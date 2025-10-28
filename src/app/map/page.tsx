@@ -284,19 +284,78 @@ export default function MapPage() {
       return;
     }
     
-    // Create refined prompt based on type
+    // For regenerate, replace the existing response instead of adding new messages
+    if (refinementType === 'regenerate') {
+      console.log('🔄 Regenerating response');
+      setIsChatLoading(true);
+      
+      try {
+        // Build conversation history up to but not including the message being regenerated
+        const conversationHistory = chatMessages.slice(0, messageIndex - 1);
+        
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: originalQuestion,
+            conversationHistory
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to regenerate response');
+        }
+
+        // Replace the assistant message at messageIndex
+        setChatMessages(prev => {
+          const updated = [...prev];
+          updated[messageIndex] = { role: 'assistant', content: data.response };
+          return updated;
+        });
+
+        // If Claude provided a concept map, use it directly
+        if (data.conceptMap && data.conceptMap.nodes && data.conceptMap.edges) {
+          console.log('📊 Using regenerated concept map from Claude');
+          setConceptMapData(data.conceptMap);
+          setLoadingState('success');
+          setShowSuccessBanner(true);
+          setTimeout(() => setShowSuccessBanner(false), 5000);
+        } else {
+          // Fallback: generate from explanation if Claude didn't provide concept map
+          await generateConceptMapFromText(data.response);
+        }
+
+      } catch (error) {
+        console.error("❌ Error regenerating response:", error);
+        
+        toast.error('Failed to regenerate response', {
+          description: error instanceof Error ? error.message : 'Unknown error',
+          action: {
+            label: 'Retry',
+            onClick: () => handleRefineMessage(messageIndex, 'regenerate')
+          },
+          duration: 5000,
+        });
+      } finally {
+        setIsChatLoading(false);
+      }
+      
+      return; // Exit early for regenerate
+    }
+    
+    // For simplify and detail, create refined prompt and add new messages
     let refinedPrompt = '';
     if (refinementType === 'simplify') {
       refinedPrompt = `${originalQuestion}\n\nPlease explain this in simpler terms, as if explaining to someone with basic knowledge. Use everyday language and analogies.`;
     } else if (refinementType === 'detail') {
       refinedPrompt = `${originalQuestion}\n\nPlease provide a more detailed explanation with additional examples, mechanisms, and technical information.`;
-    } else if (refinementType === 'regenerate') {
-      refinedPrompt = originalQuestion; // Same question, new response
     }
     
     console.log('🔄 Refining message with type:', refinementType);
     
-    // Use existing message handler
+    // Use existing message handler for simplify and detail
     await handleSendChatMessage(refinedPrompt);
   };
 
