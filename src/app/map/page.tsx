@@ -37,7 +37,7 @@ export default function MapPage() {
   const [showSuccessBanner, setShowSuccessBanner] = useState(true);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
-  const [isChatMode, setIsChatMode] = useState(false);
+  const [isChatMode, setIsChatMode] = useState(true);
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [isRestoringFromStorage, setIsRestoringFromStorage] = useState(true);
