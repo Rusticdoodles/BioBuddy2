@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Function to get OpenAI client (lazy initialization)
+const getOpenAIClient = () => {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error('OpenAI API key not configured');
+  }
+  return new OpenAI({ apiKey });
+};
 
 // Input validation schema
 interface ConceptMapRequest {
@@ -89,14 +93,8 @@ export async function POST(request: NextRequest) {
   console.log('🚀 Concept map generation API called');
   
   try {
-    // Check if OpenAI API key is configured
-    if (!process.env.OPENAI_API_KEY) {
-      console.error('❌ OpenAI API key not configured');
-      return NextResponse.json(
-        { error: 'OpenAI API key not configured. Please add OPENAI_API_KEY to your environment variables.' },
-        { status: 500 }
-      );
-    }
+    // Initialize OpenAI client (only when API is called)
+    const openai = getOpenAIClient();
 
     // Parse request body
     let body: ConceptMapRequest;

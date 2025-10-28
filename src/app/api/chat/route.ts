@@ -1,12 +1,20 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest, NextResponse } from 'next/server';
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+// Function to get Anthropic client (lazy initialization)
+const getAnthropicClient = () => {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    throw new Error('Anthropic API key not configured');
+  }
+  return new Anthropic({ apiKey });
+};
 
 export async function POST(request: NextRequest) {
   try {
+    // Initialize Anthropic client (only when API is called)
+    const anthropic = getAnthropicClient();
+    
     const { message, conversationHistory } = await request.json();
 
     if (!message || typeof message !== 'string') {
