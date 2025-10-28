@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { X, ChevronLeft, ChevronRight, MessageSquare, FileText, Sparkles } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, MessageSquare, FileText, Sparkles, Scaling, BadgeInfo, Plus, Dot, Download, FileImage, Info } from 'lucide-react';
 
 interface WelcomeModalProps {
   isOpen: boolean;
@@ -36,6 +36,11 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) =
       ),
     },
     {
+      icon: <Scaling className="w-16 h-16 text-orange-600 dark:text-orange-400 -mb-2" />,
+      title: <h2 className="text-3xl mb-10">Map Too Small?</h2>,
+      description: <p>Click the <ChevronRight className="inline w-4 h-4 align-[-0.125em]" aria-hidden="true" /> at the top right of the left panel to collapse it, giving you more room for the concept map! </p>
+    },
+    {
       icon: <FileText className="w-16 h-16 text-purple-600 dark:text-purple-400" />,
       title: <h2 className="text-3xl mb-10">Make It Your Own</h2>,
       description: (
@@ -46,6 +51,35 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) =
           <li>• Everything saves automatically - never lose progress</li>
         </ul>
       ),
+    },
+    {
+      icon: <BadgeInfo className="w-16 h-16 text-yellow-600 dark:text-yellow-400 -mb-2" />,
+      title: <h2 className="text-3xl mb-6">How to Use the Map</h2>,
+      description: (
+        <div className="space-y-4 ">
+          <div>
+            <p className="text-lg font-semibold text-blue-600 dark:text-blue-400">Adding Nodes</p>
+            <p className="text-sm">To add a node, click on the <Plus className="inline w-4 h-4 align-[-0.125em]" aria-hidden="true" /> icon on the right panel.</p>
+          </div>
+          <div>
+            <p className="text-lg font-semibold text-purple-600 dark:text-purple-400">Adding Connections</p>
+            <p className="text-sm">To add connections between nodes, click on the &quot;<Dot className="inline w-4 h-4 align-[-0.125em]" aria-hidden="true" />&quot; icons on the concept nodes.</p>
+          </div>
+          <div>
+            <p className="text-lg font-semibold text-green-600 dark:text-green-400">Exporting and Importing Saved Maps</p>
+            <p className="text-sm">To export and import saved maps, click on the <FileText className="inline w-4 h-4 align-[-0.125em]" aria-hidden="true" /> and <Download className="inline w-4 h-4 align-[-0.125em]" aria-hidden="true"/> icons respectively.</p>
+          </div>
+          <div>
+            <p className="text-lg font-semibold text-red-600 dark:text-red-400">Saving an Image of the Map</p>
+            <p className="text-sm">To take a screenshot of the map, click on the <FileImage className="inline w-4 h-4 align-[-0.125em]" aria-hidden="true" /> icon.</p>
+          </div>
+          <div>
+            <p className="text-lg font-semibold text-yellow-600 dark:text-yellow-400">Accessing the Legend</p>
+            <p className="text-sm">To access the legend, click on the <Info className="inline w-4 h-4 align-[-0.125em]" aria-hidden="true" /> icon.</p>
+          </div>    
+        </div>
+
+      )
     },
   ];
 

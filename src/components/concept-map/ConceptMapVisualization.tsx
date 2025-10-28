@@ -567,7 +567,7 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
                 aria-label="Toggle info panel"
                 title="Show/Hide Legend and Tips"
               >
-                <Info className={`w-5 h-5 transition-colors ${showInfo ? 'text-blue-600' : 'text-slate-600 dark:text-slate-300'}`} />
+                Legend & Help <Info className={`inline w-4 h-4 align-[-0.125em] transition-colors ${showInfo ? 'text-blue-600' : ' inline w-4 h-4 align-[-0.125em] text-slate-600 dark:text-slate-300'}`} />
               </button>
 
               {/* Floating Info Panel */}
@@ -639,7 +639,7 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
             </ReactFlow>
             
             {/* Floating Action Button for adding nodes */}
-            <div className="absolute bottom-4 right-4 flex flex-col gap-2">
+            <div className="absolute bottom-56 right-4 flex flex-col gap-2">
               <button
                 onClick={() => setShowAddNodeForm(true)}
                 className="w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group"
