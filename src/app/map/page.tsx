@@ -231,15 +231,24 @@ export default function MapPage() {
         throw new Error('Invalid response format from chat API');
       }
 
-      // Add AI response to chat
+      // Add AI response to chat (explanation only, not concept map JSON)
       const aiMsg = { role: 'assistant' as const, content: data.response };
       setChatMessages(prev => [...prev, aiMsg]);
 
       console.log("✅ Chat message processed successfully!");
 
-      // Automatically generate concept map from AI response
-      console.log("🗺️ Auto-generating concept map from AI response...");
-      await generateConceptMapFromText(data.response);
+      // If Claude provided a concept map, use it directly
+      if (data.conceptMap && data.conceptMap.nodes && data.conceptMap.edges) {
+        console.log('📊 Using concept map from Claude');
+        setConceptMapData(data.conceptMap);
+        setLoadingState('success');
+        setShowSuccessBanner(true);
+        setTimeout(() => setShowSuccessBanner(false), 5000);
+      } else {
+        // Fallback: generate from explanation if Claude didn't provide concept map
+        console.log('⚠️ No concept map in response, generating from explanation');
+        await generateConceptMapFromText(data.response);
+      }
 
     } catch (error) {
       console.error("❌ Error sending chat message:", error);

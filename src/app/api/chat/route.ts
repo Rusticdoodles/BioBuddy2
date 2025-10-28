@@ -46,26 +46,105 @@ export async function POST(request: NextRequest) {
     // Call Claude API
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 2000,
-      system: `You are a helpful educational AI assistant. Your role is to explain concepts clearly and comprehensively to students. When a student asks you a question:
+      max_tokens: 2048,
+      system: `You are an educational AI assistant that helps students learn by providing clear explanations AND structured concept maps.
 
-1. Provide a clear and concise explanation of the topic
-2. Break down complex concepts into understandable parts
-3. Do not use any markdown formatting in your response.
-4. Adjust complexity based on the question (if they ask for basics, keep it simple; if they ask for advanced details, go deeper)
-5. Focus on how each concept is related to the other concepts.
-6. Focus on accuracy and educational value
+When a student asks a question, you MUST respond with BOTH:
+1. A clear, educational explanation
+2. A JSON concept map showing key concepts and relationships
 
-Your response will be used to automatically generate a visual concept/mind map, so make sure to clearly identify key concepts and their relationships.`,
+RESPONSE FORMAT (you must follow this exactly):
+EXPLANATION:
+[Your clear explanation here - 2-4 paragraphs explaining the concept]
+
+CONCEPT_MAP:
+{
+  "nodes": [
+    {"id": "1", "label": "Main Concept", "type": "process"},
+    {"id": "2", "label": "Related Concept", "type": "molecule"}
+  ],
+  "edges": [
+    {"source": "1", "target": "2", "label": "produces"}
+  ]
+}
+
+RULES FOR EXPLANATION:
+- Clear and concise (2-4 paragraphs)
+- Break down complex ideas
+- Adjust complexity to the question
+- No markdown formatting
+- Focus on relationships between concepts
+
+RULES FOR CONCEPT MAP:
+- Include 6-12 key concepts (not too few, not too many)
+- Use clear, concise labels (2-4 words max)
+- Choose appropriate types: process, molecule, organelle, system, structure, function, enzyme, pathway, organ, tissue, cell, protein, concept
+- Use descriptive relationship labels: "produces", "requires", "contains", "regulates", "part of", "leads to", "inhibits", "activates", "transforms into"
+- Create a logical hierarchy (main concept at top, details below)
+- Ensure all edge IDs match node IDs
+- Focus on the MOST important relationships only
+
+EXAMPLE for "What is photosynthesis?":
+
+EXPLANATION:
+Photosynthesis is the process by which plants convert light energy into chemical energy. It occurs in chloroplasts and involves two main stages: the light-dependent reactions and the Calvin cycle. During the light reactions, chlorophyll absorbs sunlight and splits water molecules, producing oxygen and ATP. The Calvin cycle then uses this ATP to convert carbon dioxide into glucose.
+
+CONCEPT_MAP:
+{
+  "nodes": [
+    {"id": "1", "label": "Photosynthesis", "type": "process"},
+    {"id": "2", "label": "Light Reactions", "type": "process"},
+    {"id": "3", "label": "Calvin Cycle", "type": "process"},
+    {"id": "4", "label": "Chloroplast", "type": "organelle"},
+    {"id": "5", "label": "Glucose", "type": "molecule"},
+    {"id": "6", "label": "Oxygen", "type": "molecule"},
+    {"id": "7", "label": "Carbon Dioxide", "type": "molecule"},
+    {"id": "8", "label": "ATP", "type": "molecule"}
+  ],
+  "edges": [
+    {"source": "1", "target": "4", "label": "occurs in"},
+    {"source": "1", "target": "2", "label": "includes"},
+    {"source": "1", "target": "3", "label": "includes"},
+    {"source": "2", "target": "6", "label": "produces"},
+    {"source": "2", "target": "8", "label": "produces"},
+    {"source": "3", "target": "7", "label": "uses"},
+    {"source": "3", "target": "5", "label": "produces"},
+    {"source": "8", "target": "3", "label": "powers"}
+  ]
+}
+
+CRITICAL: Always include both EXPLANATION and CONCEPT_MAP sections in your response. The concept map must be valid JSON.`,
       messages
     });
 
-    const aiResponse = response.content[0].type === 'text' ? response.content[0].text : '';
+    const assistantMessage = response.content[0].type === 'text' ? response.content[0].text : '';
 
     console.log('✅ Claude API response received');
 
-    return NextResponse.json({
-      response: aiResponse
+    // Parse the structured response
+    let explanation = assistantMessage;
+    let conceptMapData = null;
+
+    // Check if response contains CONCEPT_MAP section
+    if (assistantMessage.includes('CONCEPT_MAP:')) {
+      const parts = assistantMessage.split('CONCEPT_MAP:');
+      explanation = parts[0].replace('EXPLANATION:', '').trim();
+      
+      try {
+        // Extract JSON from the concept map section
+        const jsonMatch = parts[1].match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          conceptMapData = JSON.parse(jsonMatch[0]);
+          console.log('✅ Successfully parsed concept map from Claude response');
+        }
+      } catch (error) {
+        console.error('❌ Error parsing concept map JSON:', error);
+      }
+    }
+
+    return NextResponse.json({ 
+      response: explanation,
+      conceptMap: conceptMapData
     });
 
   } catch (error) {

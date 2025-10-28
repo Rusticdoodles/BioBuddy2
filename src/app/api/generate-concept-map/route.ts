@@ -56,37 +56,41 @@ const validateInput = (notes: string): { isValid: boolean; error?: string } => {
 
 // OpenAI prompt for concept extraction
 const createConceptExtractionPrompt = (notes: string): string => {
-  return `You are an expert in biology and medical sciences. Analyze the following lecture notes and extract key concepts and their relationships to create a concept map.
+  return `You are an expert at extracting key concepts and relationships from educational text to create clear, logical concept maps.
 
-NOTES:
+ANALYZE THIS TEXT:
 ${notes}
 
-INSTRUCTIONS:
-1. Identify the most important biological/medical concepts, terms, processes, and structures
-2. Determine the relationships between these concepts
-3. Categorize each concept by type (e.g., organelle, molecule, process, system, structure, function, etc.)
-4. Return ONLY valid JSON in the exact format specified below
+CREATE A CONCEPT MAP with these requirements:
 
-REQUIRED JSON FORMAT:
+1. IDENTIFY KEY CONCEPTS:
+   - Extract 8-15 most important concepts
+   - Use clear, concise labels (2-4 words)
+   - Categorize each by type: process, molecule, organelle, system, structure, function, enzyme, pathway, organ, tissue, cell, protein, concept
+
+2. DETERMINE RELATIONSHIPS:
+   - Use descriptive labels: "produces", "requires", "contains", "regulates", "part of", "leads to", "inhibits", "activates", "transforms into"
+   - Focus on the STRONGEST, most important relationships
+   - Create logical flow from main concept to details
+
+3. STRUCTURE:
+   - Start with 1-2 main concepts at the top
+   - Branch to supporting concepts
+   - Connect related concepts with clear relationships
+   - Avoid creating isolated nodes
+
+OUTPUT ONLY THIS JSON (no other text):
 {
   "nodes": [
-    {"id": "1", "label": "Concept Name", "type": "concept_type"},
-    {"id": "2", "label": "Another Concept", "type": "another_type"}
+    {"id": "1", "label": "Main Concept", "type": "process"},
+    {"id": "2", "label": "Detail", "type": "molecule"}
   ],
   "edges": [
-    {"source": "1", "target": "2", "label": "relationship_type"}
+    {"source": "1", "target": "2", "label": "produces"}
   ]
 }
 
-GUIDELINES:
-- Use clear, concise labels for concepts (2-4 words max)
-- Use descriptive relationship labels (e.g., "produces", "contains", "regulates", "transports", "converts")
-- Include 5-15 key concepts for optimal visualization
-- Focus on the most important relationships
-- Ensure all source and target IDs in edges correspond to actual node IDs
-- Do not include any text outside the JSON response
-
-RESPOND WITH ONLY THE JSON OBJECT:`;
+CRITICAL: Ensure every edge's source and target IDs exist in the nodes array.`;
 };
 
 export async function POST(request: NextRequest) {
