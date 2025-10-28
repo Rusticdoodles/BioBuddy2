@@ -90,9 +90,9 @@ export const EditableEdge: React.FC<EditableEdgeProps> = ({
         ) : (
           <>
             <rect
-              x={-50}
+              x={typeof label === 'string' ? -(label.length * 10) / 2 : 0}
               y={-12}
-              width={100}
+              width={typeof label === 'string' ? label.length * 10: 0}
               height={24}
               fill="white"
               fillOpacity={0.85}

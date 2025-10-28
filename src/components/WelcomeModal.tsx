@@ -67,7 +67,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) =
           </div>
           <div>
             <p className="text-lg font-semibold text-green-600 dark:text-green-400">Exporting and Importing Saved Maps</p>
-            <p className="text-sm">To export and import saved maps, click on the <FileText className="inline w-4 h-4 align-[-0.125em]" aria-hidden="true" /> and <Download className="inline w-4 h-4 align-[-0.125em]" aria-hidden="true"/> icons respectively.</p>
+            <p className="text-sm">To export and import the JSON files of saved maps, click on the <FileText className="inline w-4 h-4 align-[-0.125em]" aria-hidden="true" /> and <Download className="inline w-4 h-4 align-[-0.125em]" aria-hidden="true"/> icons respectively.</p>
           </div>
           <div>
             <p className="text-lg font-semibold text-red-600 dark:text-red-400">Saving an Image of the Map</p>

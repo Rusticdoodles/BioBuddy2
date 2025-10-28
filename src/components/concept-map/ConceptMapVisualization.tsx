@@ -534,7 +534,7 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
                 className="dark:opacity-30"
               />
               <Controls 
-                className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+                className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-black"
                 style={{
                   boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
                 }}
