@@ -37,6 +37,41 @@ export const nodeTypeColors: NodeTypeColorMap = {
     text: 'text-gray-800 dark:text-gray-200', 
     border: 'border-gray-200 dark:border-gray-700' 
   },
+  enzyme: { 
+    bg: 'bg-yellow-50 dark:bg-yellow-900/30', 
+    text: 'text-yellow-800 dark:text-yellow-200', 
+    border: 'border-yellow-200 dark:border-yellow-700' 
+  },
+  pathway: { 
+    bg: 'bg-pink-50 dark:bg-pink-900/30', 
+    text: 'text-pink-800 dark:text-pink-200', 
+    border: 'border-pink-200 dark:border-pink-700' 
+  },
+  organ: { 
+    bg: 'bg-teal-50 dark:bg-teal-900/30', 
+    text: 'text-teal-800 dark:text-teal-200', 
+    border: 'border-teal-200 dark:border-teal-700' 
+  },
+  tissue: { 
+    bg: 'bg-lime-50 dark:bg-lime-900/30', 
+    text: 'text-lime-800 dark:text-lime-200', 
+    border: 'border-lime-200 dark:border-lime-700' 
+  },
+  cell: { 
+    bg: 'bg-cyan-50 dark:bg-cyan-900/30', 
+    text: 'text-cyan-800 dark:text-cyan-200', 
+    border: 'border-cyan-200 dark:border-cyan-700' 
+  },
+  protein: { 
+    bg: 'bg-amber-50 dark:bg-amber-900/30', 
+    text: 'text-amber-800 dark:text-amber-200', 
+    border: 'border-amber-200 dark:border-amber-700' 
+  },
+  concept: { 
+    bg: 'bg-gray-50 dark:bg-gray-900/30', 
+    text: 'text-gray-800 dark:text-gray-200', 
+    border: 'border-gray-200 dark:border-gray-700' 
+  },
 };
 
 // Node type options for dropdowns
@@ -47,4 +82,11 @@ export const nodeTypeOptions = [
   { value: 'structure', label: 'Structure' },
   { value: 'system', label: 'System' },
   { value: 'function', label: 'Function' },
+  { value: 'enzyme', label: 'Enzyme' },
+  { value: 'pathway', label: 'Pathway' },
+  { value: 'organ', label: 'Organ' },
+  { value: 'tissue', label: 'Tissue' },
+  { value: 'cell', label: 'Cell' },
+  { value: 'protein', label: 'Protein' },
+  { value: 'concept', label: 'Concept' },
 ];

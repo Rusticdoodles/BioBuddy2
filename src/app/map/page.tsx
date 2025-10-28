@@ -670,7 +670,7 @@ const onSave = useCallback(() => {
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-slate-400 dark:text-slate-500">
                 <Edit3 className="w-6 h-6 mb-2" />
-                <span className="text-xs writing-mode-vertical text-center">Your Notes</span>
+                <span className="text-xs writing-mode-vertical text-center">Your Notes & Chat</span>
               </div>
             )}
           </div>

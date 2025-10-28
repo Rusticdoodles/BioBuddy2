@@ -74,6 +74,7 @@ RULES FOR EXPLANATION:
 - Adjust complexity to the question
 - No markdown formatting
 - Focus on relationships between concepts
+- Give citations for the information you provide in a separate paragraph at the end
 
 RULES FOR CONCEPT MAP:
 - Include 6-12 key concepts (not too few, not too many)
