@@ -79,9 +79,7 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
   onAddNode,
   setNodes,
   setEdges,
-  rfInstance,
   setRfInstance,
-  onRestore,
   onImportJSON,
   onToggleChatMode,
   isRestoringFromStorage
@@ -166,7 +164,7 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
       data: n.data
     })));
     
-  }, [conceptMapData, setNodes, setEdges, onUpdateEdge, onDeleteEdge]);
+  }, [conceptMapData, setNodes, setEdges, onUpdateEdge, onDeleteEdge, onUpdateNode, onDeleteNode]);
 
   const handleAddNode = (label: string, type: string) => {
     onAddNode(label, type);
@@ -288,16 +286,20 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
 
   // Memoize nodeTypes to prevent recreation on every render
   const nodeTypes = useMemo(() => ({
-    conceptNode: (props: any) => (
-      <ConceptNode 
-        {...props}
-        data={{
-          ...props.data,
-          onUpdateNode,
-          onDeleteNode,
-        }}
-      />
-    )
+    conceptNode: (props: { data: { label: string; type?: string; onUpdateNode?: (nodeId: string, label: string, type?: string) => void; onDeleteNode?: (nodeId: string) => void }; id: string; selected?: boolean; [key: string]: unknown }) => {
+      const nodeData = props.data || { label: '', type: 'default' };
+      return (
+        <ConceptNode 
+          {...props}
+          data={{
+            ...nodeData,
+            type: nodeData.type || 'default',
+            onUpdateNode,
+            onDeleteNode,
+          }}
+        />
+      );
+    }
   }), [onUpdateNode, onDeleteNode]);
 
   // Memoize edgeTypes to prevent recreation on every render
@@ -541,7 +543,7 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
               <MiniMap 
                 className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
                 nodeColor={(node) => {
-                  const nodeType = (node.data as any)?.type;
+                  const nodeType = (node.data as { type?: string })?.type || 'default';
                   const colors = nodeTypeColors[nodeType] || nodeTypeColors.default;
                   return colors.text.includes('blue') ? '#3b82f6' :
                          colors.text.includes('green') ? '#10b981' :
