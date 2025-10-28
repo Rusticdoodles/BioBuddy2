@@ -381,21 +381,43 @@ export default function MapPage() {
     console.log('👋 Reopening welcome tutorial');
   };
 
-  const handleImportJSON = useCallback((importedData: any) => {
+  interface ImportedNode {
+    id: string;
+    position?: { x: number; y: number };
+    label: string;
+    type?: string;
+  }
+
+  interface ImportedEdge {
+    id: string;
+    source: string;
+    target: string;
+    label?: string;
+  }
+
+  interface ImportedData {
+    nodes: ImportedNode[];
+    edges: ImportedEdge[];
+  }
+
+  const handleImportJSON = useCallback((importedData: unknown) => {
     try {
       console.log('📥 Importing JSON data:', importedData);
       
+      // Validate and type cast the imported data
+      const data = importedData as ImportedData;
+      
       // Validate the imported data structure
-      if (!importedData.nodes || !importedData.edges) {
+      if (!data.nodes || !data.edges) {
         throw new Error('Invalid JSON format: missing nodes or edges');
       }
       
-      if (!Array.isArray(importedData.nodes) || !Array.isArray(importedData.edges)) {
+      if (!Array.isArray(data.nodes) || !Array.isArray(data.edges)) {
         throw new Error('Invalid JSON format: nodes and edges must be arrays');
       }
       
       // Reconstruct nodes with proper data structure and callbacks
-      const importedNodes = importedData.nodes.map((node: any) => ({
+      const importedNodes = data.nodes.map((node: ImportedNode) => ({
         id: node.id,
         type: 'conceptNode',
         position: node.position || { x: 0, y: 0 },
@@ -410,7 +432,7 @@ export default function MapPage() {
       }));
       
       // Reconstruct edges with proper data structure and callbacks
-      const importedEdges = importedData.edges.map((edge: any) => ({
+      const importedEdges = data.edges.map((edge: ImportedEdge) => ({
         id: edge.id,
         source: edge.source,
         target: edge.target,
@@ -418,12 +440,12 @@ export default function MapPage() {
         type: 'editableEdge',
         animated: true,
         style: { stroke: '#64748b', strokeWidth: 2 },
-        markerEnd: { type: 'arrowclosed', color: '#64748b' },
+        markerEnd: { type: 'arrowclosed' as const, color: '#64748b' },
         data: {
           onUpdateEdge: handleUpdateEdge,
           onDeleteEdge: handleDeleteEdge,
         },
-      }));
+      } as Edge));
       
       console.log(`✅ Imported ${importedNodes.length} nodes and ${importedEdges.length} edges`);
       
@@ -461,15 +483,31 @@ const onSave = useCallback(() => {
   }
 }, [rfInstance]);
 
+  interface StoredNode extends Node {
+    data: {
+      label: string;
+      type?: string;
+      onUpdateNode?: (nodeId: string, label: string, type?: string) => void;
+      onDeleteNode?: (nodeId: string) => void;
+    };
+  }
+
+  interface StoredEdge extends Edge {
+    data?: {
+      onUpdateEdge?: (edgeId: string, label: string) => void;
+      onDeleteEdge?: (edgeId: string) => void;
+    };
+  }
+
   const onRestore = useCallback(() => {
     console.log('🔄 onRestore called - handlers should be ready');
     const restoreFlow = async () => {
       try {
-        const flow = JSON.parse(localStorage.getItem(flowKey) || 'null');
+        const flow = JSON.parse(localStorage.getItem(flowKey) || 'null') as { nodes: StoredNode[]; edges: StoredEdge[] };
         
         if (flow && (flow.nodes?.length > 0 || flow.edges?.length > 0)) {
           // Reconstruct nodes with proper data structure including callback functions
-          const reconstructedNodes = flow.nodes.map((node: any) => ({
+          const reconstructedNodes = flow.nodes.map((node: StoredNode) => ({
             ...node,
             data: {
               ...node.data,
@@ -479,7 +517,7 @@ const onSave = useCallback(() => {
           }));
           
           // Reconstruct edges with proper data structure including callback functions
-          const reconstructedEdges = flow.edges.map((edge: any) => ({
+          const reconstructedEdges = flow.edges.map((edge: StoredEdge) => ({
             ...edge,
             data: {
               ...edge.data,

@@ -30,7 +30,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) =
           </div>
           <div>
             <p className="text-2xl font-semibold text-purple-600 dark:text-purple-400 mb-2 mt-8">📝 Notes Mode</p>
-            <p className="text-sm">Paste your study notes and we'll extract key concepts and relationships.</p>
+            <p className="text-sm">Paste your study notes and we&apos;ll extract key concepts and relationships.</p>
           </div>
         </div>
       ),
@@ -41,7 +41,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) =
       description: (
         <ul className="ml-8 text-sm space-y-2 text-left">
           <li>• Edit nodes and connections directly on the map</li>
-          <li>• Use "Simplify" or "Add Detail" to refine explanations</li>
+          <li>• Use &quot;Simplify&quot; or &quot;Add Detail&quot; to refine explanations</li>
           <li>• Export as PNG or JSON to save your work</li>
           <li>• Everything saves automatically - never lose progress</li>
         </ul>

@@ -11,6 +11,9 @@ import {
   Node,
   BackgroundVariant,
   ConnectionLineType,
+  NodeChange,
+  EdgeChange,
+  ReactFlowInstance,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { 
@@ -40,20 +43,20 @@ interface ConceptMapVisualizationProps {
   isChatMode: boolean;
   nodes: Node[];
   edges: Edge[];
-  onNodesChange: any;
-  onEdgesChange: any;
+  onNodesChange: (changes: NodeChange[]) => void;
+  onEdgesChange: (changes: EdgeChange[]) => void;
   onUpdateNode: (nodeId: string, label: string, type?: string) => void;
   onDeleteNode: (nodeId: string) => void;
   onUpdateEdge: (edgeId: string, label: string) => void;
   onDeleteEdge: (edgeId: string) => void;
   onConnect: (params: Connection) => void;
   onAddNode: (label: string, type: string) => void;
-  setNodes: any;
-  setEdges: any;
-  rfInstance: any;
-  setRfInstance: (instance: any) => void;
+  setNodes: React.Dispatch<React.SetStateAction<Node[]>>;
+  setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
+  rfInstance: ReactFlowInstance | null;
+  setRfInstance: (instance: ReactFlowInstance | null) => void;
   onRestore: () => void;
-  onImportJSON: (data: any) => void;
+  onImportJSON: (data: unknown) => void;
   onToggleChatMode: () => void;
   isRestoringFromStorage: boolean;
 }
