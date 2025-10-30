@@ -23,6 +23,7 @@ import { WelcomeModal } from '@/components/WelcomeModal';
 
 // Import types and utilities
 import { ConceptMapResponse, LoadingState, ChatMessage } from '@/types/concept-map-types';
+import { shouldGenerateConceptMap } from '@/utils/intent-detection';
 
 const flowKey = 'biobuddy-concept-map-flow';
 const SAVED_MAPS_KEY = 'biobuddy-saved-maps';
@@ -60,6 +61,7 @@ export default function MapPage() {
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [saveMapName, setSaveMapName] = useState('');
   const [showLoadMenu, setShowLoadMenu] = useState(false);
+  const [autoGenerateMap, setAutoGenerateMap] = useState(true);
 
   // ReactFlow state - managed at parent level
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
@@ -516,21 +518,31 @@ export default function MapPage() {
 
       // Add assistant response with images
       const aiMsg = { role: 'assistant' as const, content: data.message, images: data.images || [] };
+      const updatedChatMessages = [...chatMessages, userMsg];
       setChatMessages(prev => [...prev, aiMsg]);
 
       console.log("✅ Chat message processed successfully!");
 
-      // If Claude provided a concept map, use it directly
-      if (data.conceptMap && data.conceptMap.nodes && data.conceptMap.edges) {
-        console.log('📊 Using concept map from Claude');
-        setConceptMapData(data.conceptMap);
-        setLoadingState('success');
-        setShowSuccessBanner(true);
-        setTimeout(() => setShowSuccessBanner(false), 5000);
+      // Decide whether to generate concept map based on intent
+      // Use chat history including the user message we just added
+      const shouldGenerate = autoGenerateMap && shouldGenerateConceptMap(userMessage, updatedChatMessages);
+
+      if (shouldGenerate) {
+        // If Claude provided a concept map, use it directly
+        if (data.conceptMap && data.conceptMap.nodes && data.conceptMap.edges) {
+          console.log('📊 Using concept map from Claude');
+          setConceptMapData(data.conceptMap);
+          setLoadingState('success');
+          setShowSuccessBanner(true);
+          setTimeout(() => setShowSuccessBanner(false), 5000);
+        } else {
+          // Fallback: generate from explanation if Claude didn't provide concept map
+          console.log('⚠️ No concept map in response, generating from explanation');
+          await generateConceptMapFromText(data.message);
+        }
       } else {
-        // Fallback: generate from explanation if Claude didn't provide concept map
-        console.log('⚠️ No concept map in response, generating from explanation');
-        await generateConceptMapFromText(data.message);
+        console.log('⏭️ Skipping concept map generation (follow-up/clarification question)');
+        // Keep existing map visible
       }
 
     } catch (error) {
@@ -558,6 +570,25 @@ export default function MapPage() {
     }
   };
 
+  const handleRegenerateResponse = async () => {
+    // Find the last assistant message index
+    let lastAssistantIndex = -1;
+    for (let i = chatMessages.length - 1; i >= 0; i--) {
+      if (chatMessages[i].role === 'assistant') {
+        lastAssistantIndex = i;
+        break;
+      }
+    }
+    
+    if (lastAssistantIndex === -1) {
+      toast.error('No response to regenerate');
+      return;
+    }
+    
+    // Call handleRefineMessage with regenerate type
+    await handleRefineMessage(lastAssistantIndex, 'regenerate');
+  };
+
   const handleRefineMessage = async (messageIndex: number, refinementType: 'simplify' | 'detail' | 'regenerate') => {
     // Get the original user question (AI responses are at odd indices, so user message is index - 1)
     const originalQuestion = chatMessages[messageIndex - 1]?.content;
@@ -570,6 +601,7 @@ export default function MapPage() {
     // For regenerate, replace the existing response instead of adding new messages
     if (refinementType === 'regenerate') {
       console.log('🔄 Regenerating response');
+      setIsRegenerating(true);
       setIsChatLoading(true);
       
       try {
@@ -614,16 +646,24 @@ export default function MapPage() {
           return updated;
         });
 
-        // If Claude provided a concept map, use it directly
-        if (data.conceptMap && data.conceptMap.nodes && data.conceptMap.edges) {
-          console.log('📊 Using regenerated concept map from Claude');
-          setConceptMapData(data.conceptMap);
-          setLoadingState('success');
-          setShowSuccessBanner(true);
-          setTimeout(() => setShowSuccessBanner(false), 5000);
+        // Decide whether to generate concept map based on intent
+        const shouldGenerate = autoGenerateMap && shouldGenerateConceptMap(originalQuestion, conversationHistory);
+
+        if (shouldGenerate) {
+          // If Claude provided a concept map, use it directly
+          if (data.conceptMap && data.conceptMap.nodes && data.conceptMap.edges) {
+            console.log('📊 Using regenerated concept map from Claude');
+            setConceptMapData(data.conceptMap);
+            setLoadingState('success');
+            setShowSuccessBanner(true);
+            setTimeout(() => setShowSuccessBanner(false), 5000);
+          } else {
+            // Fallback: generate from explanation if Claude didn't provide concept map
+            await generateConceptMapFromText(data.message);
+          }
         } else {
-          // Fallback: generate from explanation if Claude didn't provide concept map
-          await generateConceptMapFromText(data.message);
+          console.log('⏭️ Skipping concept map generation for regenerated response (follow-up/clarification question)');
+          // Keep existing map visible
         }
 
       } catch (error) {
@@ -638,6 +678,7 @@ export default function MapPage() {
           duration: 5000,
         });
       } finally {
+        setIsRegenerating(false);
         setIsChatLoading(false);
       }
       
@@ -1138,6 +1179,10 @@ const onSave = useCallback(() => {
                     onClearChat={handleClearChat}
                     onToggleChatMode={() => setIsChatMode(!isChatMode)}
                     onRefineMessage={handleRefineMessage}
+                    isRegenerating={isRegenerating}
+                    onRegenerateResponse={handleRegenerateResponse}
+                    autoGenerateMap={autoGenerateMap}
+                    setAutoGenerateMap={setAutoGenerateMap}
                   />
               )}
               </>

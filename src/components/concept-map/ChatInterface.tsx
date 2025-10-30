@@ -13,6 +13,10 @@ interface ChatInterfaceProps {
   onClearChat: () => void;
   onToggleChatMode: () => void;
   onRefineMessage: (messageIndex: number, refinementType: 'simplify' | 'detail' | 'regenerate') => void;
+  isRegenerating: boolean;
+  onRegenerateResponse: () => void;
+  autoGenerateMap: boolean;
+  setAutoGenerateMap: (value: boolean) => void;
 }
 
 export const ChatInterface: React.FC<ChatInterfaceProps> = ({
@@ -23,7 +27,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   isChatLoading,
   onClearChat,
   onToggleChatMode,
-  onRefineMessage
+  onRefineMessage,
+  isRegenerating,
+  onRegenerateResponse,
+  autoGenerateMap,
+  setAutoGenerateMap
 }) => {
   const chatMessagesEndRef = useRef<HTMLDivElement>(null);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
@@ -278,27 +286,48 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       </div>
 
       {/* Chat Input */}
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={chatInput}
-          onChange={(e) => setChatInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Ask me anything..."
-          className="flex-1 px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400"
-        />
-        <button
-          onClick={handleSendMessage}
-          disabled={!chatInput.trim() || isChatLoading}
-          className={`px-4 py-3 rounded-lg transition-colors ${
-            chatInput.trim() && !isChatLoading
-              ? 'bg-blue-600 hover:bg-blue-700 text-white'
-              : 'bg-slate-300 dark:bg-slate-600 text-slate-500 dark:text-slate-400 cursor-not-allowed'
-          }`}
-          aria-label="Send message"
-        >
-          <Send className="w-5 h-5" />
-        </button>
+      <div className="space-y-2">
+        {/* Auto-generate toggle */}
+        {chatMessages.length > 0 && (
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="auto-generate-map"
+              checked={autoGenerateMap}
+              onChange={(e) => setAutoGenerateMap(e.target.checked)}
+              className="w-4 h-4 text-blue-600 bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 rounded focus:ring-blue-500"
+            />
+            <label 
+              htmlFor="auto-generate-map" 
+              className="text-xs text-slate-600 dark:text-slate-400 cursor-pointer select-none"
+            >
+              Auto-generate concept maps for new topics
+            </label>
+          </div>
+        )}
+        
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask me anything..."
+            className="flex-1 px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400"
+          />
+          <button
+            onClick={handleSendMessage}
+            disabled={!chatInput.trim() || isChatLoading}
+            className={`px-4 py-3 rounded-lg transition-colors ${
+              chatInput.trim() && !isChatLoading
+                ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                : 'bg-slate-300 dark:bg-slate-600 text-slate-500 dark:text-slate-400 cursor-not-allowed'
+            }`}
+            aria-label="Send message"
+          >
+            <Send className="w-5 h-5" />
+          </button>
+        </div>
       </div>
     </div>
   );
