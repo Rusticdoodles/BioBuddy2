@@ -49,7 +49,7 @@ export const NotesInput: React.FC<NotesInputProps> = ({
           )}
           <button
             onClick={onToggleChatMode}
-            className="px-3 py-1.5 text-sm bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors flex items-center gap-2 shrink-0 mr-12"
+            className="px-3 py-1.5 text-sm rounded-lg transition-colors flex items-center gap-2 shrink-0 mr-12 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50"
             title={isChatMode ? "Switch to Notes Mode" : "Switch to Chat Mode"}
           >
             <MessageSquare className="w-4 h-4" />

@@ -75,7 +75,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           </button>
           <button
             onClick={onToggleChatMode}
-            className="px-3 py-1.5 text-sm bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors flex items-center gap-2 shrink-0 mr-12"
+            className="px-3 py-1.5 text-sm bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors flex items-center gap-2 shrink-0 mr-12"
             title="Switch to Notes Mode"
           >
             <FileText className="w-4 h-4" />

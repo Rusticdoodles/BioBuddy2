@@ -59,6 +59,8 @@ interface ConceptMapVisualizationProps {
   onImportJSON: (data: unknown) => void;
   onToggleChatMode: () => void;
   isRestoringFromStorage: boolean;
+  onRegenerateMindmap: () => void;
+  isRegeneratingMap: boolean;
 }
 
 export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = ({
@@ -82,7 +84,9 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
   setRfInstance,
   onImportJSON,
   onToggleChatMode,
-  isRestoringFromStorage
+  isRestoringFromStorage,
+  onRegenerateMindmap,
+  isRegeneratingMap
 }) => {
   // DEBUG: Log what we're receiving
   console.log('🎨 ConceptMapVisualization render:', {

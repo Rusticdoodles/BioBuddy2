@@ -7,7 +7,8 @@ import {
   Edit3, 
   ChevronLeft,
   ChevronRight,
-  HelpCircle
+  HelpCircle,
+  RotateCw
 } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 
@@ -41,6 +42,8 @@ export default function MapPage() {
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [isRestoringFromStorage, setIsRestoringFromStorage] = useState(true);
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [isRegeneratingMap, setIsRegeneratingMap] = useState(false);
 
   // ReactFlow state - managed at parent level
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
@@ -118,6 +121,7 @@ export default function MapPage() {
       )
     );
   }, [setEdges]);
+  
 
   const handleDeleteEdge = useCallback((edgeId: string) => {
     setEdges((eds) => eds.filter((edge) => edge.id !== edgeId));
@@ -423,6 +427,46 @@ export default function MapPage() {
         },
         duration: 5000,
       });
+    }
+  };
+
+  const handleRegenerateMindmap = async () => {
+    // Find the last assistant message
+    let lastAssistantMessage = '';
+    for (let i = chatMessages.length - 1; i >= 0; i--) {
+      if (chatMessages[i].role === 'assistant') {
+        lastAssistantMessage = chatMessages[i].content;
+        break;
+      }
+    }
+    
+    if (!lastAssistantMessage) {
+      toast.error('No response to regenerate map from');
+      return;
+    }
+    
+    console.log('🔄 Regenerating mindmap only');
+    setIsRegeneratingMap(true);
+    setLoadingState('loading');
+    
+    try {
+      // Use the existing generateConceptMapFromText function
+      await generateConceptMapFromText(lastAssistantMessage);
+      
+      toast.success('Mindmap regenerated successfully');
+    } catch (error) {
+      console.error("❌ Error regenerating mindmap:", error);
+      
+      toast.error('Failed to regenerate mindmap', {
+        description: error instanceof Error ? error.message : 'Unknown error',
+        action: {
+          label: 'Retry',
+          onClick: () => handleRegenerateMindmap()
+        },
+        duration: 5000,
+      });
+    } finally {
+      setIsRegeneratingMap(false);
     }
   };
 
@@ -737,21 +781,39 @@ const onSave = useCallback(() => {
           {/* Right Panel - Concept Map Visualization */}
           <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 p-6 flex flex-col">
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
                   Concept Map
                 </h2>
-                {isChatMode && loadingState === 'success' && (
-                  <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded">
+                {!isChatMode && (
+                  <span className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded">
+                    From Notes
+                  </span>
+                )}
+                {isChatMode && (
+                  <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">
                     From AI Chat
                   </span>
                 )}
+                {loadingState === 'success' && nodes.length > 0 && (
+                  <button
+                    onClick={handleRegenerateMindmap}
+                    disabled={isRegeneratingMap}
+                    className={`flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors ${
+                      isRegeneratingMap
+                        ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                        : 'bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-700 dark:text-slate-200'
+                    }`}
+                    title="Regenerate the mindmap from current explanation"
+                  >
+                    <RotateCw className="w-3 h-3" />
+                    Regenerate Map
+                  </button>
+                )}
               </div>
-              <span className="text-sm text-slate-500 dark:text-slate-400">
-                {loadingState === 'loading' ? 'Analyzing...' : 
-                 loadingState === 'success' ? 'Ready' : 
-                 loadingState === 'error' ? 'Error' : 'Interactive visualization'}
-              </span>
+              <div className="text-sm text-slate-600 dark:text-slate-400">
+                {isRegeneratingMap ? 'Regenerating...' : loadingState === 'success' ? 'Ready' : loadingState === 'loading' ? 'Generating...' : ''}
+              </div>
             </div>
             
             <ConceptMapVisualization
@@ -778,6 +840,8 @@ const onSave = useCallback(() => {
               onImportJSON={handleImportJSON}
               onToggleChatMode={() => setIsChatMode(!isChatMode)}
               isRestoringFromStorage={isRestoringFromStorage}
+              onRegenerateMindmap={handleRegenerateMindmap}
+              isRegeneratingMap={isRegeneratingMap}
             />
           </div>
         </div>

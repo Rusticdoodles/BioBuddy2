@@ -110,7 +110,7 @@ export const EditableEdge: React.FC<EditableEdgeProps> = ({
             >
               {typeof label === 'string' ? label : ''}
             </text>
-            {showDelete && (
+            {showDelete && !isEditing && (
               <g transform="translate(55, -10)" onClick={handleDelete} className="cursor-pointer">
                 <circle r={8} fill="#ef4444" />
                 <path

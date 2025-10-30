@@ -87,7 +87,7 @@ export const ConceptNode: React.FC<ConceptNodeProps> = ({ data, id }) => {
 
   return (
     <>
-      <Handle type="target" position={Position.Top} />
+      <Handle className="w-4 h-4" type="target" position={Position.Top} />
       <div 
         className={`px-4 py-3 rounded-lg shadow-md border-2 ${colors.bg} ${colors.border} min-w-[120px] max-w-[200px] relative group`}
         onMouseEnter={() => setShowDelete(true)}
