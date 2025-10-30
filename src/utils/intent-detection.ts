@@ -38,6 +38,7 @@ export function shouldGenerateConceptMap(message: string, chatHistory: ChatMessa
   
   // New topic patterns (DO generate map)
   const newTopicPatterns = [
+    /^can you explain (the |how )?(?!more|that|this|it)/,
     /^explain (the |how )?(?!more|that|this|it)/,
     /^(tell me about|describe) (?!more|that|this|it)/,
     /^how does .* work/,

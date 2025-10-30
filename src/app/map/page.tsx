@@ -56,7 +56,7 @@ export default function MapPage() {
   const [isRestoringFromStorage, setIsRestoringFromStorage] = useState(true);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [isRegeneratingMap, setIsRegeneratingMap] = useState(false);
-  const lastToastedAssistantCountRef = useRef(0);
+  const lastToastedMapHashRef = useRef<string>('');
   const [savedMaps, setSavedMaps] = useState<SavedMap[]>([]);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [saveMapName, setSaveMapName] = useState('');
@@ -118,33 +118,6 @@ export default function MapPage() {
   }, [loadingState]);
 
 
-  useEffect(() => {
-    if (isRestoringFromStorage) return;            // avoid firing on restore
-    if (!isChatMode) return;                       // only in chat mode
-    if (loadingState !== 'success') return;        // map generation done
-    if (nodes.length === 0) return;                // nodes are actually rendered
-  
-    const assistantCount = chatMessages.reduce((acc, m) => acc + (m.role === 'assistant' ? 1 : 0), 0);
-    if (assistantCount <= lastToastedAssistantCountRef.current) return; // already toasted for this reply
-  
-    toast('Mindmap too confusing? Click regenerate', {
-      description: 'You can try a different structure by regenerating the map.',
-      position: 'bottom-right',
-      duration: 8000,
-      action: { label: 'Regenerate', onClick: () => handleRegenerateMindmap() },
-      className: 'bg-amber-50 text-amber-900 border border-amber-200',
-      style: {
-        backgroundColor: 'rgba(35, 117, 224, 0.9)',
-        color: '#ffffff',
-        borderRadius: '10px',
-        fontSize: '16px',
-        fontWeight: 'bold',
-        textAlign: 'left',
-      },
-    });
-  
-    lastToastedAssistantCountRef.current = assistantCount;
-  }, [isRestoringFromStorage, isChatMode, loadingState, nodes.length, chatMessages]);
 
 
   // Load saved maps from localStorage on mount
@@ -451,8 +424,15 @@ export default function MapPage() {
   const handleSendChatMessage = async (userMessage: string) => {
     if (!userMessage.trim()) return;
 
-    // Check if there's an unsaved map before generating new content
-    if (nodes.length > 0 && !savedMaps.some(m => 
+    // Prepare user message (but don't add to state yet)
+    const userMsg = { role: 'user' as const, content: userMessage.trim() };
+    const updatedChatMessages = [...chatMessages, userMsg];
+    
+    // Decide whether to generate concept map based on intent (early check)
+    const shouldGenerate = autoGenerateMap && shouldGenerateConceptMap(userMessage, updatedChatMessages);
+
+    // Check if there's an unsaved map ONLY if we're going to generate a new map
+    if (shouldGenerate && nodes.length > 0 && !savedMaps.some(m => 
       JSON.stringify(m.nodes) === JSON.stringify(nodes) && 
       JSON.stringify(m.edges) === JSON.stringify(edges)
     )) {
@@ -462,13 +442,13 @@ export default function MapPage() {
       );
       
       if (shouldSave) {
+        // User wants to save, show dialog and exit (message not added yet)
         setShowSaveDialog(true);
         return; // Exit and wait for user to save
       }
     }
 
-    // Add user message to chat
-    const userMsg = { role: 'user' as const, content: userMessage.trim() };
+    // Add user message to chat state (only if we're proceeding)
     setChatMessages(prev => [...prev, userMsg]);
     setChatInput("");
     setIsChatLoading(true);
@@ -518,14 +498,11 @@ export default function MapPage() {
 
       // Add assistant response with images
       const aiMsg = { role: 'assistant' as const, content: data.message, images: data.images || [] };
-      const updatedChatMessages = [...chatMessages, userMsg];
       setChatMessages(prev => [...prev, aiMsg]);
 
       console.log("✅ Chat message processed successfully!");
 
-      // Decide whether to generate concept map based on intent
-      // Use chat history including the user message we just added
-      const shouldGenerate = autoGenerateMap && shouldGenerateConceptMap(userMessage, updatedChatMessages);
+      // shouldGenerate was already determined earlier, no need to recalculate
 
       if (shouldGenerate) {
         // If Claude provided a concept map, use it directly
@@ -822,6 +799,40 @@ export default function MapPage() {
     }
   };
 
+  // Show toast notification when a NEW mindmap is generated
+  useEffect(() => {
+    if (isRestoringFromStorage) return;            // avoid firing on restore
+    if (!isChatMode) return;                       // only in chat mode
+    if (loadingState !== 'success') return;        // map generation done
+    if (!conceptMapData) return;                   // no map data yet
+  
+    // Create a hash of the conceptMapData to detect when a NEW map is generated
+    // Use conceptMapData instead of nodes/edges because it only changes when a new map is generated
+    const conceptNodeIds = conceptMapData.nodes.map(n => n.id).sort().join(',');
+    const currentMapHash = `${conceptMapData.nodes.length}-${conceptMapData.edges.length}-${conceptNodeIds}`;
+    
+    // Only show toast if this is a different map than the last one we toasted for
+    if (currentMapHash === lastToastedMapHashRef.current) return;
+  
+    toast('Mindmap too confusing? Click regenerate', {
+      description: 'You can try a different structure by regenerating the map.',
+      position: 'bottom-right',
+      duration: 8000,
+      action: { label: 'Regenerate', onClick: () => handleRegenerateMindmap() },
+      className: 'bg-amber-50 text-amber-900 border border-amber-200',
+      style: {
+        backgroundColor: 'rgba(35, 117, 224, 0.9)',
+        color: '#ffffff',
+        borderRadius: '10px',
+        fontSize: '16px',
+        fontWeight: 'bold',
+        textAlign: 'left',
+      },
+    });
+  
+    lastToastedMapHashRef.current = currentMapHash;
+  }, [isRestoringFromStorage, isChatMode, loadingState, conceptMapData, handleRegenerateMindmap]);
+
   const handleClearChat = () => {
     if (window.confirm('Are you sure you want to clear the chat history and concept map? This cannot be undone.')) {
       setChatMessages([]);
@@ -831,6 +842,7 @@ export default function MapPage() {
       setLoadingState('idle');
       localStorage.removeItem('chatHistory');
       localStorage.removeItem(flowKey);
+      lastToastedMapHashRef.current = ''; // Reset toast tracking
     }
   };
 
