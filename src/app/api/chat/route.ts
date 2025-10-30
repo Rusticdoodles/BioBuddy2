@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest, NextResponse } from 'next/server';
+import { searchWikimediaImages, extractKeywords } from '@/utils/wikimedia';
 
 // Function to get Anthropic client (lazy initialization)
 const getAnthropicClient = () => {
@@ -146,9 +147,24 @@ CRITICAL: Always include both EXPLANATION and CONCEPT_MAP sections in your respo
       }
     }
 
+    // Fetch relevant images from Wikimedia Commons
+    let images = [] as Awaited<ReturnType<typeof searchWikimediaImages>>;
+    try {
+      const keywords = extractKeywords(explanation);
+      console.log('🔍 Searching images for keywords:', keywords);
+      if (keywords.length > 0) {
+        images = await searchWikimediaImages(keywords[0], 6);
+        console.log('📸 Found images:', images.length);
+      }
+    } catch (error) {
+      console.error('Error fetching images:', error);
+    }
+
     return NextResponse.json({ 
-      response: explanation,
-      conceptMap: conceptMapData
+      message: explanation,
+      conceptMap: conceptMapData,
+      images,
+      success: true
     });
 
   } catch (error) {

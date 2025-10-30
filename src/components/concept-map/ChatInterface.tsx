@@ -160,7 +160,42 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       <span className="text-sm">Regenerating...</span>
                     </div>
                   ) : (
-                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    <>  {/* Code for visual resources/images in AI chat */}
+                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      {message.images && message.images.length > 0 && (
+                        <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-600">
+                          <div className="flex items-center gap-1 mb-2">
+                            <svg className="w-4 h-4 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Visual Resources:</span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2">
+                            {message.images.map((image, idx) => (
+                              <a
+                                key={idx}
+                                href={image.pageUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group relative aspect-square rounded-lg overflow-hidden border border-slate-200 dark:border-slate-600 hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
+                                title={image.title}
+                              >
+                                <img
+                                  src={image.thumbnailUrl}
+                                  alt={image.title}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                  loading="lazy"
+                                />
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                              </a>
+                            ))}
+                          </div>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                            Images from <a href="https://commons.wikimedia.org" target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-700 dark:hover:text-slate-300">Wikimedia Commons</a>
+                          </p>
+                        </div>
+                      )}
+                    </>
                   )}
                   
                   {/* Copy button for AI messages */}

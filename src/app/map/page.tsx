@@ -510,12 +510,12 @@ export default function MapPage() {
       const data = await response.json();
       console.log("✅ Chat API Response data:", data);
 
-      if (!data.response) {
+      if (!data.message) {
         throw new Error('Invalid response format from chat API');
       }
 
-      // Add AI response to chat (explanation only, not concept map JSON)
-      const aiMsg = { role: 'assistant' as const, content: data.response };
+      // Add assistant response with images
+      const aiMsg = { role: 'assistant' as const, content: data.message, images: data.images || [] };
       setChatMessages(prev => [...prev, aiMsg]);
 
       console.log("✅ Chat message processed successfully!");
@@ -530,7 +530,7 @@ export default function MapPage() {
       } else {
         // Fallback: generate from explanation if Claude didn't provide concept map
         console.log('⚠️ No concept map in response, generating from explanation');
-        await generateConceptMapFromText(data.response);
+        await generateConceptMapFromText(data.message);
       }
 
     } catch (error) {
@@ -607,10 +607,10 @@ export default function MapPage() {
 
         const data = await response.json();
 
-        // Replace the assistant message at messageIndex
+        // Replace the assistant message at messageIndex with images
         setChatMessages(prev => {
           const updated = [...prev];
-          updated[messageIndex] = { role: 'assistant', content: data.response };
+          updated[messageIndex] = { role: 'assistant', content: data.message, images: data.images || [] } as any;
           return updated;
         });
 
@@ -623,7 +623,7 @@ export default function MapPage() {
           setTimeout(() => setShowSuccessBanner(false), 5000);
         } else {
           // Fallback: generate from explanation if Claude didn't provide concept map
-          await generateConceptMapFromText(data.response);
+          await generateConceptMapFromText(data.message);
         }
 
       } catch (error) {

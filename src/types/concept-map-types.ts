@@ -1,3 +1,4 @@
+import { WikimediaImage } from '@/utils/wikimedia';
 // TypeScript types for concept map components
 
 export interface ConceptNode {
@@ -34,4 +35,5 @@ export type NodeTypeColorMap = Record<string, NodeTypeColors>;
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
+  images?: WikimediaImage[];
 }
