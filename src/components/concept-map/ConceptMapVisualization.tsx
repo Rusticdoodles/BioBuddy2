@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   ReactFlow,
   MiniMap,
@@ -101,7 +101,19 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
 
   const [showAddNodeForm, setShowAddNodeForm] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (showExportMenu && !(e.target as Element).closest('.relative')) {
+        setShowExportMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showExportMenu]);
 
   // Process concept map data whenever it changes
   React.useEffect(() => {
@@ -172,6 +184,17 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
     })));
     
   }, [conceptMapData, setNodes, setEdges, onUpdateEdge, onDeleteEdge, onUpdateNode, onDeleteNode]);
+
+  // Show success toast instead of inline banner
+  useEffect(() => {
+    if (loadingState !== 'success') return;
+    if (!showSuccessBanner) return;
+    if (nodes.length === 0) return;
+
+    toast.success('Concept map generated successfully!', {
+      description: `Found ${nodes.length} concepts with ${edges.length} relationships`,
+    });
+  }, [loadingState, showSuccessBanner, nodes.length, edges.length]);
 
   const handleAddNode = (label: string, type: string) => {
     onAddNode(label, type);
@@ -494,19 +517,6 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
 
       {loadingState === 'success' && nodes.length > 0 && (
         <div className="w-full h-full flex flex-col">
-          {showSuccessBanner && (
-            <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg transition-opacity duration-300">
-              <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="font-medium">Concept map generated successfully!</span>
-              </div>
-              <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                Found {nodes.length} concepts with {edges.length} relationships
-              </p>
-            </div>
-          )}
           
           {/* ReactFlow Visualization */}
           <div className="flex-1 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden relative">
@@ -684,34 +694,56 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
                 <Plus className="w-6 h-6" />
               </button>
               
-              {/* Export and Import buttons */}
-              <div className="flex flex-col gap-2">
+              {/* Hidden file input */}
+              <input ref={fileInputRef} type="file" accept=".json" onChange={handleFileSelect} className="hidden" />
+
+              {/* Export/Import dropdown */}
+              <div className="relative">
                 <button
-                  onClick={handleExportPNG}
-                  className="w-12 h-12 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group"
-                  aria-label="Export as PNG"
-                  title="Export as PNG"
-                >
-                  <FileImage className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={handleExportJSON}
+                  onClick={() => setShowExportMenu(!showExportMenu)}
                   className="w-12 h-12 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group"
-                  aria-label="Export as JSON"
-                  title="Export as JSON"
+                  aria-label="Export/Import options"
+                  title="Export/Import"
                 >
-                  <FileText className="w-5 h-5" />
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                  </svg>
                 </button>
-                
-                {/* Import JSON button */}
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-12 h-12 bg-orange-600 hover:bg-orange-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group"
-                  aria-label="Import JSON"
-                  title="Import JSON"
-                >
-                  <Upload className="w-5 h-5" />
-                </button>
+
+                {showExportMenu && (
+                  <div className="absolute bottom-0 right-14 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 py-2 min-w-40">
+                    <button
+                      onClick={() => {
+                        handleExportPNG();
+                        setShowExportMenu(false);
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2"
+                    >
+                      <FileImage className="w-4 h-4 text-green-600" />
+                      Export PNG
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleExportJSON();
+                        setShowExportMenu(false);
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2"
+                    >
+                      <FileText className="w-4 h-4 text-purple-600" />
+                      Export JSON
+                    </button>
+                    <button
+                      onClick={() => {
+                        fileInputRef.current?.click();
+                        setShowExportMenu(false);
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2"
+                    >
+                      <Upload className="w-4 h-4 text-orange-600" />
+                      Import JSON
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
             

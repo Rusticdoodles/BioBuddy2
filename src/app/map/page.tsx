@@ -17,6 +17,8 @@ import {
   ChatInterface, 
   NotesInput 
 } from '@/components/concept-map';
+import { SavedMapsDropdown } from '@/components/concept-map/SavedMapsDropdown';
+import { SaveMapDialog } from '@/components/concept-map/SaveMapDialog';
 import { WelcomeModal } from '@/components/WelcomeModal';
 
 // Import types and utilities
@@ -1071,63 +1073,13 @@ const onSave = useCallback(() => {
             </div>
             
             <div className="flex items-center gap-3">
-              {/* My Saved Maps dropdown */}
-              {savedMaps.length > 0 && (
-                <div className="relative">
-                  <button
-                    onClick={() => setShowLoadMenu(!showLoadMenu)}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition-colors border border-slate-300 dark:border-slate-600"
-                    title="Load saved maps"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" />
-                    </svg>
-                    <span className="text-sm font-medium">My Maps ({savedMaps.length})</span>
-                  </button>
-
-                  {showLoadMenu && (
-                    <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 z-50 max-h-96 overflow-y-auto">
-                      <div className="p-3 border-b border-slate-200 dark:border-slate-700">
-                        <h3 className="font-semibold text-slate-900 dark:text-white text-sm">Saved Maps</h3>
-                      </div>
-                      <div className="p-2">
-                        {savedMaps.map((map) => (
-                          <div
-                            key={map.id}
-                            className="flex items-center justify-between p-3 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg group"
-                          >
-                            <button
-                              onClick={() => handleLoadMap(map.id)}
-                              className="flex-1 text-left"
-                            >
-                              <div className="font-medium text-slate-900 dark:text-white text-sm">
-                                {map.name}
-                              </div>
-                              <div className="text-xs text-slate-500 dark:text-slate-400">
-                                {new Date(map.timestamp).toLocaleDateString()} • {map.nodes.length} nodes
-                              </div>
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (window.confirm(`Delete "${map.name}"?`)) {
-                                  handleDeleteMap(map.id);
-                                }
-                              }}
-                              className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                              title="Delete map"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
+              <SavedMapsDropdown
+                savedMaps={savedMaps}
+                showLoadMenu={showLoadMenu}
+                onToggleMenu={() => setShowLoadMenu(!showLoadMenu)}
+                onLoadMap={handleLoadMap}
+                onDeleteMap={handleDeleteMap}
+              />
 
               {/* Help button */}
               <button
@@ -1252,48 +1204,13 @@ const onSave = useCallback(() => {
         </div>
 
         {/* Save Map Dialog */}
-        {showSaveDialog && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                Save Concept Map
-              </h3>
-              <input
-                type="text"
-                value={saveMapName}
-                onChange={(e) => setSaveMapName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleSaveMap(saveMapName);
-                  } else if (e.key === 'Escape') {
-                    setShowSaveDialog(false);
-                    setSaveMapName('');
-                  }
-                }}
-                placeholder="Enter a name for this map..."
-                className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-700 text-slate-900 dark:text-white mb-4"
-                autoFocus
-              />
-              <div className="flex gap-3 justify-end">
-                <button
-                  onClick={() => {
-                    setShowSaveDialog(false);
-                    setSaveMapName('');
-                  }}
-                  className="px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => handleSaveMap(saveMapName)}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                >
-                  Save
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <SaveMapDialog
+          open={showSaveDialog}
+          name={saveMapName}
+          onChangeName={setSaveMapName}
+          onCancel={() => { setShowSaveDialog(false); setSaveMapName(''); }}
+          onSave={() => handleSaveMap(saveMapName)}
+        />
       </main>
     </div>
   );
