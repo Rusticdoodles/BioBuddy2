@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { Navbar } from "@/components/navbar";
 import { addEdge, Connection, Edge, Node, useNodesState, useEdgesState, Position, ReactFlowInstance } from '@xyflow/react';
 import {
@@ -44,11 +44,50 @@ export default function MapPage() {
   const [isRestoringFromStorage, setIsRestoringFromStorage] = useState(true);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [isRegeneratingMap, setIsRegeneratingMap] = useState(false);
+  const lastToastedAssistantCountRef = useRef(0);
 
   // ReactFlow state - managed at parent level
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
+
+  // Undo history: store serializable snapshots (strip function callbacks)
+  const historyRef = useRef<{ nodes: any[]; edges: any[] }[]>([]);
+  const [historyVersion, setHistoryVersion] = useState(0); // trigger re-render when history changes
+  const isProgrammaticChangeRef = useRef(false);
+  const nodesRef = useRef<Node[]>(nodes);
+  const edgesRef = useRef<Edge[]>(edges);
+
+  useEffect(() => { nodesRef.current = nodes; }, [nodes]);
+  useEffect(() => { edgesRef.current = edges; }, [edges]);
+
+  const getStorableSnapshot = useCallback(() => {
+    const currentNodes = nodesRef.current;
+    const currentEdges = edgesRef.current;
+    const storableNodes: any[] = currentNodes.map((n) => ({
+      ...n,
+      data: {
+        label: (n.data as any)?.label ?? '',
+        type: (n.data as any)?.type,
+      },
+    }));
+    const storableEdges: any[] = currentEdges.map((e) => ({
+      ...e,
+      data: undefined,
+    }));
+    return { nodes: storableNodes, edges: storableEdges };
+  }, []);
+
+  const pushHistory = useCallback(() => {
+    if (isProgrammaticChangeRef.current) return; // don't record during programmatic updates
+    const snapshot = getStorableSnapshot();
+    historyRef.current.push(snapshot);
+    setHistoryVersion((v) => v + 1);
+  }, [getStorableSnapshot]);
+
+  const canUndo = historyRef.current.length > 0;
+
+  // restoreFromSnapshot and handleUndo are defined after mutation handlers
 
   useEffect(() => {
     if (loadingState === 'success') {
@@ -60,6 +99,36 @@ export default function MapPage() {
       return () => clearTimeout(timer);
     }
   }, [loadingState]);
+
+
+  useEffect(() => {
+    if (isRestoringFromStorage) return;            // avoid firing on restore
+    if (!isChatMode) return;                       // only in chat mode
+    if (loadingState !== 'success') return;        // map generation done
+    if (nodes.length === 0) return;                // nodes are actually rendered
+  
+    const assistantCount = chatMessages.reduce((acc, m) => acc + (m.role === 'assistant' ? 1 : 0), 0);
+    if (assistantCount <= lastToastedAssistantCountRef.current) return; // already toasted for this reply
+  
+    toast('Mindmap too confusing? Click regenerate', {
+      description: 'You can try a different structure by regenerating the map.',
+      position: 'bottom-right',
+      duration: 8000,
+      action: { label: 'Regenerate', onClick: () => handleRegenerateMindmap() },
+      className: 'bg-amber-50 text-amber-900 border border-amber-200',
+      style: {
+        backgroundColor: 'rgba(35, 117, 224, 0.9)',
+        color: '#ffffff',
+        borderRadius: '10px',
+        fontSize: '16px',
+        fontWeight: 'bold',
+        textAlign: 'left',
+      },
+    });
+  
+    lastToastedAssistantCountRef.current = assistantCount;
+  }, [isRestoringFromStorage, isChatMode, loadingState, nodes.length, chatMessages]);
+
 
   // Load chat history from localStorage on mount
   useEffect(() => {
@@ -90,11 +159,13 @@ export default function MapPage() {
   }, []);
 
   const handleDeleteNode = useCallback((nodeId: string) => {
+    pushHistory();
     setNodes((nds) => nds.filter((node) => node.id !== nodeId));
     setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
-  }, [setNodes, setEdges]);
+  }, [setNodes, setEdges, pushHistory]);
 
   const handleUpdateNode = useCallback((nodeId: string, label: string, type?: string) => {
+    pushHistory();
     setNodes((nds) =>
       nds.map((node) => {
         if (node.id === nodeId) {
@@ -112,23 +183,26 @@ export default function MapPage() {
         return node;
       })
     );
-  }, [handleDeleteNode, setNodes]);
+  }, [handleDeleteNode, setNodes, pushHistory]);
 
   const handleUpdateEdge = useCallback((edgeId: string, label: string) => {
+    pushHistory();
     setEdges((eds) =>
       eds.map((edge) =>
         edge.id === edgeId ? { ...edge, label, data: { ...edge.data, label } } : edge
       )
     );
-  }, [setEdges]);
+  }, [setEdges, pushHistory]);
   
 
   const handleDeleteEdge = useCallback((edgeId: string) => {
+    pushHistory();
     setEdges((eds) => eds.filter((edge) => edge.id !== edgeId));
-  }, [setEdges]);
+  }, [setEdges, pushHistory]);
 
   const onConnect = useCallback(
     (params: Connection) => {
+      pushHistory();
       const newEdge = {
         ...params,
         id: `edge-${params.source}-${params.target}-${Date.now()}`,
@@ -144,10 +218,11 @@ export default function MapPage() {
       };
       setEdges((eds) => addEdge(newEdge as Edge, eds));
     },
-    [setEdges, handleUpdateEdge, handleDeleteEdge]
+    [setEdges, handleUpdateEdge, handleDeleteEdge, pushHistory]
   );
 
   const handleAddNode = (label: string, type: string) => {
+    pushHistory();
     // For now, add node at center of viewport (0,0)
     const newNode: Node = {
       id: `node-${Date.now()}`,
@@ -163,6 +238,36 @@ export default function MapPage() {
     
     setNodes((nds) => [...nds, newNode]);
   };
+
+  // Reconstruct nodes/edges from a stored snapshot by reattaching callbacks
+  const restoreFromSnapshot = useCallback((snapshot: { nodes: any[]; edges: any[] }) => {
+    const reconstructedNodes: Node[] = snapshot.nodes.map((node: any) => ({
+      ...node,
+      data: {
+        ...(node.data || {}),
+        onUpdateNode: handleUpdateNode,
+        onDeleteNode: handleDeleteNode,
+      },
+    }));
+    const reconstructedEdges: Edge[] = snapshot.edges.map((edge: any) => ({
+      ...edge,
+      data: {
+        onUpdateEdge: handleUpdateEdge,
+        onDeleteEdge: handleDeleteEdge,
+      },
+    } as Edge));
+    isProgrammaticChangeRef.current = true;
+    setNodes(reconstructedNodes);
+    setEdges(reconstructedEdges);
+    setTimeout(() => { isProgrammaticChangeRef.current = false; }, 0);
+  }, [handleUpdateNode, handleDeleteNode, handleUpdateEdge, handleDeleteEdge, setNodes, setEdges]);
+
+  const handleUndo = useCallback(() => {
+    if (historyRef.current.length === 0) return;
+    const last = historyRef.current.pop()!;
+    restoreFromSnapshot(last);
+    setHistoryVersion((v) => v + 1);
+  }, [restoreFromSnapshot]);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputText(e.target.value);
@@ -561,7 +666,9 @@ export default function MapPage() {
       
       console.log(`✅ Imported ${importedNodes.length} nodes and ${importedEdges.length} edges`);
       
-      // Set the imported data
+      // Set the imported data (clears prior history, starting a fresh session)
+      historyRef.current = [];
+      setHistoryVersion((v) => v + 1);
       setNodes(importedNodes);
       setEdges(importedEdges);
       setLoadingState('success');
@@ -643,8 +750,12 @@ const onSave = useCallback(() => {
             firstNodeData: reconstructedNodes[0]?.data 
           });
 
+          historyRef.current = [];
+          setHistoryVersion((v) => v + 1);
+          isProgrammaticChangeRef.current = true;
           setNodes(reconstructedNodes);
           setEdges(reconstructedEdges);
+          setTimeout(() => { isProgrammaticChangeRef.current = false; }, 0);
           setLoadingState('success');
 
           console.log('📂 Concept map restored from localStorage');
@@ -667,6 +778,50 @@ const onSave = useCallback(() => {
       onSave();
     }
   }, [nodes, edges, rfInstance, onSave]);
+
+  // Wrap change handlers to record history before ReactFlow applies them
+  const wrappedOnNodesChange = useCallback((changes: any) => {
+    if (!isProgrammaticChangeRef.current) {
+      pushHistory();
+    }
+    onNodesChange(changes as any);
+  }, [onNodesChange, pushHistory]);
+
+  const wrappedOnEdgesChange = useCallback((changes: any) => {
+    if (!isProgrammaticChangeRef.current) {
+      pushHistory();
+    }
+    onEdgesChange(changes as any);
+  }, [onEdgesChange, pushHistory]);
+
+  // Programmatic setters passed to child to avoid history loops
+  const setNodesProgrammatic = useCallback((updater: any) => {
+    isProgrammaticChangeRef.current = true;
+    setNodes(updater);
+    setTimeout(() => { isProgrammaticChangeRef.current = false; }, 0);
+  }, [setNodes]);
+
+  const setEdgesProgrammatic = useCallback((updater: any) => {
+    isProgrammaticChangeRef.current = true;
+    setEdges(updater);
+    setTimeout(() => { isProgrammaticChangeRef.current = false; }, 0);
+  }, [setEdges]);
+
+  // Ctrl/Cmd + Z keyboard shortcut
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName?.toLowerCase();
+      const isEditable = (target as any)?.isContentEditable;
+      if (tag === 'input' || tag === 'textarea' || isEditable) return; // don't hijack text input undo
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
+        e.preventDefault();
+        handleUndo();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [handleUndo]);
 
   // Restore concept map from localStorage on mount (after all handlers are defined)
   useEffect(() => {
@@ -824,16 +979,16 @@ const onSave = useCallback(() => {
               isChatMode={isChatMode}
               nodes={nodes}
               edges={edges}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
+              onNodesChange={wrappedOnNodesChange}
+              onEdgesChange={wrappedOnEdgesChange}
               onUpdateNode={handleUpdateNode}
               onDeleteNode={handleDeleteNode}
               onUpdateEdge={handleUpdateEdge}
               onDeleteEdge={handleDeleteEdge}
               onConnect={onConnect}
               onAddNode={handleAddNode}
-              setNodes={setNodes}
-              setEdges={setEdges}
+              setNodes={setNodesProgrammatic}
+              setEdges={setEdgesProgrammatic}
               rfInstance={rfInstance}
               setRfInstance={setRfInstance}
               onRestore={onRestore}

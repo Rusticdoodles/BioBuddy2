@@ -31,6 +31,18 @@ export const EditableEdge: React.FC<EditableEdgeProps> = ({
   const edgeCenterX = (sourceX + targetX) / 2;
   const edgeCenterY = (sourceY + targetY) / 2;
 
+  // Compute label-based sizing to keep hover/click area relative to text length
+  const labelText = typeof label === 'string' ? label : '';
+  const textWidth = Math.max(labelText.length * 10, 24); // minimum width similar to visible rect
+  const labelRectX = -textWidth / 2;
+  const labelRectY = -12;
+  const labelRectW = textWidth;
+  const labelRectH = 24;
+  const hoverPadding = 14; // padding around label for easier hover/click
+  const deleteInset = 14; // move the delete button slightly inward from the edge
+  const deleteX = labelRectX + labelRectW + hoverPadding - deleteInset;
+  const deleteY = labelRectY - hoverPadding + deleteInset;
+
   const handleLabelClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsEditing(true);
@@ -89,11 +101,20 @@ export const EditableEdge: React.FC<EditableEdgeProps> = ({
           </foreignObject>
         ) : (
           <>
+            {/* Expand hover/clickable area relative to text size */}
             <rect
-              x={typeof label === 'string' ? -(label.length * 10) / 2 : 0}
-              y={-12}
-              width={typeof label === 'string' ? label.length * 10: 0}
-              height={24}
+              x={labelRectX - hoverPadding}
+              y={labelRectY - hoverPadding}
+              width={labelRectW + hoverPadding * 2}
+              height={labelRectH + hoverPadding * 2}
+              fill="transparent"
+              style={{ pointerEvents: 'all' }}
+            />
+            <rect
+              x={labelRectX}
+              y={labelRectY}
+              width={labelRectW}
+              height={labelRectH}
               fill="white"
               fillOpacity={0.85}
               rx={4}
@@ -108,15 +129,32 @@ export const EditableEdge: React.FC<EditableEdgeProps> = ({
               dominantBaseline="middle"
               style={{ font: '11px sans-serif', fontWeight: 500, fill: '#374151', pointerEvents: 'none' }}
             >
-              {typeof label === 'string' ? label : ''}
+              {labelText}
             </text>
             {showDelete && !isEditing && (
-              <g transform="translate(55, -10)" onClick={handleDelete} className="cursor-pointer">
+              <g
+                transform={`translate(${deleteX}, ${deleteY})`}
+                onClick={handleDelete}
+                onMouseDown={(e) => e.stopPropagation()}
+                role="button"
+                tabIndex={0}
+                aria-label="Delete edge"
+                className="cursor-pointer"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    // @ts-ignore - reusing handler
+                    handleDelete(e);
+                  }
+                }}
+                style={{ pointerEvents: 'all' }}
+              >
+                {/* Larger invisible hit area for easier clicking */}
+                <circle r={10} fill="transparent" style={{ pointerEvents: 'all' }} />
                 <circle r={8} fill="#ef4444" />
                 <path
                   d="M -3,-3 L 3,3 M 3,-3 L -3,3"
                   stroke="white"
-                  strokeWidth={1.5}
+                  strokeWidth={1.75}
                   strokeLinecap="round"
                 />
               </g>

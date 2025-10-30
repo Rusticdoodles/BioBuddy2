@@ -87,9 +87,34 @@ export const ConceptNode: React.FC<ConceptNodeProps> = ({ data, id }) => {
 
   return (
     <>
-      <Handle className="w-4 h-4" type="target" position={Position.Top} />
+      <Handle
+        type="target"
+        position={Position.Top}
+          aria-label="Target handle (top)"
+          style={{
+            width: 8,
+            height: 8,
+            backgroundColor: '#ffffff',
+            border: `2px solid ${colors.color}`,
+            borderRadius: 9999,
+            zIndex: 10,
+          }}
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        aria-label="Source handle (bottom)"
+        style={{
+          width: 8,
+          height: 8,
+          backgroundColor: '#ffffff',
+          border: `2px solid ${colors.color}`,
+          borderRadius: 9999,
+          zIndex: 10,
+        }}
+      />
       <div 
-        className={`px-4 py-3 rounded-lg shadow-md border-2 ${colors.bg} ${colors.border} min-w-[120px] max-w-[200px] relative group`}
+        className={`px-6 py-4 rounded-lg shadow-md border-2 ${colors.bg} ${colors.border} min-w-[120px] max-w-[200px] relative group`}
         onMouseEnter={() => setShowDelete(true)}
         onMouseLeave={() => setShowDelete(false)}
       >
@@ -151,7 +176,6 @@ export const ConceptNode: React.FC<ConceptNodeProps> = ({ data, id }) => {
           </button>
         )}
       </div>
-      <Handle type="source" position={Position.Bottom} />
     </>
   );
 };

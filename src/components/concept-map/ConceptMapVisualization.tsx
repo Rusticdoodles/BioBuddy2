@@ -567,7 +567,7 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
               {/* Info Panel Toggle Button */}
               <button
                 onClick={() => setShowInfo(!showInfo)}
-                className="absolute top-4 left-4 z-10 p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+                className="absolute top-4 left-4 z-10 p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-200"
                 aria-label="Toggle info panel"
                 title="Show/Hide Legend and Tips"
               >

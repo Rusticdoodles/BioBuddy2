@@ -25,6 +25,7 @@ export interface NodeTypeColors {
   bg: string;
   text: string;
   border: string;
+  color: string;
 }
 
 export type NodeTypeColorMap = Record<string, NodeTypeColors>;
