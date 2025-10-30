@@ -7,8 +7,7 @@ import {
   Edit3, 
   ChevronLeft,
   ChevronRight,
-  HelpCircle,
-  RotateCw
+  HelpCircle
 } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 
@@ -24,6 +23,16 @@ import { WelcomeModal } from '@/components/WelcomeModal';
 import { ConceptMapResponse, LoadingState, ChatMessage } from '@/types/concept-map-types';
 
 const flowKey = 'biobuddy-concept-map-flow';
+const SAVED_MAPS_KEY = 'biobuddy-saved-maps';
+
+interface SavedMap {
+  id: string;
+  name: string;
+  timestamp: string;
+  nodes: Node[];
+  edges: Edge[];
+  chatHistory: ChatMessage[];
+}
 
 
 
@@ -45,6 +54,10 @@ export default function MapPage() {
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [isRegeneratingMap, setIsRegeneratingMap] = useState(false);
   const lastToastedAssistantCountRef = useRef(0);
+  const [savedMaps, setSavedMaps] = useState<SavedMap[]>([]);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [saveMapName, setSaveMapName] = useState('');
+  const [showLoadMenu, setShowLoadMenu] = useState(false);
 
   // ReactFlow state - managed at parent level
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
@@ -130,6 +143,20 @@ export default function MapPage() {
   }, [isRestoringFromStorage, isChatMode, loadingState, nodes.length, chatMessages]);
 
 
+  // Load saved maps from localStorage on mount
+  useEffect(() => {
+    try {
+      const savedMapsJson = localStorage.getItem(SAVED_MAPS_KEY);
+      if (savedMapsJson) {
+        const maps = JSON.parse(savedMapsJson);
+        setSavedMaps(maps);
+        console.log('📚 Loaded saved maps:', maps.length);
+      }
+    } catch (error) {
+      console.error('Error loading saved maps:', error);
+    }
+  }, []);
+
   // Load chat history from localStorage on mount
   useEffect(() => {
     const savedMessages = localStorage.getItem('chatHistory');
@@ -157,6 +184,18 @@ export default function MapPage() {
       setShowWelcomeModal(true);
     }
   }, []);
+
+  // Close load menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (showLoadMenu && !(e.target as Element).closest('.relative')) {
+        setShowLoadMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showLoadMenu]);
 
   const handleDeleteNode = useCallback((nodeId: string) => {
     pushHistory();
@@ -269,6 +308,108 @@ export default function MapPage() {
     setHistoryVersion((v) => v + 1);
   }, [restoreFromSnapshot]);
 
+  const handleSaveMap = useCallback((name: string) => {
+    if (!name.trim()) {
+      toast.error('Please enter a name for the map');
+      return;
+    }
+
+    if (nodes.length === 0) {
+      toast.error('No map to save');
+      return;
+    }
+
+    const newMap: SavedMap = {
+      id: `map-${Date.now()}`,
+      name: name.trim(),
+      timestamp: new Date().toISOString(),
+      nodes: nodes,
+      edges: edges,
+      chatHistory: chatMessages,
+    };
+
+    const updatedMaps = [...savedMaps, newMap];
+    setSavedMaps(updatedMaps);
+    
+    // Save to localStorage
+    try {
+      localStorage.setItem(SAVED_MAPS_KEY, JSON.stringify(updatedMaps));
+      toast.success('Map saved successfully!', {
+        description: `Saved as "${name}"`,
+      });
+      console.log('💾 Saved map:', name);
+    } catch (error) {
+      console.error('Error saving map:', error);
+      toast.error('Failed to save map', {
+        description: 'Storage limit may have been reached',
+      });
+    }
+
+    setShowSaveDialog(false);
+    setSaveMapName('');
+  }, [nodes, edges, chatMessages, savedMaps]);
+
+  const handleLoadMap = useCallback((mapId: string) => {
+    const mapToLoad = savedMaps.find(m => m.id === mapId);
+    
+    if (!mapToLoad) {
+      toast.error('Map not found');
+      return;
+    }
+
+    // Reconstruct nodes with callbacks
+    const reconstructedNodes = mapToLoad.nodes.map((node: any) => ({
+      ...node,
+      data: {
+        ...node.data,
+        onUpdateNode: handleUpdateNode,
+        onDeleteNode: handleDeleteNode,
+      }
+    }));
+
+    // Reconstruct edges with callbacks
+    const reconstructedEdges = mapToLoad.edges.map((edge: any) => ({
+      ...edge,
+      data: {
+        ...edge.data,
+        onUpdateEdge: handleUpdateEdge,
+        onDeleteEdge: handleDeleteEdge,
+      }
+    }));
+
+    setNodes(reconstructedNodes);
+    setEdges(reconstructedEdges);
+    setChatMessages(mapToLoad.chatHistory || []);
+    setLoadingState('success');
+    setShowLoadMenu(false);
+
+    toast.success('Map loaded!', {
+      description: `Loaded "${mapToLoad.name}"`,
+    });
+
+    console.log('📂 Loaded map:', mapToLoad.name);
+  }, [savedMaps, handleUpdateNode, handleDeleteNode, handleUpdateEdge, handleDeleteEdge, setNodes, setEdges, setChatMessages]);
+
+  const handleDeleteMap = useCallback((mapId: string) => {
+    const mapToDelete = savedMaps.find(m => m.id === mapId);
+    
+    if (!mapToDelete) return;
+
+    const updatedMaps = savedMaps.filter(m => m.id !== mapId);
+    setSavedMaps(updatedMaps);
+
+    try {
+      localStorage.setItem(SAVED_MAPS_KEY, JSON.stringify(updatedMaps));
+      toast.success('Map deleted', {
+        description: `Deleted "${mapToDelete.name}"`,
+      });
+      console.log('🗑️ Deleted map:', mapToDelete.name);
+    } catch (error) {
+      console.error('Error deleting map:', error);
+      toast.error('Failed to delete map');
+    }
+  }, [savedMaps]);
+
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputText(e.target.value);
     // Reset states when user changes input
@@ -306,6 +447,22 @@ export default function MapPage() {
   const handleSendChatMessage = async (userMessage: string) => {
     if (!userMessage.trim()) return;
 
+    // Check if there's an unsaved map before generating new content
+    if (nodes.length > 0 && !savedMaps.some(m => 
+      JSON.stringify(m.nodes) === JSON.stringify(nodes) && 
+      JSON.stringify(m.edges) === JSON.stringify(edges)
+    )) {
+      // Prompt to save current map
+      const shouldSave = window.confirm(
+        'You have an unsaved concept map. Would you like to save it before generating a new one?'
+      );
+      
+      if (shouldSave) {
+        setShowSaveDialog(true);
+        return; // Exit and wait for user to save
+      }
+    }
+
     // Add user message to chat
     const userMsg = { role: 'user' as const, content: userMessage.trim() };
     setChatMessages(prev => [...prev, userMsg]);
@@ -329,8 +486,23 @@ export default function MapPage() {
       console.log("📊 Chat API Response status:", response.status);
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        // Try to get error message from response
+        let errorMessage = `Request failed with status ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.details || errorMessage;
+        } catch (e) {
+          // If JSON parsing fails, try text (but don't fail if that fails too)
+          try {
+            const errorText = await response.text();
+            // Only use first 200 chars to avoid huge HTML error pages
+            errorMessage = errorText.substring(0, 200) || errorMessage;
+          } catch (textError) {
+            // Give up and use default message
+            console.error('Could not parse error response:', textError);
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
@@ -411,11 +583,27 @@ export default function MapPage() {
           }),
         });
 
-        const data = await response.json();
-
         if (!response.ok) {
-          throw new Error(data.error || 'Failed to regenerate response');
+          // Try to get error message from response
+          let errorMessage = `Request failed with status ${response.status}`;
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorData.details || errorMessage;
+          } catch (e) {
+            // If JSON parsing fails, try text (but don't fail if that fails too)
+            try {
+              const errorText = await response.text();
+              // Only use first 200 chars to avoid huge HTML error pages
+              errorMessage = errorText.substring(0, 200) || errorMessage;
+            } catch (textError) {
+              // Give up and use default message
+              console.error('Could not parse error response:', textError);
+            }
+          }
+          throw new Error(errorMessage);
         }
+
+        const data = await response.json();
 
         // Replace the assistant message at messageIndex
         setChatMessages(prev => {
@@ -492,12 +680,28 @@ export default function MapPage() {
 
       console.log("📊 API Response status:", response.status);
 
+      if (!response.ok) {
+        // Try to get error message from response
+        let errorMessage = `Request failed with status ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.details || errorMessage;
+        } catch (e) {
+          // If JSON parsing fails, try text (but don't fail if that fails too)
+          try {
+            const errorText = await response.text();
+            // Only use first 200 chars to avoid huge HTML error pages
+            errorMessage = errorText.substring(0, 200) || errorMessage;
+          } catch (textError) {
+            // Give up and use default message
+            console.error('Could not parse error response:', textError);
+          }
+        }
+        throw new Error(errorMessage);
+      }
+
       const data = await response.json();
       console.log("📋 API Response data:", data);
-
-      if (!response.ok) {
-        throw new Error(data.error || `HTTP error! status: ${response.status}`);
-      }
 
       // Validate response structure
       if (!data.nodes || !data.edges || !Array.isArray(data.nodes) || !Array.isArray(data.edges)) {
@@ -866,16 +1070,76 @@ const onSave = useCallback(() => {
               </p>
             </div>
             
-            {/* Help button */}
-            <button
-              onClick={handleOpenWelcomeModal}
-              className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition-colors border border-slate-300 dark:border-slate-600"
-              title="Show tutorial"
-              aria-label="Show tutorial"
-            >
-              <HelpCircle className="w-5 h-5" />
-              <span className="-ml-1 text-sm font-medium">Help</span>
-            </button>
+            <div className="flex items-center gap-3">
+              {/* My Saved Maps dropdown */}
+              {savedMaps.length > 0 && (
+                <div className="relative">
+                  <button
+                    onClick={() => setShowLoadMenu(!showLoadMenu)}
+                    className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition-colors border border-slate-300 dark:border-slate-600"
+                    title="Load saved maps"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" />
+                    </svg>
+                    <span className="text-sm font-medium">My Maps ({savedMaps.length})</span>
+                  </button>
+
+                  {showLoadMenu && (
+                    <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 z-50 max-h-96 overflow-y-auto">
+                      <div className="p-3 border-b border-slate-200 dark:border-slate-700">
+                        <h3 className="font-semibold text-slate-900 dark:text-white text-sm">Saved Maps</h3>
+                      </div>
+                      <div className="p-2">
+                        {savedMaps.map((map) => (
+                          <div
+                            key={map.id}
+                            className="flex items-center justify-between p-3 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg group"
+                          >
+                            <button
+                              onClick={() => handleLoadMap(map.id)}
+                              className="flex-1 text-left"
+                            >
+                              <div className="font-medium text-slate-900 dark:text-white text-sm">
+                                {map.name}
+                              </div>
+                              <div className="text-xs text-slate-500 dark:text-slate-400">
+                                {new Date(map.timestamp).toLocaleDateString()} • {map.nodes.length} nodes
+                              </div>
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (window.confirm(`Delete "${map.name}"?`)) {
+                                  handleDeleteMap(map.id);
+                                }
+                              }}
+                              className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                              title="Delete map"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Help button */}
+              <button
+                onClick={handleOpenWelcomeModal}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition-colors border border-slate-300 dark:border-slate-600"
+                title="Show tutorial"
+                aria-label="Show tutorial"
+              >
+                <HelpCircle className="w-5 h-5" />
+                <span className="text-sm font-medium">Help</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -950,21 +1214,6 @@ const onSave = useCallback(() => {
                     From AI Chat
                   </span>
                 )}
-                {loadingState === 'success' && nodes.length > 0 && (
-                  <button
-                    onClick={handleRegenerateMindmap}
-                    disabled={isRegeneratingMap}
-                    className={`flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors ${
-                      isRegeneratingMap
-                        ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
-                        : 'bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-700 dark:text-slate-200'
-                    }`}
-                    title="Regenerate the mindmap from current explanation"
-                  >
-                    <RotateCw className="w-3 h-3" />
-                    Regenerate Map
-                  </button>
-                )}
               </div>
               <div className="text-sm text-slate-600 dark:text-slate-400">
                 {isRegeneratingMap ? 'Regenerating...' : loadingState === 'success' ? 'Ready' : loadingState === 'loading' ? 'Generating...' : ''}
@@ -997,9 +1246,54 @@ const onSave = useCallback(() => {
               isRestoringFromStorage={isRestoringFromStorage}
               onRegenerateMindmap={handleRegenerateMindmap}
               isRegeneratingMap={isRegeneratingMap}
+              onSaveMap={() => setShowSaveDialog(true)}
             />
           </div>
         </div>
+
+        {/* Save Map Dialog */}
+        {showSaveDialog && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                Save Concept Map
+              </h3>
+              <input
+                type="text"
+                value={saveMapName}
+                onChange={(e) => setSaveMapName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSaveMap(saveMapName);
+                  } else if (e.key === 'Escape') {
+                    setShowSaveDialog(false);
+                    setSaveMapName('');
+                  }
+                }}
+                placeholder="Enter a name for this map..."
+                className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-700 text-slate-900 dark:text-white mb-4"
+                autoFocus
+              />
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => {
+                    setShowSaveDialog(false);
+                    setSaveMapName('');
+                  }}
+                  className="px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleSaveMap(saveMapName)}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

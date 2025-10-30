@@ -4,14 +4,17 @@ import { NextRequest, NextResponse } from 'next/server';
 // Function to get Anthropic client (lazy initialization)
 const getAnthropicClient = () => {
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    throw new Error('Anthropic API key not configured');
+  console.log('🔑 API Key check:', apiKey ? `Found (${apiKey.substring(0, 10)}...)` : 'MISSING');
+  if (!apiKey || apiKey.includes('your_') || apiKey.includes('API_KEY')) {
+    throw new Error('Anthropic API key not configured. Please add ANTHROPIC_API_KEY to your .env.local file.');
   }
   return new Anthropic({ apiKey });
 };
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('🔑 Checking API key...', process.env.ANTHROPIC_API_KEY ? 'Found' : 'MISSING');
+    
     // Initialize Anthropic client (only when API is called)
     const anthropic = getAnthropicClient();
     
@@ -151,10 +154,20 @@ CRITICAL: Always include both EXPLANATION and CONCEPT_MAP sections in your respo
   } catch (error) {
     console.error('❌ Error in chat API:', error);
     
+    // Provide a more user-friendly error message
+    let errorMessage = 'An unexpected error occurred';
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      // Check if it's an API key error
+      if (error.message.includes('API key')) {
+        errorMessage = 'Anthropic API key is not configured. Please check your .env.local file and add ANTHROPIC_API_KEY.';
+      }
+    }
+    
     return NextResponse.json(
       { 
-        error: error instanceof Error ? error.message : 'An unexpected error occurred',
-        details: error instanceof Error ? error.stack : undefined
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' && error instanceof Error ? error.stack : undefined
       },
       { status: 500 }
     );
