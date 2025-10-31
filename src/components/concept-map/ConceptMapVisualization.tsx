@@ -18,7 +18,6 @@ import {
 import '@xyflow/react/dist/style.css';
 import { 
   Plus, 
-  FileImage,
   FileText,
   Info,
   X,
@@ -26,7 +25,6 @@ import {
   MessageSquare,
   RotateCw
 } from 'lucide-react';
-import { toPng } from 'html-to-image';
 import { toast } from 'sonner';
 
 import { ConceptNode } from './ConceptNode';
@@ -201,66 +199,6 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
     setShowAddNodeForm(false);
   };
 
-  const handleExportPNG = async () => {
-    const reactFlowElement = document.querySelector('.react-flow') as HTMLElement;
-    
-    if (!reactFlowElement || nodes.length === 0) {
-      toast.error('No concept map to export', {
-        description: 'Please generate a concept map first before exporting.',
-      });
-      return;
-    }
-
-    try {
-      // Hide UI elements temporarily (but keep edge labels visible)
-      const controls = document.querySelector('.react-flow__controls') as HTMLElement;
-      const minimap = document.querySelector('.react-flow__minimap') as HTMLElement;
-      const debugInfo = reactFlowElement.querySelector('.absolute.top-2.right-2') as HTMLElement;
-      const actionButtons = reactFlowElement.querySelector('.absolute.bottom-4.right-4') as HTMLElement;
-      
-      // Only hide controls, minimap, debug info, and action buttons - NOT edge labels
-      if (controls) controls.style.visibility = 'hidden';
-      if (minimap) minimap.style.visibility = 'hidden';
-      if (debugInfo) debugInfo.style.visibility = 'hidden';
-      if (actionButtons) actionButtons.style.visibility = 'hidden';
-      
-      // Small delay to ensure hiding takes effect
-      await new Promise(resolve => setTimeout(resolve, 50));
-      
-      // Capture the whole ReactFlow container
-      const dataUrl = await toPng(reactFlowElement, {
-        backgroundColor: '#f8fafc',
-        pixelRatio: 2,
-        cacheBust: true,
-      });
-      
-      // Restore visibility
-      if (controls) controls.style.visibility = '';
-      if (minimap) minimap.style.visibility = '';
-      if (debugInfo) debugInfo.style.visibility = '';
-      if (actionButtons) actionButtons.style.visibility = '';
-      
-      // Download
-      const link = document.createElement('a');
-      link.download = `biobuddy-concept-map-${new Date().toISOString().split('T')[0]}.png`;
-      link.href = dataUrl;
-      link.click();
-
-      toast.success('Concept map exported!', {
-        description: 'PNG image saved to your downloads folder',
-      });
-      
-    } catch (error) {
-      console.error('Error exporting PNG:', error);
-      toast.error('Failed to export PNG', {
-        description: 'Try using the JSON export instead, or try again.',
-        action: {
-          label: 'Retry',
-          onClick: handleExportPNG
-        }
-      });
-    }
-  };
 
   const handleExportJSON = () => {
     const exportData = {
@@ -712,16 +650,6 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
 
                 {showExportMenu && (
                   <div className="absolute bottom-0 right-14 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 py-2 min-w-40">
-                    <button
-                      onClick={() => {
-                        handleExportPNG();
-                        setShowExportMenu(false);
-                      }}
-                      className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2"
-                    >
-                      <FileImage className="w-4 h-4 text-green-600" />
-                      Export PNG
-                    </button>
                     <button
                       onClick={() => {
                         handleExportJSON();

@@ -7,7 +7,7 @@ export function shouldGenerateConceptMap(message: string, chatHistory: ChatMessa
   // Clarification patterns (DON'T generate map)
   const clarificationPatterns = [
     /^what (does|is|are|was|were|do)/,
-    /^can you (explain|clarify|define|give|tell)/,
+    /^can you (clarify|define|give|tell)/,
     /^give me (an|some|more)/,
     /^tell me more/,
     /^why (is|does|do|did)/,
