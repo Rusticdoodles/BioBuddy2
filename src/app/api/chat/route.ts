@@ -53,13 +53,18 @@ export async function POST(request: NextRequest) {
       max_tokens: 2048,
       system: `You are an educational AI assistant that helps students learn by providing clear explanations AND structured concept maps.
 
-When a student asks a question, you MUST respond with BOTH:
+When a student asks a question, you MUST respond with THREE sections:
 1. A clear, educational explanation
-2. A JSON concept map showing key concepts and relationships
+2. Specific search terms for finding relevant educational images
+3. A JSON concept map showing key concepts and relationships
 
 RESPONSE FORMAT (you must follow this exactly):
+
 EXPLANATION:
 [Your clear explanation here - 2-4 paragraphs explaining the concept]
+
+IMAGE_SEARCH_TERMS:
+["term1", "term2", "term3"]
 
 CONCEPT_MAP:
 {
@@ -80,6 +85,16 @@ RULES FOR EXPLANATION:
 - Focus on relationships between concepts
 - Give citations for the information you provide in a separate paragraph at the end
 
+RULES FOR IMAGE_SEARCH_TERMS:
+- Provide 2-4 specific scientific/educational terms
+- Use complete phrases, not single generic words
+- Example: "Krebs cycle diagram" NOT "cycle"
+- Example: "mitochondria structure" NOT "structure"
+- Include scientific synonyms when applicable
+- Example: ["krebs cycle", "citric acid cycle", "TCA cycle"]
+- Avoid ambiguous terms that could match non-educational content
+- Focus on visual, diagram-friendly terms
+
 RULES FOR CONCEPT MAP:
 - Include 6-12 key concepts (not too few, not too many)
 - Use clear, concise labels (2-4 words max)
@@ -93,6 +108,9 @@ EXAMPLE for "What is photosynthesis?":
 
 EXPLANATION:
 Photosynthesis is the process by which plants convert light energy into chemical energy. It occurs in chloroplasts and involves two main stages: the light-dependent reactions and the Calvin cycle. During the light reactions, chlorophyll absorbs sunlight and splits water molecules, producing oxygen and ATP. The Calvin cycle then uses this ATP to convert carbon dioxide into glucose.
+
+IMAGE_SEARCH_TERMS:
+["photosynthesis diagram", "chloroplast structure", "light reactions"]
 
 CONCEPT_MAP:
 {
@@ -118,7 +136,23 @@ CONCEPT_MAP:
   ]
 }
 
-CRITICAL: Always include both EXPLANATION and CONCEPT_MAP sections in your response. The concept map must be valid JSON.`,
+CRITICAL EXAMPLES:
+
+Question: "Explain the Krebs cycle"
+❌ BAD IMAGE_SEARCH_TERMS: ["cycle", "process"]
+✅ GOOD IMAGE_SEARCH_TERMS: ["krebs cycle", "citric acid cycle diagram", "TCA cycle"]
+
+Question: "What is a mitochondria?"
+❌ BAD IMAGE_SEARCH_TERMS: ["cell", "organelle"]  
+✅ GOOD IMAGE_SEARCH_TERMS: ["mitochondria structure", "mitochondria diagram", "cellular respiration"]
+
+Question: "How does DNA replication work?"
+❌ BAD IMAGE_SEARCH_TERMS: ["DNA", "replication"]
+✅ GOOD IMAGE_SEARCH_TERMS: ["DNA replication fork", "DNA polymerase", "semiconservative replication"]
+
+Always use specific, complete scientific terms that would appear in textbooks!
+
+CRITICAL: Always include all three sections (EXPLANATION, IMAGE_SEARCH_TERMS, and CONCEPT_MAP) in your response. The concept map must be valid JSON.`,
       messages
     });
 
@@ -129,15 +163,33 @@ CRITICAL: Always include both EXPLANATION and CONCEPT_MAP sections in your respo
     // Parse the structured response
     let explanation = assistantMessage;
     let conceptMapData = null;
+    let searchTerms: string[] = [];
 
-    // Check if response contains CONCEPT_MAP section
-    if (assistantMessage.includes('CONCEPT_MAP:')) {
-      const parts = assistantMessage.split('CONCEPT_MAP:');
+    // Extract EXPLANATION section
+    if (assistantMessage.includes('EXPLANATION:')) {
+      const parts = assistantMessage.split('IMAGE_SEARCH_TERMS:');
       explanation = parts[0].replace('EXPLANATION:', '').trim();
-      
+    }
+
+    // Extract IMAGE_SEARCH_TERMS section
+    if (assistantMessage.includes('IMAGE_SEARCH_TERMS:')) {
       try {
-        // Extract JSON from the concept map section
-        const jsonMatch = parts[1].match(/\{[\s\S]*\}/);
+        const searchTermsSection = assistantMessage.split('IMAGE_SEARCH_TERMS:')[1].split('CONCEPT_MAP:')[0];
+        const jsonMatch = searchTermsSection.match(/\[(.*?)\]/s);
+        if (jsonMatch) {
+          searchTerms = JSON.parse(`[${jsonMatch[1]}]`);
+          console.log('🔍 Claude provided search terms:', searchTerms);
+        }
+      } catch (error) {
+        console.error('❌ Error parsing search terms:', error);
+      }
+    }
+
+    // Extract CONCEPT_MAP section
+    if (assistantMessage.includes('CONCEPT_MAP:')) {
+      try {
+        const conceptMapSection = assistantMessage.split('CONCEPT_MAP:')[1];
+        const jsonMatch = conceptMapSection.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           conceptMapData = JSON.parse(jsonMatch[0]);
           console.log('✅ Successfully parsed concept map from Claude response');
@@ -147,14 +199,32 @@ CRITICAL: Always include both EXPLANATION and CONCEPT_MAP sections in your respo
       }
     }
 
-    // Fetch relevant images from Wikimedia Commons
+    // Fetch relevant images from Wikimedia Commons using Claude's search terms
     let images = [] as Awaited<ReturnType<typeof searchWikimediaImages>>;
     try {
-      const keywords = extractKeywords(explanation);
-      console.log('🔍 Searching images for keywords:', keywords);
-      if (keywords.length > 0) {
-        images = await searchWikimediaImages(keywords[0], 6);
-        console.log('📸 Found images:', images.length);
+      if (searchTerms.length > 0) {
+        console.log('🔍 Searching Wikimedia with terms:', searchTerms);
+        
+        // Try each search term until we get good results
+        for (const term of searchTerms) {
+          const results = await searchWikimediaImages(term, 6);
+          if (results.length > 0) {
+            images = results;
+            console.log(`📸 Found ${results.length} images for "${term}"`);
+            break;
+          }
+        }
+        
+        if (images.length === 0) {
+          console.log('⚠️ No images found for any search term');
+        }
+      } else {
+        // Fallback: extract keywords locally if Claude didn't provide search terms
+        console.log('⚠️ No search terms from Claude, falling back to keyword extraction');
+        const keywords = extractKeywords(explanation);
+        if (keywords.length > 0) {
+          images = await searchWikimediaImages(keywords[0], 6);
+        }
       }
     } catch (error) {
       console.error('Error fetching images:', error);

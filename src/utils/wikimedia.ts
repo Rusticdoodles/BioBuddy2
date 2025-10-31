@@ -6,15 +6,72 @@ export interface WikimediaImage {
   pageUrl: string;
 }
 
+// Helper function to check if text appears to be primarily in English
+function isEnglishText(text: string): boolean {
+  // Basic heuristics to detect non-English content
+  // This checks for common non-English characters and patterns
+  
+  // Remove file extensions and special characters for analysis
+  const cleanText = text.replace(/\.(png|jpg|jpeg|svg|gif|webp)/i, '').toLowerCase();
+  
+  // Check for common non-English character patterns
+  const nonEnglishPatterns = [
+    // Common non-English characters
+    /[àáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿ]/gi,
+    // Cyrillic
+    /[а-яё]/gi,
+    // Chinese/Japanese/Korean
+    /[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff]/g,
+    // Arabic
+    /[\u0600-\u06ff]/g,
+    // Hebrew
+    /[\u0590-\u05ff]/g,
+    // Thai
+    /[\u0e00-\u0e7f]/g,
+    // Common non-English prefixes/suffixes
+    /^(de_|fr_|es_|it_|pt_|ru_|zh_|ja_|ko_|ar_)/i,
+    /_(de|fr|es|it|pt|ru|zh|ja|ko|ar)$/i,
+    // German umlauts pattern
+    /\w+ä\w+|\w+ö\w+|\w+ü\w+/i,
+    // Accented characters that are less common in English
+    /ß/i
+  ];
+  
+  // Check against patterns
+  for (const pattern of nonEnglishPatterns) {
+    if (pattern.test(text)) {
+      return false;
+    }
+  }
+  
+  // Additional check: if most words are short and contain special characters, likely non-English
+  const words = cleanText.split(/[\s\-_]/).filter(w => w.length > 0);
+  if (words.length > 0) {
+    // Look for latinized versions (e.g., "mitochondrie", "mitocondria" vs "mitochondria")
+    // This is a simplified check - could be enhanced
+    const hasSuspiciousEndings = /(ie|ia|ion|ica)\w*$/.test(cleanText) && 
+                                  !/(tion|sion|cation|ization)$/.test(cleanText); // Common English endings
+    
+    if (hasSuspiciousEndings && !/(diagram|structure|process|mechanism|cycle|pathway)/i.test(cleanText)) {
+      return false;
+    }
+  }
+  
+  return true;
+}
+
 export async function searchWikimediaImages(searchTerm: string, limit: number = 3): Promise<WikimediaImage[]> {
   try {
+    // Search for more results than needed to account for filtering
+    const searchLimit = Math.min(limit * 3, 30);
+    
     const params = new URLSearchParams({
       action: 'query',
       format: 'json',
       generator: 'search',
       gsrsearch: searchTerm,
       gsrnamespace: '6',
-      gsrlimit: limit.toString(),
+      gsrlimit: searchLimit.toString(),
       prop: 'imageinfo',
       iiprop: 'url|extmetadata|size',
       iiurlwidth: '300',
@@ -34,16 +91,37 @@ export async function searchWikimediaImages(searchTerm: string, limit: number = 
       if (page.imageinfo && page.imageinfo[0]) {
         const imageInfo = page.imageinfo[0];
         const metadata = imageInfo.extmetadata || {};
+        const title = page.title.replace('File:', '');
+        const description = metadata.ImageDescription?.value || metadata.ObjectName?.value || '';
+        
+        // Filter out non-English content
+        if (!isEnglishText(title)) {
+          console.log(`🌍 Filtered out non-English image: ${title}`);
+          continue;
+        }
+        
+        // Check description as well if it's provided
+        if (description && !isEnglishText(description.substring(0, 100))) {
+          console.log(`🌍 Filtered out image with non-English description: ${title}`);
+          continue;
+        }
+        
         images.push({
           url: imageInfo.url,
           thumbnailUrl: imageInfo.thumburl || imageInfo.url,
-          title: page.title.replace('File:', ''),
-          description: metadata.ImageDescription?.value || metadata.ObjectName?.value || '',
+          title,
+          description,
           pageUrl: `https://commons.wikimedia.org/wiki/${page.title}`
         });
+        
+        // Stop once we have enough English results
+        if (images.length >= limit) {
+          break;
+        }
       }
     }
 
+    console.log(`✅ Filtered to ${images.length} English images from ${Object.keys(data.query.pages).length} total results`);
     return images;
   } catch (error) {
     console.error('Error fetching Wikimedia images:', error);
