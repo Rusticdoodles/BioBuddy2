@@ -175,7 +175,7 @@ CRITICAL: Always include all three sections (EXPLANATION, IMAGE_SEARCH_TERMS, an
     if (assistantMessage.includes('IMAGE_SEARCH_TERMS:')) {
       try {
         const searchTermsSection = assistantMessage.split('IMAGE_SEARCH_TERMS:')[1].split('CONCEPT_MAP:')[0];
-        const jsonMatch = searchTermsSection.match(/\[(.*?)\]/s);
+        const jsonMatch = searchTermsSection.match(/\[([\s\S]*?)\]/);
         if (jsonMatch) {
           searchTerms = JSON.parse(`[${jsonMatch[1]}]`);
           console.log('🔍 Claude provided search terms:', searchTerms);
@@ -223,7 +223,7 @@ CRITICAL: Always include all three sections (EXPLANATION, IMAGE_SEARCH_TERMS, an
         console.log('⚠️ No search terms from Claude, falling back to keyword extraction');
         const keywords = extractKeywords(explanation);
         if (keywords.length > 0) {
-          images = await searchWikimediaImages(keywords[0], 6);
+          images = await searchWikimediaImages(keywords[0], 3);
         }
       }
     } catch (error) {
@@ -234,6 +234,7 @@ CRITICAL: Always include all three sections (EXPLANATION, IMAGE_SEARCH_TERMS, an
       message: explanation,
       conceptMap: conceptMapData,
       images,
+      searchTerms: searchTerms,
       success: true
     });
 

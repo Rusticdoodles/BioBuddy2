@@ -24,6 +24,7 @@ import { WelcomeModal } from '@/components/WelcomeModal';
 // Import types and utilities
 import { ConceptMapResponse, LoadingState, ChatMessage } from '@/types/concept-map-types';
 import { shouldGenerateConceptMap } from '@/utils/intent-detection';
+import { GoogleImage } from '@/utils/google-images';
 
 const flowKey = 'biobuddy-concept-map-flow';
 const SAVED_MAPS_KEY = 'biobuddy-saved-maps';
@@ -83,6 +84,7 @@ export default function MapPage() {
   const [saveMapName, setSaveMapName] = useState('');
   const [showLoadMenu, setShowLoadMenu] = useState(false);
   const [autoGenerateMap, setAutoGenerateMap] = useState(true);
+  const [loadingBetterImages, setLoadingBetterImages] = useState<number | null>(null);
 
   // ReactFlow state - managed at parent level
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
@@ -526,7 +528,13 @@ export default function MapPage() {
       }
 
       // Add assistant response with images
-      const aiMsg = { role: 'assistant' as const, content: data.message, images: data.images || [] };
+      const aiMsg: ChatMessage = { 
+        role: 'assistant', 
+        content: data.message, 
+        images: data.images || [],
+        imageSource: 'wikimedia',
+        searchTerms: data.searchTerms
+      };
       setChatMessages(prev => [...prev, aiMsg]);
 
       console.log("✅ Chat message processed successfully!");
@@ -628,7 +636,13 @@ export default function MapPage() {
         // Replace the assistant message at messageIndex with images
         setChatMessages(prev => {
           const updated = [...prev];
-          updated[messageIndex] = { role: 'assistant', content: data.message, images: data.images || [] } as ChatMessage;
+          updated[messageIndex] = { 
+            role: 'assistant', 
+            content: data.message, 
+            images: data.images || [],
+            imageSource: 'wikimedia',
+            searchTerms: data.searchTerms
+          } as ChatMessage;
           return updated;
         });
 
@@ -682,6 +696,67 @@ export default function MapPage() {
     
     // Use existing message handler for simplify and detail
     await handleSendChatMessage(refinedPrompt);
+  };
+
+  const handleSearchBetterImages = async (messageIndex: number, searchTerms: string[]) => {
+    console.log('🔵 Find Better Images clicked!', { messageIndex, searchTerms });
+    setLoadingBetterImages(messageIndex);
+    
+    try {
+      let images: GoogleImage[] = [];
+      
+      // Try each search term
+      for (const term of searchTerms) {
+        console.log('🔵 Fetching Google images for term:', term);
+        const response = await fetch('/api/google-images', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ searchTerm: term, limit: 3 }),
+        });
+
+        if (!response.ok) {
+          console.error('Failed to fetch Google images:', response.statusText);
+          continue;
+        }
+
+        const data = await response.json();
+        if (data.images && data.images.length > 0) {
+          images = data.images;
+          console.log(`📸 Found ${data.images.length} Google images for "${term}"`);
+          break;
+        }
+      }
+      
+      if (images.length === 0) {
+        toast.error('No additional images found', {
+          description: 'Try refining your question or topic',
+        });
+        return;
+      }
+      
+      // Update the message with new images
+      setChatMessages(prev => {
+        const updated = [...prev];
+        if (updated[messageIndex]) {
+          updated[messageIndex] = {
+            ...updated[messageIndex],
+            images: images,
+            imageSource: 'google',
+          };
+        }
+        return updated;
+      });
+      
+      toast.success('Updated with Google images!');
+      
+    } catch (error) {
+      console.error('Error searching better images:', error);
+      toast.error('Failed to search additional sources');
+    } finally {
+      setLoadingBetterImages(null);
+    }
   };
 
   const generateConceptMapFromText = useCallback(async (text: string) => {
@@ -1201,6 +1276,8 @@ const onSave = useCallback(() => {
                     onRefineMessage={handleRefineMessage}
                     autoGenerateMap={autoGenerateMap}
                     setAutoGenerateMap={setAutoGenerateMap}
+                    onSearchBetterImages={handleSearchBetterImages}
+                    loadingBetterImages={loadingBetterImages}
                   />
               )}
               </>

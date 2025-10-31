@@ -36,4 +36,6 @@ export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   images?: WikimediaImage[];
+  imageSource?: 'wikimedia' | 'google';
+  searchTerms?: string[];
 }
