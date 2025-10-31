@@ -66,3 +66,6 @@ export function shouldGenerateConceptMap(message: string, chatHistory: ChatMessa
   return false;
 }
 
+
+
+

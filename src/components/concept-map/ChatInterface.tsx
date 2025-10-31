@@ -13,8 +13,6 @@ interface ChatInterfaceProps {
   onClearChat: () => void;
   onToggleChatMode: () => void;
   onRefineMessage: (messageIndex: number, refinementType: 'simplify' | 'detail' | 'regenerate') => void;
-  isRegenerating: boolean;
-  onRegenerateResponse: () => void;
   autoGenerateMap: boolean;
   setAutoGenerateMap: (value: boolean) => void;
 }
@@ -28,8 +26,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   onClearChat,
   onToggleChatMode,
   onRefineMessage,
-  isRegenerating,
-  onRegenerateResponse,
   autoGenerateMap,
   setAutoGenerateMap
 }) => {
@@ -188,6 +184,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                                 className="group relative aspect-square rounded-lg overflow-hidden border border-slate-200 dark:border-slate-600 hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
                                 title={image.title}
                               >
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
                                   src={image.thumbnailUrl}
                                   alt={image.title}

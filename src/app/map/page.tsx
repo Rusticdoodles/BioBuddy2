@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { Navbar } from "@/components/navbar";
-import { addEdge, Connection, Edge, Node, useNodesState, useEdgesState, Position, ReactFlowInstance } from '@xyflow/react';
+import { addEdge, Connection, Edge, Node, useNodesState, useEdgesState, Position, ReactFlowInstance, NodeChange, EdgeChange } from '@xyflow/react';
 import {
   Edit3, 
   ChevronLeft,
@@ -37,6 +37,28 @@ interface SavedMap {
   chatHistory: ChatMessage[];
 }
 
+interface SerializableNode {
+  id: string;
+  type?: string;
+  position: { x: number; y: number };
+  data?: {
+    label?: string;
+    type?: string;
+  };
+}
+
+interface SerializableEdge {
+  id: string;
+  source: string;
+  target: string;
+  type?: string;
+  animated?: boolean;
+  style?: unknown;
+  markerEnd?: unknown;
+  label?: string | React.ReactNode;
+  data?: unknown;
+}
+
 
 
 
@@ -54,7 +76,6 @@ export default function MapPage() {
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [isRestoringFromStorage, setIsRestoringFromStorage] = useState(true);
-  const [isRegenerating, setIsRegenerating] = useState(false);
   const [isRegeneratingMap, setIsRegeneratingMap] = useState(false);
   const lastToastedMapHashRef = useRef<string>('');
   const [savedMaps, setSavedMaps] = useState<SavedMap[]>([]);
@@ -69,8 +90,9 @@ export default function MapPage() {
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
 
   // Undo history: store serializable snapshots (strip function callbacks)
-  const historyRef = useRef<{ nodes: any[]; edges: any[] }[]>([]);
-  const [historyVersion, setHistoryVersion] = useState(0); // trigger re-render when history changes
+  const historyRef = useRef<{ nodes: SerializableNode[]; edges: SerializableEdge[] }[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [historyVersion, setHistoryVersion] = useState(0); // trigger re-render when history changes (setter used, getter unused by design)
   const isProgrammaticChangeRef = useRef(false);
   const nodesRef = useRef<Node[]>(nodes);
   const edgesRef = useRef<Edge[]>(edges);
@@ -81,15 +103,24 @@ export default function MapPage() {
   const getStorableSnapshot = useCallback(() => {
     const currentNodes = nodesRef.current;
     const currentEdges = edgesRef.current;
-    const storableNodes: any[] = currentNodes.map((n) => ({
-      ...n,
+    const storableNodes: SerializableNode[] = currentNodes.map((n) => ({
+      id: n.id,
+      type: n.type,
+      position: n.position,
       data: {
-        label: (n.data as any)?.label ?? '',
-        type: (n.data as any)?.type,
+        label: (n.data as { label?: string; type?: string })?.label ?? '',
+        type: (n.data as { label?: string; type?: string })?.type,
       },
     }));
-    const storableEdges: any[] = currentEdges.map((e) => ({
-      ...e,
+    const storableEdges: SerializableEdge[] = currentEdges.map((e) => ({
+      id: e.id,
+      source: e.source,
+      target: e.target,
+      type: e.type,
+      animated: e.animated,
+      style: e.style,
+      markerEnd: e.markerEnd,
+      label: e.label,
       data: undefined,
     }));
     return { nodes: storableNodes, edges: storableEdges };
@@ -101,8 +132,6 @@ export default function MapPage() {
     historyRef.current.push(snapshot);
     setHistoryVersion((v) => v + 1);
   }, [getStorableSnapshot]);
-
-  const canUndo = historyRef.current.length > 0;
 
   // restoreFromSnapshot and handleUndo are defined after mutation handlers
 
@@ -256,8 +285,8 @@ export default function MapPage() {
   };
 
   // Reconstruct nodes/edges from a stored snapshot by reattaching callbacks
-  const restoreFromSnapshot = useCallback((snapshot: { nodes: any[]; edges: any[] }) => {
-    const reconstructedNodes: Node[] = snapshot.nodes.map((node: any) => ({
+  const restoreFromSnapshot = useCallback((snapshot: { nodes: SerializableNode[]; edges: SerializableEdge[] }) => {
+    const reconstructedNodes: Node[] = snapshot.nodes.map((node: SerializableNode) => ({
       ...node,
       data: {
         ...(node.data || {}),
@@ -265,7 +294,7 @@ export default function MapPage() {
         onDeleteNode: handleDeleteNode,
       },
     }));
-    const reconstructedEdges: Edge[] = snapshot.edges.map((edge: any) => ({
+    const reconstructedEdges: Edge[] = snapshot.edges.map((edge: SerializableEdge) => ({
       ...edge,
       data: {
         onUpdateEdge: handleUpdateEdge,
@@ -335,7 +364,7 @@ export default function MapPage() {
     }
 
     // Reconstruct nodes with callbacks
-    const reconstructedNodes = mapToLoad.nodes.map((node: any) => ({
+    const reconstructedNodes = mapToLoad.nodes.map((node: Node) => ({
       ...node,
       data: {
         ...node.data,
@@ -345,7 +374,7 @@ export default function MapPage() {
     }));
 
     // Reconstruct edges with callbacks
-    const reconstructedEdges = mapToLoad.edges.map((edge: any) => ({
+    const reconstructedEdges = mapToLoad.edges.map((edge: Edge) => ({
       ...edge,
       data: {
         ...edge.data,
@@ -475,7 +504,7 @@ export default function MapPage() {
         try {
           const errorData = await response.json();
           errorMessage = errorData.error || errorData.details || errorMessage;
-        } catch (e) {
+        } catch {
           // If JSON parsing fails, try text (but don't fail if that fails too)
           try {
             const errorText = await response.text();
@@ -547,25 +576,6 @@ export default function MapPage() {
     }
   };
 
-  const handleRegenerateResponse = async () => {
-    // Find the last assistant message index
-    let lastAssistantIndex = -1;
-    for (let i = chatMessages.length - 1; i >= 0; i--) {
-      if (chatMessages[i].role === 'assistant') {
-        lastAssistantIndex = i;
-        break;
-      }
-    }
-    
-    if (lastAssistantIndex === -1) {
-      toast.error('No response to regenerate');
-      return;
-    }
-    
-    // Call handleRefineMessage with regenerate type
-    await handleRefineMessage(lastAssistantIndex, 'regenerate');
-  };
-
   const handleRefineMessage = async (messageIndex: number, refinementType: 'simplify' | 'detail' | 'regenerate') => {
     // Get the original user question (AI responses are at odd indices, so user message is index - 1)
     const originalQuestion = chatMessages[messageIndex - 1]?.content;
@@ -578,7 +588,6 @@ export default function MapPage() {
     // For regenerate, replace the existing response instead of adding new messages
     if (refinementType === 'regenerate') {
       console.log('🔄 Regenerating response');
-      setIsRegenerating(true);
       setIsChatLoading(true);
       
       try {
@@ -600,7 +609,7 @@ export default function MapPage() {
           try {
             const errorData = await response.json();
             errorMessage = errorData.error || errorData.details || errorMessage;
-          } catch (e) {
+          } catch {
             // If JSON parsing fails, try text (but don't fail if that fails too)
             try {
               const errorText = await response.text();
@@ -619,7 +628,7 @@ export default function MapPage() {
         // Replace the assistant message at messageIndex with images
         setChatMessages(prev => {
           const updated = [...prev];
-          updated[messageIndex] = { role: 'assistant', content: data.message, images: data.images || [] } as any;
+          updated[messageIndex] = { role: 'assistant', content: data.message, images: data.images || [] } as ChatMessage;
           return updated;
         });
 
@@ -655,7 +664,6 @@ export default function MapPage() {
           duration: 5000,
         });
       } finally {
-        setIsRegenerating(false);
         setIsChatLoading(false);
       }
       
@@ -676,7 +684,7 @@ export default function MapPage() {
     await handleSendChatMessage(refinedPrompt);
   };
 
-  const generateConceptMapFromText = async (text: string) => {
+  const generateConceptMapFromText = useCallback(async (text: string) => {
     console.log("🚀 Generating concept map from text");
     console.log("📝 Text length:", text.length);
 
@@ -706,7 +714,7 @@ export default function MapPage() {
         try {
           const errorData = await response.json();
           errorMessage = errorData.error || errorData.details || errorMessage;
-        } catch (e) {
+        } catch {
           // If JSON parsing fails, try text (but don't fail if that fails too)
           try {
             const errorText = await response.text();
@@ -757,9 +765,9 @@ export default function MapPage() {
         duration: 5000,
       });
     }
-  };
+  }, [inputText]);
 
-  const handleRegenerateMindmap = async () => {
+  const handleRegenerateMindmap = useCallback(async () => {
     // Find the last assistant message
     let lastAssistantMessage = '';
     for (let i = chatMessages.length - 1; i >= 0; i--) {
@@ -797,7 +805,7 @@ export default function MapPage() {
     } finally {
       setIsRegeneratingMap(false);
     }
-  };
+  }, [chatMessages, generateConceptMapFromText]);
 
   // Show toast notification when a NEW mindmap is generated
   useEffect(() => {
@@ -1039,28 +1047,28 @@ const onSave = useCallback(() => {
   }, [nodes, edges, rfInstance, onSave]);
 
   // Wrap change handlers to record history before ReactFlow applies them
-  const wrappedOnNodesChange = useCallback((changes: any) => {
+  const wrappedOnNodesChange = useCallback((changes: NodeChange[]) => {
     if (!isProgrammaticChangeRef.current) {
       pushHistory();
     }
-    onNodesChange(changes as any);
+    onNodesChange(changes);
   }, [onNodesChange, pushHistory]);
 
-  const wrappedOnEdgesChange = useCallback((changes: any) => {
+  const wrappedOnEdgesChange = useCallback((changes: EdgeChange[]) => {
     if (!isProgrammaticChangeRef.current) {
       pushHistory();
     }
-    onEdgesChange(changes as any);
+    onEdgesChange(changes);
   }, [onEdgesChange, pushHistory]);
 
   // Programmatic setters passed to child to avoid history loops
-  const setNodesProgrammatic = useCallback((updater: any) => {
+  const setNodesProgrammatic = useCallback((updater: React.SetStateAction<Node[]>) => {
     isProgrammaticChangeRef.current = true;
     setNodes(updater);
     setTimeout(() => { isProgrammaticChangeRef.current = false; }, 0);
   }, [setNodes]);
 
-  const setEdgesProgrammatic = useCallback((updater: any) => {
+  const setEdgesProgrammatic = useCallback((updater: React.SetStateAction<Edge[]>) => {
     isProgrammaticChangeRef.current = true;
     setEdges(updater);
     setTimeout(() => { isProgrammaticChangeRef.current = false; }, 0);
@@ -1071,7 +1079,7 @@ const onSave = useCallback(() => {
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       const tag = target?.tagName?.toLowerCase();
-      const isEditable = (target as any)?.isContentEditable;
+      const isEditable = (target as HTMLElement)?.isContentEditable ?? false;
       if (tag === 'input' || tag === 'textarea' || isEditable) return; // don't hijack text input undo
       if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
         e.preventDefault();
@@ -1191,8 +1199,6 @@ const onSave = useCallback(() => {
                     onClearChat={handleClearChat}
                     onToggleChatMode={() => setIsChatMode(!isChatMode)}
                     onRefineMessage={handleRefineMessage}
-                    isRegenerating={isRegenerating}
-                    onRegenerateResponse={handleRegenerateResponse}
                     autoGenerateMap={autoGenerateMap}
                     setAutoGenerateMap={setAutoGenerateMap}
                   />

@@ -142,7 +142,7 @@ export const EditableEdge: React.FC<EditableEdgeProps> = ({
                 className="cursor-pointer"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
-                    // @ts-ignore - reusing handler
+                    // @ts-expect-error - reusing handler from MouseEvent
                     handleDelete(e);
                   }
                 }}
