@@ -735,6 +735,18 @@ export default function MapPage() {
         throw new Error('Invalid response format from chat API');
       }
 
+      // Final client-side sanitization
+      let sanitizedMessage = data.message;
+
+      // Remove any section headers that might have slipped through
+      if (sanitizedMessage.includes('IMAGE_SEARCH_TERMS:') || sanitizedMessage.includes('CONCEPT_MAP:')) {
+        console.warn('⚠️ Client-side sanitization needed');
+        sanitizedMessage = sanitizedMessage
+          .split('IMAGE_SEARCH_TERMS:')[0]
+          .split('CONCEPT_MAP:')[0]
+          .trim();
+      }
+
       // Add assistant response with images
       setTopicChats(prev => prev.map(topic =>
         topic.id === activeTopicId
@@ -742,7 +754,7 @@ export default function MapPage() {
               ...topic, 
               messages: [...topic.messages, { 
                 role: 'assistant', 
-                content: data.message, 
+                content: sanitizedMessage,
                 images: data.images || [],
                 imageSource: 'wikimedia',
                 searchTerms: data.searchTerms,

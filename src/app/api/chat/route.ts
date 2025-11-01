@@ -14,6 +14,20 @@ const getAnthropicClient = () => {
   return new Anthropic({ apiKey });
 };
 
+// Sanitize response to remove any remaining structured output markers
+function sanitizeExplanation(text: string): string {
+  return text
+    // Remove section headers
+    .replace(/^EXPLANATION:\s*/i, '')
+    .replace(/IMAGE_SEARCH_TERMS:\s*\[.*?\]/gi, '')
+    .replace(/CONCEPT_MAP:\s*\{[\s\S]*$/i, '')
+    // Remove stray brackets that might be JSON fragments
+    .replace(/\n\s*[\[\{][\s\S]*$/g, '')
+    // Clean up extra whitespace
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 export async function POST(request: NextRequest) {
   try {
     console.log('🔑 Checking API key...', process.env.ANTHROPIC_API_KEY ? 'Found' : 'MISSING');
@@ -60,7 +74,11 @@ export async function POST(request: NextRequest) {
 
     // Create system prompt conditionally based on intent detection
     const systemPrompt = shouldGenerateMap
-      ? `You are an educational AI assistant that helps students learn by providing clear explanations AND structured concept maps.
+      ? `CRITICAL FORMATTING RULE:
+You MUST separate each section with EXACTLY one blank line, and the JSON must be properly formatted.
+The user should NEVER see the section headers (EXPLANATION, IMAGE_SEARCH_TERMS, CONCEPT_MAP) - they are only for parsing.
+
+You are an educational AI assistant that helps students learn by providing clear explanations AND structured concept maps.
 
 When a student asks a question, you MUST respond with THREE sections:
 1. A clear, educational explanation
@@ -85,6 +103,8 @@ CONCEPT_MAP:
     {"source": "1", "target": "2", "label": "produces"}
   ]
 }
+
+CRITICAL: Do NOT include any text after the CONCEPT_MAP JSON. End your response immediately after the closing brace.
 
 RULES FOR EXPLANATION:
 - Clear and concise (2-4 paragraphs)
@@ -159,10 +179,12 @@ Question: "How does DNA replication work?"
 ❌ BAD IMAGE_SEARCH_TERMS: ["DNA", "replication"]
 ✅ GOOD IMAGE_SEARCH_TERMS: ["DNA replication fork", "DNA polymerase", "semiconservative replication"]
 
-Always use specific, complete scientific terms that would appear in textbooks!
+Always use specific, complete scientific terms that would appear in textbooks!`
+      : `CRITICAL FORMATTING RULE:
+You MUST separate each section with EXACTLY one blank line, and the JSON must be properly formatted.
+The user should NEVER see the section headers (EXPLANATION, IMAGE_SEARCH_TERMS) - they are only for parsing.
 
-CRITICAL: Always include all three sections (EXPLANATION, IMAGE_SEARCH_TERMS, and CONCEPT_MAP) in your response. The concept map must be valid JSON.`
-      : `You are an educational AI assistant that helps students learn by providing clear explanations.
+You are an educational AI assistant that helps students learn by providing clear explanations.
 
 When a student asks a question (especially follow-up or clarification questions), you should respond with TWO sections:
 1. A clear, educational explanation
@@ -175,6 +197,8 @@ EXPLANATION:
 
 IMAGE_SEARCH_TERMS:
 ["term1", "term2", "term3"]
+
+CRITICAL: Do NOT include any text after the IMAGE_SEARCH_TERMS JSON. End your response immediately after the closing bracket.
 
 RULES FOR EXPLANATION:
 - Clear and concise (2-4 paragraphs)
@@ -208,47 +232,74 @@ CRITICAL: Always include both sections (EXPLANATION and IMAGE_SEARCH_TERMS) in y
 
     console.log('✅ Claude API response received');
 
-    // Parse the structured response
-    let explanation = assistantMessage;
+    // Parse the structured response with robust error handling
+    let explanation = '';
     let conceptMapData = null;
     let searchTerms: string[] = [];
 
-    // Extract EXPLANATION section
-    if (assistantMessage.includes('EXPLANATION:')) {
-      const parts = assistantMessage.split('IMAGE_SEARCH_TERMS:');
-      explanation = parts[0].replace('EXPLANATION:', '').trim();
-    }
+    try {
+      // Extract EXPLANATION section (everything before IMAGE_SEARCH_TERMS or CONCEPT_MAP)
+      const explanationMatch = assistantMessage.match(/EXPLANATION:\s*([\s\S]*?)(?=IMAGE_SEARCH_TERMS:|CONCEPT_MAP:|$)/i);
+      if (explanationMatch) {
+        explanation = explanationMatch[1].trim();
+      } else {
+        // Fallback: try to get text before first section header
+        const firstSectionMatch = assistantMessage.match(/([\s\S]*?)(?=IMAGE_SEARCH_TERMS:|CONCEPT_MAP:|$)/);
+        explanation = firstSectionMatch ? firstSectionMatch[1].trim() : assistantMessage;
+      }
 
-    // Extract IMAGE_SEARCH_TERMS section
-    if (assistantMessage.includes('IMAGE_SEARCH_TERMS:')) {
-      try {
-        const searchTermsSection = shouldGenerateMap && assistantMessage.includes('CONCEPT_MAP:')
-          ? assistantMessage.split('IMAGE_SEARCH_TERMS:')[1].split('CONCEPT_MAP:')[0]
-          : assistantMessage.split('IMAGE_SEARCH_TERMS:')[1];
-        const jsonMatch = searchTermsSection.match(/\[([\s\S]*?)\]/);
-        if (jsonMatch) {
-          searchTerms = JSON.parse(`[${jsonMatch[1]}]`);
+      // Extract IMAGE_SEARCH_TERMS section
+      const searchTermsMatch = assistantMessage.match(/IMAGE_SEARCH_TERMS:\s*(\[[\s\S]*?\])/i);
+      if (searchTermsMatch) {
+        try {
+          searchTerms = JSON.parse(searchTermsMatch[1]);
           console.log('🔍 Claude provided search terms:', searchTerms);
+        } catch (error) {
+          console.error('Error parsing search terms JSON:', error);
         }
-      } catch (error) {
-        console.error('❌ Error parsing search terms:', error);
       }
-    }
 
-    // Extract CONCEPT_MAP section (only if we should generate a map)
-    if (shouldGenerateMap && assistantMessage.includes('CONCEPT_MAP:')) {
-      try {
-        const conceptMapSection = assistantMessage.split('CONCEPT_MAP:')[1];
-        const jsonMatch = conceptMapSection.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          conceptMapData = JSON.parse(jsonMatch[0]);
-          console.log('✅ Successfully parsed concept map from Claude response');
+      // Extract CONCEPT_MAP section (only if we should generate a map)
+      if (shouldGenerateMap) {
+        const conceptMapMatch = assistantMessage.match(/CONCEPT_MAP:\s*(\{[\s\S]*?\})\s*$/i);
+        if (conceptMapMatch) {
+          try {
+            conceptMapData = JSON.parse(conceptMapMatch[1]);
+            console.log('📊 Claude provided concept map');
+          } catch (error) {
+            console.error('Error parsing concept map JSON:', error);
+          }
+        } else {
+          console.log('⚠️ Expected concept map but not found in Claude response');
         }
-      } catch (error) {
-        console.error('❌ Error parsing concept map JSON:', error);
       }
-    } else if (shouldGenerateMap && !assistantMessage.includes('CONCEPT_MAP:')) {
-      console.log('⚠️ Expected concept map but not found in Claude response');
+
+      // Clean up explanation: remove any remaining section headers that slipped through
+      explanation = explanation
+        .replace(/^EXPLANATION:\s*/i, '')
+        .replace(/IMAGE_SEARCH_TERMS:[\s\S]*$/i, '')
+        .replace(/CONCEPT_MAP:[\s\S]*$/i, '')
+        .trim();
+
+      // Final safety check: if explanation is empty or looks like JSON, use original message
+      if (!explanation || explanation.startsWith('{') || explanation.startsWith('[')) {
+        console.warn('⚠️ Parsing may have failed, using original message');
+        explanation = assistantMessage
+          .replace(/IMAGE_SEARCH_TERMS:[\s\S]*/i, '')
+          .replace(/CONCEPT_MAP:[\s\S]*/i, '')
+          .trim();
+      }
+
+      console.log('✅ Parsed explanation length:', explanation.length);
+
+    } catch (error) {
+      console.error('Error parsing Claude response:', error);
+      // Fallback: strip out obvious section headers and use what's left
+      explanation = assistantMessage
+        .replace(/EXPLANATION:/gi, '')
+        .replace(/IMAGE_SEARCH_TERMS:[\s\S]*/gi, '')
+        .replace(/CONCEPT_MAP:[\s\S]*/gi, '')
+        .trim();
     }
 
     // Fetch relevant images from Wikimedia Commons using Claude's search terms
@@ -280,6 +331,34 @@ CRITICAL: Always include both sections (EXPLANATION and IMAGE_SEARCH_TERMS) in y
       }
     } catch (error) {
       console.error('Error fetching images:', error);
+    }
+
+    // Sanitize the explanation one more time before returning
+    explanation = sanitizeExplanation(explanation);
+
+    // Final validation: explanation should be at least 50 characters
+    if (explanation.length < 50) {
+      console.error('⚠️ Explanation too short after parsing, using fallback');
+      explanation = assistantMessage.split(/IMAGE_SEARCH_TERMS:|CONCEPT_MAP:/i)[0].trim();
+      explanation = sanitizeExplanation(explanation);
+    }
+
+    // Debug logging
+    console.log('📝 Response breakdown:');
+    console.log('- Explanation length:', explanation.length);
+    console.log('- Search terms count:', searchTerms.length);
+    console.log('- Has concept map:', !!conceptMapData);
+    console.log('- First 100 chars:', explanation.substring(0, 100));
+
+    // Check if explanation contains any section headers (shouldn't happen)
+    if (/IMAGE_SEARCH_TERMS:|CONCEPT_MAP:/i.test(explanation)) {
+      console.error('❌ ERROR: Explanation still contains section headers!');
+      console.error('Explanation:', explanation);
+      // Last resort: strip headers again
+      explanation = explanation
+        .replace(/IMAGE_SEARCH_TERMS:[\s\S]*/i, '')
+        .replace(/CONCEPT_MAP:[\s\S]*/i, '')
+        .trim();
     }
 
     return NextResponse.json({ 
