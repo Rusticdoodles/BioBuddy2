@@ -23,7 +23,7 @@ import { WelcomeModal } from '@/components/WelcomeModal';
 
 // Import types and utilities
 import { ConceptMapResponse, LoadingState, ChatMessage, TopicChat } from '@/types/concept-map-types';
-import { shouldGenerateConceptMap } from '@/utils/intent-detection';
+import { shouldGenerateConceptMap, wantsToUpdateMap } from '@/utils/intent-detection';
 import { GoogleImage } from '@/utils/google-images';
 import { getLayoutedElements } from '@/utils/layout';
 
@@ -659,12 +659,29 @@ export default function MapPage() {
   const handleSendChatMessage = async (userMessage: string) => {
     if (!userMessage.trim()) return;
 
+    const userMessage_trimmed = userMessage.trim();
+
+    // PHASE 3a: Detect update map intent (logging only, no action yet)
+    if (wantsToUpdateMap(userMessage_trimmed)) {
+      console.log('🎯 DETECTED: User wants to update map');
+      console.log('   Message:', userMessage_trimmed);
+      console.log('   Current topic:', activeTopic?.name);
+      console.log('   Current nodes:', activeTopic?.nodes.length);
+      // TODO Phase 3b: Call /api/update-map endpoint
+      // TODO Phase 3c: Show confirmation modal
+      // TODO Phase 3d: Merge new nodes with existing map
+      // For now, just continue with normal response
+    } else {
+      console.log('📝 Regular message (not a map update request)');
+    }
+
     // Prepare user message (but don't add to state yet)
-    const userMsg = { role: 'user' as const, content: userMessage.trim() };
+    const userMsg = { role: 'user' as const, content: userMessage_trimmed };
     const updatedChatMessages = [...chatMessages, userMsg];
     
     // Decide whether to generate concept map based on intent (early check)
-    const shouldGenerate = autoGenerateMap && shouldGenerateConceptMap(userMessage, updatedChatMessages);
+    // Pass chatMessages (not updatedChatMessages) to check if this is the first message in the topic
+    const shouldGenerate = autoGenerateMap && shouldGenerateConceptMap(userMessage_trimmed, chatMessages);
 
     // Check if there's an unsaved map ONLY if we're going to generate a new map
     if (shouldGenerate && nodes.length > 0 && !savedMaps.some(m => 
@@ -693,7 +710,7 @@ export default function MapPage() {
     setIsChatLoading(true);
 
     try {
-      console.log("🤖 Sending chat message to AI:", userMessage);
+      console.log("🤖 Sending chat message to AI:", userMessage_trimmed);
 
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -701,7 +718,7 @@ export default function MapPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: userMessage.trim(),
+          message: userMessage_trimmed,
           conversationHistory: updatedChatMessages
         })
       });
