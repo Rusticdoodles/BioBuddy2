@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { Navbar } from "@/components/navbar";
 import { addEdge, Connection, Edge, Node, useNodesState, useEdgesState, Position, ReactFlowInstance, NodeChange, EdgeChange } from '@xyflow/react';
 import {
@@ -22,12 +22,15 @@ import { SaveMapDialog } from '@/components/concept-map/SaveMapDialog';
 import { WelcomeModal } from '@/components/WelcomeModal';
 
 // Import types and utilities
-import { ConceptMapResponse, LoadingState, ChatMessage } from '@/types/concept-map-types';
+import { ConceptMapResponse, LoadingState, ChatMessage, TopicChat } from '@/types/concept-map-types';
 import { shouldGenerateConceptMap } from '@/utils/intent-detection';
 import { GoogleImage } from '@/utils/google-images';
+import { getLayoutedElements } from '@/utils/layout';
 
 const flowKey = 'biobuddy-concept-map-flow';
 const SAVED_MAPS_KEY = 'biobuddy-saved-maps';
+const TOPIC_CHATS_KEY = 'biobuddy-topic-chats';
+const ACTIVE_TOPIC_KEY = 'biobuddy-active-topic';
 
 interface SavedMap {
   id: string;
@@ -66,12 +69,9 @@ interface SerializableEdge {
 
 export default function MapPage() {
   const [inputText, setInputText] = useState("");
-  const [loadingState, setLoadingState] = useState<LoadingState>('idle');
-  const [conceptMapData, setConceptMapData] = useState<ConceptMapResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [isLeftPanelCollapsed, setIsLeftPanelCollapsed] = useState(false);
   const [showSuccessBanner, setShowSuccessBanner] = useState(true);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [isChatMode, setIsChatMode] = useState(true);
   const [isChatLoading, setIsChatLoading] = useState(false);
@@ -86,9 +86,20 @@ export default function MapPage() {
   const [autoGenerateMap, setAutoGenerateMap] = useState(true);
   const [loadingBetterImages, setLoadingBetterImages] = useState<number | null>(null);
 
-  // ReactFlow state - managed at parent level
+  // Topic-based chat system
+  const [topicChats, setTopicChats] = useState<TopicChat[]>([]);
+  const [activeTopicId, setActiveTopicId] = useState<string | null>(null);
+
+  // Derived state for active topic
+  const activeTopic = useMemo(() => 
+    topicChats.find(t => t.id === activeTopicId), 
+    [topicChats, activeTopicId]
+  );
+  const chatMessages = useMemo(() => activeTopic?.messages || [], [activeTopic?.messages]);
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+  const conceptMapData = activeTopic?.conceptMapData || null;
+  const loadingState = activeTopic?.loadingState || 'idle';
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
 
   // Undo history: store serializable snapshots (strip function callbacks)
@@ -98,6 +109,8 @@ export default function MapPage() {
   const isProgrammaticChangeRef = useRef(false);
   const nodesRef = useRef<Node[]>(nodes);
   const edgesRef = useRef<Edge[]>(edges);
+  const prevActiveTopicIdRef = useRef<string | null>(null);
+  const processedConceptMapRef = useRef<string | null>(null);
 
   useEffect(() => { nodesRef.current = nodes; }, [nodes]);
   useEffect(() => { edgesRef.current = edges; }, [edges]);
@@ -165,25 +178,71 @@ export default function MapPage() {
     }
   }, []);
 
-  // Load chat history from localStorage on mount
+  // Load topic chats from localStorage on mount
   useEffect(() => {
-    const savedMessages = localStorage.getItem('chatHistory');
-    if (savedMessages) {
-      try {
-        const parsed = JSON.parse(savedMessages);
-        setChatMessages(parsed);
-      } catch (error) {
-        console.error('Failed to load chat history:', error);
+    try {
+      const savedTopics = localStorage.getItem(TOPIC_CHATS_KEY);
+      const savedActiveId = localStorage.getItem(ACTIVE_TOPIC_KEY);
+      
+      if (savedTopics) {
+        const topics: TopicChat[] = JSON.parse(savedTopics);
+        setTopicChats(topics);
+        
+        // Set active topic (either saved one, or first one, or null)
+        if (savedActiveId && topics.find(t => t.id === savedActiveId)) {
+          setActiveTopicId(savedActiveId);
+        } else if (topics.length > 0) {
+          setActiveTopicId(topics[0].id);
+        }
+        
+        console.log('📚 Loaded', topics.length, 'topic chats from localStorage');
       }
+    } catch (error) {
+      console.error('Error loading topic chats:', error);
     }
   }, []);
 
-  // Save chat history to localStorage whenever it changes
+  // Auto-save topic chats to localStorage
   useEffect(() => {
-    if (chatMessages.length > 0) {
-      localStorage.setItem('chatHistory', JSON.stringify(chatMessages));
+    if (topicChats.length > 0) {
+      try {
+        localStorage.setItem(TOPIC_CHATS_KEY, JSON.stringify(topicChats));
+        if (activeTopicId) {
+          localStorage.setItem(ACTIVE_TOPIC_KEY, activeTopicId);
+        }
+      } catch (error) {
+        console.error('Error saving topic chats:', error);
+      }
     }
-  }, [chatMessages]);
+  }, [topicChats, activeTopicId]);
+
+  // Sync nodes and edges when active topic ID changes
+  useEffect(() => {
+    // Only sync when the active topic ID changes, not when the topic object changes
+    if (activeTopicId !== prevActiveTopicIdRef.current) {
+      const topic = topicChats.find(t => t.id === activeTopicId);
+      if (topic) {
+        setNodes(topic.nodes || []);
+        setEdges(topic.edges || []);
+      } else {
+        setNodes([]);
+        setEdges([]);
+      }
+      prevActiveTopicIdRef.current = activeTopicId;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTopicId, setNodes, setEdges]);
+
+  // Update active topic when nodes or edges change
+  useEffect(() => {
+    if (activeTopicId) {
+      setTopicChats(prev => prev.map(topic => 
+        topic.id === activeTopicId
+          ? { ...topic, nodes, edges, updatedAt: new Date().toISOString() }
+          : topic
+      ));
+    }
+  }, [nodes, edges, activeTopicId]);
 
   // Check if user has seen onboarding
   useEffect(() => {
@@ -316,6 +375,76 @@ export default function MapPage() {
     setHistoryVersion((v) => v + 1);
   }, [restoreFromSnapshot]);
 
+  // Convert conceptMapData to ReactFlow nodes/edges when it changes
+  useEffect(() => {
+    if (!conceptMapData || !conceptMapData.nodes || !conceptMapData.edges) {
+      return;
+    }
+
+    // Create a hash of the conceptMapData to avoid processing the same data twice
+    const conceptMapHash = `${conceptMapData.nodes.length}-${conceptMapData.edges.length}-${activeTopicId}`;
+    if (processedConceptMapRef.current === conceptMapHash) {
+      return;
+    }
+
+    console.log('🔄 Converting conceptMapData to ReactFlow format...');
+    
+    // Convert to ReactFlow format
+    const reactFlowNodes: Node[] = conceptMapData.nodes.map((node) => ({
+      id: node.id,
+      type: 'conceptNode',
+      position: { x: 0, y: 0 },
+      data: {
+        label: node.label,
+        type: node.type,
+        onUpdateNode: handleUpdateNode,
+        onDeleteNode: handleDeleteNode,
+      },
+    }));
+
+    const reactFlowEdges: Edge[] = conceptMapData.edges.map((edge, index) => ({
+      id: `edge-${edge.source}-${edge.target}-${index}`,
+      source: edge.source,
+      target: edge.target,
+      label: edge.label,
+      type: 'editableEdge',
+      animated: true,
+      style: { 
+        stroke: '#64748b', 
+        strokeWidth: 2,
+      },
+      markerEnd: {
+        type: 'arrowclosed',
+        color: '#64748b',
+      },
+      data: {
+        onUpdateEdge: handleUpdateEdge,
+        onDeleteEdge: handleDeleteEdge,
+      },
+    }));
+
+    // Apply layout
+    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+      reactFlowNodes,
+      reactFlowEdges
+    );
+
+    console.log('✅ Layout complete, setting nodes/edges');
+    
+    // Update nodes and edges
+    isProgrammaticChangeRef.current = true;
+    setNodes(layoutedNodes);
+    setEdges(layoutedEdges);
+    setTimeout(() => { isProgrammaticChangeRef.current = false; }, 0);
+    
+    processedConceptMapRef.current = conceptMapHash;
+  }, [conceptMapData, activeTopicId, handleUpdateNode, handleDeleteNode, handleUpdateEdge, handleDeleteEdge, setNodes, setEdges]);
+
+  // Reset processed conceptMap ref when switching topics
+  useEffect(() => {
+    processedConceptMapRef.current = null;
+  }, [activeTopicId]);
+
   const handleSaveMap = useCallback((name: string) => {
     if (!name.trim()) {
       toast.error('Please enter a name for the map');
@@ -385,10 +514,21 @@ export default function MapPage() {
       }
     }));
 
-    setNodes(reconstructedNodes);
-    setEdges(reconstructedEdges);
-    setChatMessages(mapToLoad.chatHistory || []);
-    setLoadingState('success');
+    // Update active topic with loaded map data
+    if (activeTopicId) {
+      setTopicChats(prev => prev.map(topic =>
+        topic.id === activeTopicId
+          ? {
+              ...topic,
+              nodes: reconstructedNodes,
+              edges: reconstructedEdges,
+              messages: mapToLoad.chatHistory || [],
+              loadingState: 'success' as LoadingState,
+              updatedAt: new Date().toISOString()
+            }
+          : topic
+      ));
+    }
     setShowLoadMenu(false);
 
     toast.success('Map loaded!', {
@@ -396,7 +536,7 @@ export default function MapPage() {
     });
 
     console.log('📂 Loaded map:', mapToLoad.name);
-  }, [savedMaps, handleUpdateNode, handleDeleteNode, handleUpdateEdge, handleDeleteEdge, setNodes, setEdges, setChatMessages]);
+  }, [savedMaps, handleUpdateNode, handleDeleteNode, handleUpdateEdge, handleDeleteEdge, activeTopicId]);
 
   const handleDeleteMap = useCallback((mapId: string) => {
     const mapToDelete = savedMaps.find(m => m.id === mapId);
@@ -418,12 +558,76 @@ export default function MapPage() {
     }
   }, [savedMaps]);
 
+  // Topic management functions
+  const handleCreateTopic = useCallback((name: string) => {
+    const newTopic: TopicChat = {
+      id: `topic-${Date.now()}`,
+      name: name.trim() || 'New Topic',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      messages: [],
+      nodes: [],
+      edges: [],
+      conceptMapData: null,
+      loadingState: 'idle',
+    };
+    
+    setTopicChats(prev => [...prev, newTopic]);
+    setActiveTopicId(newTopic.id);
+    
+    toast.success('New topic created!', {
+      description: `Created "${newTopic.name}"`,
+    });
+    
+    console.log('📝 Created new topic:', newTopic.name);
+  }, []);
+
+  const handleSwitchTopic = useCallback((topicId: string) => {
+    setActiveTopicId(topicId);
+    const topic = topicChats.find(t => t.id === topicId);
+    if (topic) {
+      console.log('🔄 Switched to topic:', topic.name);
+    }
+  }, [topicChats]);
+
+  const handleDeleteTopic = useCallback((topicId: string) => {
+    const topic = topicChats.find(t => t.id === topicId);
+    if (!topic) return;
+    
+    setTopicChats(prev => prev.filter(t => t.id !== topicId));
+    
+    // If deleting active topic, switch to another
+    if (activeTopicId === topicId) {
+      const remaining = topicChats.filter(t => t.id !== topicId);
+      setActiveTopicId(remaining.length > 0 ? remaining[0].id : null);
+    }
+    
+    toast.success('Topic deleted', {
+      description: `Deleted "${topic.name}"`,
+    });
+    
+    console.log('🗑️ Deleted topic:', topic.name);
+  }, [topicChats, activeTopicId]);
+
+  const handleRenameTopic = useCallback((topicId: string, newName: string) => {
+    setTopicChats(prev => prev.map(topic =>
+      topic.id === topicId
+        ? { ...topic, name: newName.trim(), updatedAt: new Date().toISOString() }
+        : topic
+    ));
+    
+    toast.success('Topic renamed');
+  }, []);
+
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputText(e.target.value);
     // Reset states when user changes input
-    if (loadingState !== 'idle') {
-      setLoadingState('idle');
-      setConceptMapData(null);
+    if (loadingState !== 'idle' && activeTopicId) {
+      setTopicChats(prev => prev.map(topic =>
+        topic.id === activeTopicId
+          ? { ...topic, loadingState: 'idle' as LoadingState, conceptMapData: null, updatedAt: new Date().toISOString() }
+          : topic
+      ));
       setErrorMessage("");
     }
   };
@@ -479,8 +683,12 @@ export default function MapPage() {
       }
     }
 
-    // Add user message to chat state (only if we're proceeding)
-    setChatMessages(prev => [...prev, userMsg]);
+    // Update active topic's messages (only if we're proceeding)
+    setTopicChats(prev => prev.map(topic =>
+      topic.id === activeTopicId
+        ? { ...topic, messages: [...topic.messages, userMsg], updatedAt: new Date().toISOString() }
+        : topic
+    ));
     setChatInput("");
     setIsChatLoading(true);
 
@@ -494,7 +702,7 @@ export default function MapPage() {
         },
         body: JSON.stringify({
           message: userMessage.trim(),
-          conversationHistory: chatMessages
+          conversationHistory: updatedChatMessages
         })
       });
 
@@ -528,25 +736,32 @@ export default function MapPage() {
       }
 
       // Add assistant response with images
-      const aiMsg: ChatMessage = { 
-        role: 'assistant', 
-        content: data.message, 
-        images: data.images || [],
-        imageSource: 'wikimedia',
-        searchTerms: data.searchTerms
-      };
-      setChatMessages(prev => [...prev, aiMsg]);
+      setTopicChats(prev => prev.map(topic =>
+        topic.id === activeTopicId
+          ? { 
+              ...topic, 
+              messages: [...topic.messages, { 
+                role: 'assistant', 
+                content: data.message, 
+                images: data.images || [],
+                imageSource: 'wikimedia',
+                searchTerms: data.searchTerms,
+              }], 
+              conceptMapData: data.conceptMap || topic.conceptMapData,
+              loadingState: 'success' as LoadingState,
+              updatedAt: new Date().toISOString()
+            }
+          : topic
+      ));
 
       console.log("✅ Chat message processed successfully!");
 
       // shouldGenerate was already determined earlier, no need to recalculate
 
       if (shouldGenerate) {
-        // If Claude provided a concept map, use it directly
+        // If Claude provided a concept map, use it directly (already set above)
         if (data.conceptMap && data.conceptMap.nodes && data.conceptMap.edges) {
           console.log('📊 Using concept map from Claude');
-          setConceptMapData(data.conceptMap);
-          setLoadingState('success');
           setShowSuccessBanner(true);
           setTimeout(() => setShowSuccessBanner(false), 5000);
         } else {
@@ -570,7 +785,11 @@ export default function MapPage() {
         action: {
           label: 'Retry',
           onClick: () => {
-            setChatMessages(prev => prev.slice(0, -1)); // Remove user message
+            setTopicChats(prev => prev.map(topic =>
+              topic.id === activeTopicId
+                ? { ...topic, messages: topic.messages.slice(0, -1), updatedAt: new Date().toISOString() }
+                : topic
+            ));
             handleSendChatMessage(userMessage);
           }
         },
@@ -578,7 +797,11 @@ export default function MapPage() {
       });
       
       // Remove the user message since it failed
-      setChatMessages(prev => prev.slice(0, -1));
+      setTopicChats(prev => prev.map(topic =>
+        topic.id === activeTopicId
+          ? { ...topic, messages: topic.messages.slice(0, -1), updatedAt: new Date().toISOString() }
+          : topic
+      ));
     } finally {
       setIsChatLoading(false);
     }
@@ -634,27 +857,34 @@ export default function MapPage() {
         const data = await response.json();
 
         // Replace the assistant message at messageIndex with images
-        setChatMessages(prev => {
-          const updated = [...prev];
-          updated[messageIndex] = { 
-            role: 'assistant', 
-            content: data.message, 
-            images: data.images || [],
-            imageSource: 'wikimedia',
-            searchTerms: data.searchTerms
-          } as ChatMessage;
-          return updated;
-        });
+        setTopicChats(prev => prev.map(topic => {
+          if (topic.id === activeTopicId) {
+            const updated = [...topic.messages];
+            updated[messageIndex] = { 
+              role: 'assistant', 
+              content: data.message, 
+              images: data.images || [],
+              imageSource: 'wikimedia',
+              searchTerms: data.searchTerms
+            } as ChatMessage;
+            return {
+              ...topic,
+              messages: updated,
+              conceptMapData: data.conceptMap || topic.conceptMapData,
+              loadingState: (data.conceptMap && data.conceptMap.nodes && data.conceptMap.edges) ? 'success' as LoadingState : topic.loadingState,
+              updatedAt: new Date().toISOString()
+            };
+          }
+          return topic;
+        }));
 
         // Decide whether to generate concept map based on intent
         const shouldGenerate = autoGenerateMap && shouldGenerateConceptMap(originalQuestion, conversationHistory);
 
         if (shouldGenerate) {
-          // If Claude provided a concept map, use it directly
+          // If Claude provided a concept map, use it directly (already set above)
           if (data.conceptMap && data.conceptMap.nodes && data.conceptMap.edges) {
             console.log('📊 Using regenerated concept map from Claude');
-            setConceptMapData(data.conceptMap);
-            setLoadingState('success');
             setShowSuccessBanner(true);
             setTimeout(() => setShowSuccessBanner(false), 5000);
           } else {
@@ -737,17 +967,24 @@ export default function MapPage() {
       }
       
       // Update the message with new images
-      setChatMessages(prev => {
-        const updated = [...prev];
-        if (updated[messageIndex]) {
-          updated[messageIndex] = {
-            ...updated[messageIndex],
-            images: images,
-            imageSource: 'google',
+      setTopicChats(prev => prev.map(topic => {
+        if (topic.id === activeTopicId) {
+          const updated = [...topic.messages];
+          if (updated[messageIndex]) {
+            updated[messageIndex] = {
+              ...updated[messageIndex],
+              images: images,
+              imageSource: 'google',
+            };
+          }
+          return {
+            ...topic,
+            messages: updated,
+            updatedAt: new Date().toISOString()
           };
         }
-        return updated;
-      });
+        return topic;
+      }));
       
       toast.success('Updated with Google images!');
       
@@ -764,9 +1001,14 @@ export default function MapPage() {
     console.log("📝 Text length:", text.length);
 
     // Set loading state
-    setLoadingState('loading');
+    if (!activeTopicId) return;
+    
+    setTopicChats(prev => prev.map(topic =>
+      topic.id === activeTopicId
+        ? { ...topic, loadingState: 'loading' as LoadingState, updatedAt: new Date().toISOString() }
+        : topic
+    ));
     setErrorMessage("");
-    setConceptMapData(null);
 
     try {
       console.log("🌐 Making fetch request to /api/generate-concept-map");
@@ -815,20 +1057,31 @@ export default function MapPage() {
       console.log("✅ Concept map generated successfully!");
       console.log(`📊 Generated ${data.nodes.length} nodes and ${data.edges.length} edges`);
       
-      setLoadingState('success');
-      setConceptMapData(data);
+      if (activeTopicId) {
+        setTopicChats(prev => prev.map(topic =>
+          topic.id === activeTopicId
+            ? { ...topic, conceptMapData: data, loadingState: 'success' as LoadingState, updatedAt: new Date().toISOString() }
+            : topic
+        ));
+      }
       setErrorMessage("");
 
     } catch (error) {
       console.error("❌ Error generating concept map:", error);
       
-      setLoadingState('error');
       const errorMessage = error instanceof Error 
         ? error.message 
         : 'An unexpected error occurred while generating the concept map.';
       
+      if (activeTopicId) {
+        setTopicChats(prev => prev.map(topic =>
+          topic.id === activeTopicId
+            ? { ...topic, loadingState: 'error' as LoadingState, updatedAt: new Date().toISOString() }
+            : topic
+        ));
+      }
+      
       setErrorMessage(errorMessage);
-      setConceptMapData(null);
       
       // Show toast with retry option
       toast.error('Failed to generate concept map', {
@@ -840,7 +1093,7 @@ export default function MapPage() {
         duration: 5000,
       });
     }
-  }, [inputText]);
+  }, [inputText, activeTopicId]);
 
   const handleRegenerateMindmap = useCallback(async () => {
     // Find the last assistant message
@@ -859,7 +1112,6 @@ export default function MapPage() {
     
     console.log('🔄 Regenerating mindmap only');
     setIsRegeneratingMap(true);
-    setLoadingState('loading');
     
     try {
       // Use the existing generateConceptMapFromText function
@@ -917,15 +1169,27 @@ export default function MapPage() {
   }, [isRestoringFromStorage, isChatMode, loadingState, conceptMapData, handleRegenerateMindmap]);
 
   const handleClearChat = () => {
-    if (window.confirm('Are you sure you want to clear the chat history and concept map? This cannot be undone.')) {
-      setChatMessages([]);
-      setNodes([]);
-      setEdges([]);
-      setConceptMapData(null);
-      setLoadingState('idle');
-      localStorage.removeItem('chatHistory');
-      localStorage.removeItem(flowKey);
-      lastToastedMapHashRef.current = ''; // Reset toast tracking
+    if (!activeTopicId) return;
+    
+    const topic = topicChats.find(t => t.id === activeTopicId);
+    if (!topic) return;
+    
+    if (window.confirm(`Clear all messages and map for "${topic.name}"?`)) {
+      setTopicChats(prev => prev.map(t =>
+        t.id === activeTopicId
+          ? {
+              ...t,
+              messages: [],
+              nodes: [],
+              edges: [],
+              conceptMapData: null,
+              loadingState: 'idle',
+              updatedAt: new Date().toISOString()
+            }
+          : t
+      ));
+      
+      toast.success('Topic cleared');
     }
   };
 
@@ -1011,9 +1275,14 @@ export default function MapPage() {
       // Set the imported data (clears prior history, starting a fresh session)
       historyRef.current = [];
       setHistoryVersion((v) => v + 1);
-      setNodes(importedNodes);
-      setEdges(importedEdges);
-      setLoadingState('success');
+      
+      if (activeTopicId) {
+        setTopicChats(prev => prev.map(topic =>
+          topic.id === activeTopicId
+            ? { ...topic, nodes: importedNodes, edges: importedEdges, loadingState: 'success' as LoadingState, updatedAt: new Date().toISOString() }
+            : topic
+        ));
+      }
       
       toast.success('Concept map imported successfully!', {
         description: `Loaded ${importedNodes.length} nodes and ${importedEdges.length} edges`,
@@ -1026,7 +1295,7 @@ export default function MapPage() {
         duration: 5000,
       });
     }
-  }, [handleUpdateNode, handleDeleteNode, handleUpdateEdge, handleDeleteEdge, setNodes, setEdges]);
+  }, [handleUpdateNode, handleDeleteNode, handleUpdateEdge, handleDeleteEdge, activeTopicId]);
 
 const onSave = useCallback(() => {
   if (rfInstance) {
@@ -1061,58 +1330,10 @@ const onSave = useCallback(() => {
   }
 
   const onRestore = useCallback(() => {
-    console.log('🔄 onRestore called - handlers should be ready');
-    const restoreFlow = async () => {
-      try {
-        const flow = JSON.parse(localStorage.getItem(flowKey) || 'null') as { nodes: StoredNode[]; edges: StoredEdge[] };
-        
-        if (flow && (flow.nodes?.length > 0 || flow.edges?.length > 0)) {
-          // Reconstruct nodes with proper data structure including callback functions
-          const reconstructedNodes = flow.nodes.map((node: StoredNode) => ({
-            ...node,
-            data: {
-              ...node.data,
-              onUpdateNode: handleUpdateNode,
-              onDeleteNode: handleDeleteNode,
-            }
-          }));
-          
-          // Reconstruct edges with proper data structure including callback functions
-          const reconstructedEdges = flow.edges.map((edge: StoredEdge) => ({
-            ...edge,
-            data: {
-              ...edge.data,
-              onUpdateEdge: handleUpdateEdge,
-              onDeleteEdge: handleDeleteEdge,
-            }
-          }));
-          
-          console.log('🔍 About to restore:', { 
-            nodeCount: reconstructedNodes.length, 
-            firstNodeData: reconstructedNodes[0]?.data 
-          });
-
-          historyRef.current = [];
-          setHistoryVersion((v) => v + 1);
-          isProgrammaticChangeRef.current = true;
-          setNodes(reconstructedNodes);
-          setEdges(reconstructedEdges);
-          setTimeout(() => { isProgrammaticChangeRef.current = false; }, 0);
-          setLoadingState('success');
-
-          console.log('📂 Concept map restored from localStorage');
-          console.log('✅ State should now have', reconstructedNodes.length, 'nodes');
-        }
-      } catch (error) {
-        console.error('Error restoring from localStorage:', error);
-      } finally {
-        // Always set loading to false, whether restore succeeded or not
-        setIsRestoringFromStorage(false);
-      }
-    };
-    
-    restoreFlow();
-  }, [setNodes, setEdges, handleUpdateNode, handleDeleteNode, handleUpdateEdge, handleDeleteEdge]);
+    console.log('🔄 onRestore called - topic-based system handles restoration automatically');
+    // Legacy localStorage restoration is no longer needed since we use topic-based storage
+    setIsRestoringFromStorage(false);
+  }, []);
 
   // Auto-save to localStorage whenever nodes or edges change
   useEffect(() => {
@@ -1179,7 +1400,7 @@ const onSave = useCallback(() => {
   }, [onRestore]);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
       <Toaster 
         position="top-center" 
         richColors 
@@ -1194,44 +1415,123 @@ const onSave = useCallback(() => {
         onClose={handleCloseWelcomeModal}
       />
       
-      <Navbar />
-      
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
-                Concept Map Generator
-              </h1>
-              <p className="text-slate-600 dark:text-slate-300">
-                Paste your notes and watch them transform into visual concept maps
+      {/* Topics Sidebar */}
+      <div className="w-64 border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex flex-col">
+        {/* Sidebar Header */}
+        <div className="p-4 border-b border-slate-200 dark:border-slate-700">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-3">
+            My Topics
+          </h2>
+          <button
+            onClick={() => {
+              const name = prompt('Topic name:');
+              if (name) handleCreateTopic(name);
+            }}
+            className="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            New Topic
+          </button>
+        </div>
+
+        {/* Topics List */}
+        <div className="flex-1 overflow-y-auto p-2">
+          {topicChats.length === 0 ? (
+            <div className="text-center py-8 px-4">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                No topics yet. Create your first topic to get started!
               </p>
             </div>
-            
-            <div className="flex items-center gap-3">
-              <SavedMapsDropdown
-                savedMaps={savedMaps}
-                showLoadMenu={showLoadMenu}
-                onToggleMenu={() => setShowLoadMenu(!showLoadMenu)}
-                onLoadMap={handleLoadMap}
-                onDeleteMap={handleDeleteMap}
-              />
+          ) : (
+            <div className="space-y-1">
+              {topicChats.map(topic => (
+                <div
+                  key={topic.id}
+                  className={`group relative p-3 rounded-lg cursor-pointer transition-colors ${
+                    topic.id === activeTopicId
+                      ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
+                      : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'
+                  }`}
+                  onClick={() => handleSwitchTopic(topic.id)}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <h3 className={`text-sm font-medium truncate ${
+                        topic.id === activeTopicId
+                          ? 'text-blue-900 dark:text-blue-100'
+                          : 'text-slate-900 dark:text-white'
+                      }`}>
+                        {topic.name}
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        {topic.messages.length} messages
+                        {topic.nodes.length > 0 && ` • ${topic.nodes.length} nodes`}
+                      </p>
+                    </div>
+                    
+                    {/* Delete button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (window.confirm(`Delete "${topic.name}"?`)) {
+                          handleDeleteTopic(topic.id);
+                        }
+                      }}
+                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded transition-opacity"
+                      title="Delete topic"
+                    >
+                      <svg className="w-4 h-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
 
-              {/* Help button */}
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Navbar />
+        
+        {/* Show welcome or active topic content */}
+        {!activeTopicId ? (
+          <div className="flex-1 flex items-center justify-center p-8">
+            <div className="text-center max-w-md">
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">
+                Welcome to BioBuddy
+              </h2>
+              <p className="text-slate-600 dark:text-slate-400 mb-6">
+                Create your first topic to start generating concept maps and learning!
+              </p>
               <button
-                onClick={handleOpenWelcomeModal}
-                className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition-colors border border-slate-300 dark:border-slate-600"
-                title="Show tutorial"
-                aria-label="Show tutorial"
+                onClick={() => {
+                  const name = prompt('What topic would you like to study?');
+                  if (name) handleCreateTopic(name);
+                }}
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
               >
-                <HelpCircle className="w-5 h-5" />
-                <span className="text-sm font-medium">Help</span>
+                Create Your First Topic
               </button>
             </div>
           </div>
+        ) : (
+          <main className="flex-1 container mx-auto px-4 py-8 overflow-auto">
+        {/* Active topic name header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+            {activeTopic?.name}
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            {activeTopic?.messages.length || 0} messages • Updated {activeTopic?.updatedAt ? new Date(activeTopic.updatedAt).toLocaleDateString() : 'recently'}
+          </p>
         </div>
-
-        <div className={`grid grid-cols-1 gap-8 h-[calc(100vh-140px)] transition-all duration-300 ${
+        
+        <div className={`grid grid-cols-1 gap-8 h-[calc(100vh-280px)] transition-all duration-300 ${
   isLeftPanelCollapsed ? 'lg:grid-cols-[60px_1fr]' : 'lg:grid-cols-2'
 }`}>
           {/* Left Panel - Text Input - h-svh is used to make the height of the panel take up the full height of the viewport*/} 
@@ -1352,7 +1652,10 @@ const onSave = useCallback(() => {
           onSave={() => handleSaveMap(saveMapName)}
         />
       </main>
+        )}
+      </div>
     </div>
   );
 }
+
 

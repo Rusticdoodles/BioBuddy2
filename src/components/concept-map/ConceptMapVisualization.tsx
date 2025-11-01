@@ -113,75 +113,64 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showExportMenu]);
 
-  // Process concept map data whenever it changes
-  React.useEffect(() => {
-    console.log('📊 conceptMapData changed:', conceptMapData);
-    
-    // Only process if we have valid conceptMapData (not null/undefined)
-    // Don't clear nodes/edges when conceptMapData is null - this allows restored state to persist
-    if (!conceptMapData || !conceptMapData.nodes || !conceptMapData.edges) {
-      console.log('📊 No valid conceptMapData, skipping processing (preserving existing state)');
-      return;
-    }
-
-    console.log('✅ Valid conceptMapData found, processing...');
-    console.log('📊 Nodes:', conceptMapData.nodes.length);
-    console.log('📊 Edges:', conceptMapData.edges.length);
-
-    // Convert to ReactFlow format
-    const reactFlowNodes: Node[] = conceptMapData.nodes.map((node) => ({
-      id: node.id,
-      type: 'conceptNode',
-      position: { x: 0, y: 0 },
-      data: {
-        label: node.label,
-        type: node.type,
-        onUpdateNode,
-        onDeleteNode,
-      },
-    }));
-
-    const reactFlowEdges: Edge[] = conceptMapData.edges.map((edge, index) => ({
-      id: `edge-${edge.source}-${edge.target}-${index}`,
-      source: edge.source,
-      target: edge.target,
-      label: edge.label,
-      type: 'editableEdge',
-      animated: true,
-      style: { 
-        stroke: '#64748b', 
-        strokeWidth: 2,
-      },
-      markerEnd: {
-        type: 'arrowclosed',
-        color: '#64748b',
-      },
-      data: {
-        onUpdateEdge,
-        onDeleteEdge,
-      },
-    }));
-
-    console.log('🔄 Converted:', { nodes: reactFlowNodes.length, edges: reactFlowEdges.length });
-
-    // Apply layout
-    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
-      reactFlowNodes,
-      reactFlowEdges
-    );
-
-    console.log('🎯 Setting state:', { nodes: layoutedNodes.length, edges: layoutedEdges.length });
-    
-    // Update ReactFlow state
-    setNodes(layoutedNodes);
-    setEdges(layoutedEdges);
-
-    console.log('🔍 DEBUG - Nodes after layout:', layoutedNodes.map(n => ({
-      id: n.id,
-      data: n.data
-    })));
-    
-  }, [conceptMapData, setNodes, setEdges, onUpdateEdge, onDeleteEdge, onUpdateNode, onDeleteNode]);
+  // NOTE: This effect is disabled in the topic-based system because nodes/edges are managed 
+  // by the parent component's topic state. The parent handles syncing conceptMapData to nodes/edges.
+  // 
+  // If you need to re-enable this for non-topic-based usage, uncomment below:
+  //
+  // React.useEffect(() => {
+  //   console.log('📊 conceptMapData changed:', conceptMapData);
+  //   
+  //   if (!conceptMapData || !conceptMapData.nodes || !conceptMapData.edges) {
+  //     console.log('📊 No valid conceptMapData, skipping processing (preserving existing state)');
+  //     return;
+  //   }
+  //
+  //   console.log('✅ Valid conceptMapData found, processing...');
+  //   console.log('📊 Nodes:', conceptMapData.nodes.length);
+  //   console.log('📊 Edges:', conceptMapData.edges.length);
+  //
+  //   const reactFlowNodes: Node[] = conceptMapData.nodes.map((node) => ({
+  //     id: node.id,
+  //     type: 'conceptNode',
+  //     position: { x: 0, y: 0 },
+  //     data: {
+  //       label: node.label,
+  //       type: node.type,
+  //       onUpdateNode,
+  //       onDeleteNode,
+  //     },
+  //   }));
+  //
+  //   const reactFlowEdges: Edge[] = conceptMapData.edges.map((edge, index) => ({
+  //     id: `edge-${edge.source}-${edge.target}-${index}`,
+  //     source: edge.source,
+  //     target: edge.target,
+  //     label: edge.label,
+  //     type: 'editableEdge',
+  //     animated: true,
+  //     style: { 
+  //       stroke: '#64748b', 
+  //       strokeWidth: 2,
+  //     },
+  //     markerEnd: {
+  //       type: 'arrowclosed',
+  //       color: '#64748b',
+  //     },
+  //     data: {
+  //       onUpdateEdge,
+  //       onDeleteEdge,
+  //     },
+  //   }));
+  //
+  //   const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+  //     reactFlowNodes,
+  //     reactFlowEdges
+  //   );
+  //
+  //   setNodes(layoutedNodes);
+  //   setEdges(layoutedEdges);
+  // }, [conceptMapData, setNodes, setEdges, onUpdateEdge, onDeleteEdge, onUpdateNode, onDeleteNode]);
 
   // Show success toast instead of inline banner
   useEffect(() => {

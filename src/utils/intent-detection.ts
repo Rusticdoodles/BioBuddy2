@@ -47,13 +47,13 @@ export function shouldGenerateConceptMap(message: string, chatHistory: ChatMessa
     /^contrast/,
     /^(analyze|discuss)/,
   ];
-  
-  for (const pattern of newTopicPatterns) {
-    if (pattern.test(lowerMessage)) {
-      console.log('✅ Detected new topic, will generate map');
-      return true;
-    }
-  }
+  // Disable new topic patterns for now
+  // for (const pattern of newTopicPatterns) {
+  //   if (pattern.test(lowerMessage)) {
+  //     console.log('✅ Detected new topic, will generate map');
+  //     return true;
+  //   }
+  // }
   
   // If conversation is empty or just started, generate map
   if (chatHistory.length <= 2) {

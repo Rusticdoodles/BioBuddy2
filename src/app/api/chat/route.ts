@@ -1,6 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest, NextResponse } from 'next/server';
 import { searchWikimediaImages, extractKeywords } from '@/utils/wikimedia';
+import { shouldGenerateConceptMap } from '@/utils/intent-detection';
+import { ChatMessage } from '@/types/concept-map-types';
 
 // Function to get Anthropic client (lazy initialization)
 const getAnthropicClient = () => {
@@ -47,11 +49,18 @@ export async function POST(request: NextRequest) {
       }
     ];
 
-    // Call Claude API
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 2048,
-      system: `You are an educational AI assistant that helps students learn by providing clear explanations AND structured concept maps.
+    // Determine if we should generate a concept map based on intent detection
+    const chatHistoryForIntent: ChatMessage[] = (conversationHistory || []).map((msg: HistoryMessage) => ({
+      role: msg.role,
+      content: msg.content
+    }));
+    const shouldGenerateMap = shouldGenerateConceptMap(message, chatHistoryForIntent);
+    
+    console.log(`🧠 Intent detection: ${shouldGenerateMap ? '✅ Will generate concept map' : '⏭️ Skipping concept map (follow-up/clarification)'}`);
+
+    // Create system prompt conditionally based on intent detection
+    const systemPrompt = shouldGenerateMap
+      ? `You are an educational AI assistant that helps students learn by providing clear explanations AND structured concept maps.
 
 When a student asks a question, you MUST respond with THREE sections:
 1. A clear, educational explanation
@@ -152,7 +161,46 @@ Question: "How does DNA replication work?"
 
 Always use specific, complete scientific terms that would appear in textbooks!
 
-CRITICAL: Always include all three sections (EXPLANATION, IMAGE_SEARCH_TERMS, and CONCEPT_MAP) in your response. The concept map must be valid JSON.`,
+CRITICAL: Always include all three sections (EXPLANATION, IMAGE_SEARCH_TERMS, and CONCEPT_MAP) in your response. The concept map must be valid JSON.`
+      : `You are an educational AI assistant that helps students learn by providing clear explanations.
+
+When a student asks a question (especially follow-up or clarification questions), you should respond with TWO sections:
+1. A clear, educational explanation
+2. Specific search terms for finding relevant educational images
+
+RESPONSE FORMAT (you must follow this exactly):
+
+EXPLANATION:
+[Your clear explanation here - 2-4 paragraphs explaining the concept or answering the question]
+
+IMAGE_SEARCH_TERMS:
+["term1", "term2", "term3"]
+
+RULES FOR EXPLANATION:
+- Clear and concise (2-4 paragraphs)
+- Break down complex ideas
+- Adjust complexity to the question
+- No markdown formatting
+- Focus on answering the specific question asked
+- Give citations for the information you provide in a separate paragraph at the end
+
+RULES FOR IMAGE_SEARCH_TERMS:
+- Provide 2-4 specific scientific/educational terms
+- Use complete phrases, not single generic words
+- Example: "Krebs cycle diagram" NOT "cycle"
+- Example: "mitochondria structure" NOT "structure"
+- Include scientific synonyms when applicable
+- Example: ["krebs cycle", "citric acid cycle", "TCA cycle"]
+- Avoid ambiguous terms that could match non-educational content
+- Focus on visual, diagram-friendly terms
+
+CRITICAL: Always include both sections (EXPLANATION and IMAGE_SEARCH_TERMS) in your response. Do NOT include a CONCEPT_MAP section.`;
+
+    // Call Claude API
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2048,
+      system: systemPrompt,
       messages
     });
 
@@ -174,7 +222,9 @@ CRITICAL: Always include all three sections (EXPLANATION, IMAGE_SEARCH_TERMS, an
     // Extract IMAGE_SEARCH_TERMS section
     if (assistantMessage.includes('IMAGE_SEARCH_TERMS:')) {
       try {
-        const searchTermsSection = assistantMessage.split('IMAGE_SEARCH_TERMS:')[1].split('CONCEPT_MAP:')[0];
+        const searchTermsSection = shouldGenerateMap && assistantMessage.includes('CONCEPT_MAP:')
+          ? assistantMessage.split('IMAGE_SEARCH_TERMS:')[1].split('CONCEPT_MAP:')[0]
+          : assistantMessage.split('IMAGE_SEARCH_TERMS:')[1];
         const jsonMatch = searchTermsSection.match(/\[([\s\S]*?)\]/);
         if (jsonMatch) {
           searchTerms = JSON.parse(`[${jsonMatch[1]}]`);
@@ -185,8 +235,8 @@ CRITICAL: Always include all three sections (EXPLANATION, IMAGE_SEARCH_TERMS, an
       }
     }
 
-    // Extract CONCEPT_MAP section
-    if (assistantMessage.includes('CONCEPT_MAP:')) {
+    // Extract CONCEPT_MAP section (only if we should generate a map)
+    if (shouldGenerateMap && assistantMessage.includes('CONCEPT_MAP:')) {
       try {
         const conceptMapSection = assistantMessage.split('CONCEPT_MAP:')[1];
         const jsonMatch = conceptMapSection.match(/\{[\s\S]*\}/);
@@ -197,6 +247,8 @@ CRITICAL: Always include all three sections (EXPLANATION, IMAGE_SEARCH_TERMS, an
       } catch (error) {
         console.error('❌ Error parsing concept map JSON:', error);
       }
+    } else if (shouldGenerateMap && !assistantMessage.includes('CONCEPT_MAP:')) {
+      console.log('⚠️ Expected concept map but not found in Claude response');
     }
 
     // Fetch relevant images from Wikimedia Commons using Claude's search terms

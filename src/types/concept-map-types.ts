@@ -1,4 +1,5 @@
 import { WikimediaImage } from '@/utils/wikimedia';
+import { Node, Edge } from '@xyflow/react';
 // TypeScript types for concept map components
 
 export interface ConceptNode {
@@ -20,6 +21,19 @@ export interface ConceptMapResponse {
 
 // Loading states
 export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
+
+// Topic-based chat system
+export interface TopicChat {
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  messages: ChatMessage[];
+  nodes: Node[];
+  edges: Edge[];
+  conceptMapData: ConceptMapResponse | null;
+  loadingState: LoadingState;
+}
 
 // Node type colors for different concept types
 export interface NodeTypeColors {
