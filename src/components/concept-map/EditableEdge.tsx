@@ -76,7 +76,11 @@ export const EditableEdge: React.FC<EditableEdgeProps> = ({
     <>
       <path
         id={id}
-        style={style}
+        style={{
+          ...style,
+          fill: 'none',
+          stroke: style?.stroke || '#64748b', // Ensure stroke is applied
+        }}
         className="react-flow__edge-path"
         d={edgePath}
         markerEnd={markerEnd}

@@ -11,6 +11,7 @@ interface ConceptNodeProps {
     type: string;
     onUpdateNode: (nodeId: string, label: string, type?: string) => void;
     onDeleteNode: (nodeId: string) => void;
+    isNew?: boolean;
   };
   id: string;
 }
@@ -114,7 +115,9 @@ export const ConceptNode: React.FC<ConceptNodeProps> = ({ data, id }) => {
         }}
       />
       <div 
-        className={`px-6 py-4 rounded-lg shadow-md border-2 ${colors.bg} ${colors.border} min-w-[120px] max-w-[200px] relative group`}
+        className={`px-6 py-4 rounded-lg shadow-md border-2 ${colors.bg} ${colors.border} min-w-[120px] max-w-[200px] relative group ${
+          data.isNew ? 'ring-2 ring-blue-400 animate-pulse' : ''
+        }`}
         onMouseEnter={() => setShowDelete(true)}
         onMouseLeave={() => setShowDelete(false)}
       >

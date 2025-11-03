@@ -349,6 +349,226 @@ export default function MapPage() {
     [setEdges, handleUpdateEdge, handleDeleteEdge, pushHistory]
   );
 
+  const handleConfirmMapUpdate = useCallback(() => {
+    if (!pendingMapUpdate || !activeTopicId || !activeTopic) {
+      console.error('❌ Cannot confirm map update - missing data');
+      return;
+    }
+
+    console.log('🔄 Merging new nodes into map...');
+    console.log('   New nodes:', pendingMapUpdate.newNodes.length);
+    console.log('   New edges:', pendingMapUpdate.newEdges.length);
+
+    try {
+      // Step 1: Check for duplicate nodes and filter them out
+      const existingLabels = new Set(
+        activeTopic.nodes.map(n => {
+          const label = (n.data as { label?: string })?.label || '';
+          return label.toLowerCase().trim();
+        })
+      );
+
+      const uniqueNewNodes = pendingMapUpdate.newNodes.filter(node => {
+        const isDuplicate = existingLabels.has(node.label.toLowerCase().trim());
+        if (isDuplicate) {
+          console.log('⚠️ Skipping duplicate node:', node.label);
+        }
+        return !isDuplicate;
+      });
+
+      if (uniqueNewNodes.length === 0) {
+        toast.info('No new nodes to add - all concepts already exist on the map');
+        setShowAddToMapPrompt(false);
+        setPendingMapUpdate(null);
+        return;
+      }
+
+      console.log('✅ Adding', uniqueNewNodes.length, 'unique nodes');
+
+      // Step 2: Create a mapping from "new-X" IDs to actual React Flow node IDs
+      const newIdMap = new Map<string, string>();
+
+      // Step 3: Find a good position for new nodes (near center-right of existing nodes)
+      const existingPositions = activeTopic.nodes.map(n => n.position);
+      let baseX = 200;
+      let baseY = 200;
+
+      if (existingPositions.length > 0) {
+        // Calculate average position of existing nodes
+        const avgX = existingPositions.reduce((sum, pos) => sum + pos.x, 0) / existingPositions.length;
+        const avgY = existingPositions.reduce((sum, pos) => sum + pos.y, 0) / existingPositions.length;
+
+        // Place new nodes to the right and slightly down
+        baseX = avgX + 300;
+        baseY = avgY;
+      }
+
+      // Step 4: Format new nodes for React Flow
+      const newNodesFormatted = uniqueNewNodes.map((node, index) => {
+        const newNodeId = `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        newIdMap.set(node.id, newNodeId); // Map "new-1" → "node-123456-abc"
+
+        return {
+          id: newNodeId,
+          type: 'conceptNode',
+          position: {
+            x: baseX + (index % 2) * 200, // Stagger horizontally
+            y: baseY + Math.floor(index / 2) * 150, // Stack vertically
+          },
+          data: {
+            label: node.label,
+            type: node.type,
+            onUpdateNode: handleUpdateNode,
+            onDeleteNode: handleDeleteNode,
+            isNew: true, // Mark as new for highlighting
+          },
+          targetPosition: Position.Top,
+          sourcePosition: Position.Bottom,
+        };
+      });
+
+      // Step 5: Create a map of existing node IDs for validation
+      const existingNodeIds = new Set(activeTopic.nodes.map(n => n.id));
+
+      // Step 6: Format new edges, mapping "new-X" IDs to actual IDs
+      const newEdgesFormatted = pendingMapUpdate.newEdges
+        .map(edge => {
+          // Map source and target IDs
+          let sourceId = edge.source;
+          let targetId = edge.target;
+
+          // If source is a "new-X" ID, map it
+          if (edge.source.startsWith('new-')) {
+            sourceId = newIdMap.get(edge.source) || edge.source;
+          }
+
+          // If target is a "new-X" ID, map it
+          if (edge.target.startsWith('new-')) {
+            targetId = newIdMap.get(edge.target) || edge.target;
+          }
+
+          // Validate that both nodes exist
+          const sourceExists = existingNodeIds.has(sourceId) || newIdMap.has(edge.source);
+          const targetExists = existingNodeIds.has(targetId) || newIdMap.has(edge.target);
+
+          if (!sourceExists || !targetExists) {
+            console.warn('⚠️ Skipping invalid edge:', edge, {
+              sourceExists,
+              targetExists,
+              mappedSource: sourceId,
+              mappedTarget: targetId
+            });
+            return null;
+          }
+
+          return {
+            id: `edge-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            source: sourceId,
+            target: targetId,
+            label: edge.label,
+            type: 'editableEdge',
+            animated: true,
+            style: { 
+              stroke: '#3b82f6', // Blue color for new edges
+              strokeWidth: 2,
+              fill: 'none'
+            },
+            markerEnd: { 
+              type: 'arrowclosed' as const, 
+              color: '#3b82f6' 
+            },
+            data: {
+              onUpdateEdge: handleUpdateEdge,
+              onDeleteEdge: handleDeleteEdge,
+              isNew: true, // Mark as new
+            },
+          };
+        })
+        .filter(edge => edge !== null); // Remove invalid edges
+
+      console.log('✅ Formatted nodes and edges');
+      console.log('   Nodes to add:', newNodesFormatted.length);
+      console.log('   Edges to add:', newEdgesFormatted.length);
+
+      // Step 7: Update both React Flow state and topic with merged nodes and edges
+      // First, update React Flow state directly (for immediate rendering)
+      setNodes((prevNodes) => [...prevNodes, ...newNodesFormatted]);
+      setEdges((prevEdges) => [...prevEdges, ...newEdgesFormatted]);
+
+      // Then update the topic (for persistence)
+      setTopicChats(prev => prev.map(topic =>
+        topic.id === activeTopicId
+          ? {
+              ...topic,
+              nodes: [...topic.nodes, ...newNodesFormatted],
+              edges: [...topic.edges, ...newEdgesFormatted],
+              updatedAt: new Date().toISOString()
+            }
+          : topic
+      ));
+
+      // Step 8: Close modal and show success
+      setShowAddToMapPrompt(false);
+      setPendingMapUpdate(null);
+
+      toast.success('Map updated!', {
+        description: `Added ${newNodesFormatted.length} new concept${newNodesFormatted.length !== 1 ? 's' : ''}`,
+      });
+
+      // Step 9: Highlight new nodes temporarily (remove highlight after 3 seconds)
+      setTimeout(() => {
+        // Update React Flow state (for immediate rendering)
+        setNodes((prevNodes) => prevNodes.map(node => ({
+          ...node,
+          data: {
+            ...node.data,
+            isNew: false
+          }
+        })));
+        setEdges((prevEdges) => prevEdges.map(edge => ({
+          ...edge,
+          style: { stroke: '#64748b', strokeWidth: 2 },
+          markerEnd: { type: 'arrowclosed' as const, color: '#64748b' },
+          data: {
+            ...edge.data,
+            isNew: false
+          }
+        })));
+
+        // Update topic (for persistence - useEffect will sync this, but updating explicitly for consistency)
+        setTopicChats(prev => prev.map(topic =>
+          topic.id === activeTopicId
+            ? {
+                ...topic,
+                nodes: topic.nodes.map(node => ({
+                  ...node,
+                  data: {
+                    ...node.data,
+                    isNew: false
+                  }
+                })),
+                edges: topic.edges.map(edge => ({
+                  ...edge,
+                  style: { stroke: '#64748b', strokeWidth: 2 },
+                  markerEnd: { type: 'arrowclosed' as const, color: '#64748b' },
+                  data: {
+                    ...edge.data,
+                    isNew: false
+                  }
+                }))
+              }
+            : topic
+        ));
+      }, 12000);
+
+    } catch (error) {
+      console.error('❌ Error merging nodes:', error);
+      toast.error('Failed to update map', {
+        description: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }, [pendingMapUpdate, activeTopicId, activeTopic, handleUpdateNode, handleDeleteNode, handleUpdateEdge, handleDeleteEdge]);
+
   const handleAddNode = (label: string, type: string) => {
     pushHistory();
     // For now, add node at center of viewport (0,0)
@@ -691,7 +911,19 @@ export default function MapPage() {
     }
 
     // PHASE 3c: Detect and handle map update requests
-    if (wantsToUpdateMap(userMessage_trimmed) && activeTopic && activeTopic.nodes.length > 0) {
+    if (wantsToUpdateMap(userMessage_trimmed)) {
+      // First check: must have an active topic
+      if (!activeTopic) {
+        toast.error('Please create or select a topic first');
+        return;
+      }
+      
+      // Second check: must have an existing map (nodes) to update
+      if (!activeTopic.nodes || activeTopic.nodes.length === 0) {
+        toast.error('No existing map to update. Please ask a question first to generate a concept map.');
+        return;
+      }
+      
       console.log('🎯 DETECTED: User wants to update map');
       
       // Get the last assistant message (the content to add to map)
@@ -1868,13 +2100,7 @@ const onSave = useCallback(() => {
                   Cancel
                 </button>
                 <button
-                  onClick={() => {
-                    // TODO: Phase 3d will implement the actual merge logic
-                    console.log('✅ User confirmed - will merge nodes in Phase 3d');
-                    setShowAddToMapPrompt(false);
-                    toast.info('Phase 3d: Merge logic coming next!');
-                    // Keep pendingMapUpdate for Phase 3d
-                  }}
+                  onClick={handleConfirmMapUpdate}
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
                 >
                   Add to Map
