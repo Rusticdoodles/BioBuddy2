@@ -26,6 +26,7 @@ import { ConceptMapResponse, LoadingState, ChatMessage, TopicChat } from '@/type
 import { shouldGenerateConceptMap, wantsToUpdateMap } from '@/utils/intent-detection';
 import { GoogleImage } from '@/utils/google-images';
 import { getLayoutedElements } from '@/utils/layout';
+import { findEmptySpace, calculateOptimalStartPosition, clusterRelatedNodes } from '@/utils/node-positioning';
 
 const flowKey = 'biobuddy-concept-map-flow';
 const SAVED_MAPS_KEY = 'biobuddy-saved-maps';
@@ -388,33 +389,34 @@ export default function MapPage() {
       // Step 2: Create a mapping from "new-X" IDs to actual React Flow node IDs
       const newIdMap = new Map<string, string>();
 
-      // Step 3: Find a good position for new nodes (near center-right of existing nodes)
-      const existingPositions = activeTopic.nodes.map(n => n.position);
-      let baseX = 200;
-      let baseY = 200;
+      // Step 3: Calculate optimal starting position
+      const { x: baseX, y: baseY } = calculateOptimalStartPosition(activeTopic.nodes);
+      console.log('📍 Starting position for new nodes:', { baseX, baseY });
 
-      if (existingPositions.length > 0) {
-        // Calculate average position of existing nodes
-        const avgX = existingPositions.reduce((sum, pos) => sum + pos.x, 0) / existingPositions.length;
-        const avgY = existingPositions.reduce((sum, pos) => sum + pos.y, 0) / existingPositions.length;
+      // Step 4: Group related nodes together
+      const clusteredNodes = clusterRelatedNodes(uniqueNewNodes, pendingMapUpdate.newEdges);
+      console.log('🔗 Clustered into', new Set(clusteredNodes.map(c => c.group)).size, 'groups');
 
-        // Place new nodes to the right and slightly down
-        baseX = avgX + 300;
-        baseY = avgY;
-      }
-
-      // Step 4: Format new nodes for React Flow
-      const newNodesFormatted = uniqueNewNodes.map((node, index) => {
+      // Step 5: Format new nodes with smart positioning
+      const newNodesFormatted: any[] = [];
+      clusteredNodes.forEach(({ node }, index) => {
         const newNodeId = `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         newIdMap.set(node.id, newNodeId); // Map "new-1" → "node-123456-abc"
 
-        return {
+        // Find empty space for this node
+        const position = findEmptySpace(
+          [...activeTopic.nodes, ...newNodesFormatted], // Include already-placed new nodes
+          baseX,
+          baseY,
+          index
+        );
+
+        console.log(`  Node "${node.label}" positioned at (${Math.round(position.x)}, ${Math.round(position.y)})`);
+
+        newNodesFormatted.push({
           id: newNodeId,
           type: 'conceptNode',
-          position: {
-            x: baseX + (index % 2) * 200, // Stagger horizontally
-            y: baseY + Math.floor(index / 2) * 150, // Stack vertically
-          },
+          position,
           data: {
             label: node.label,
             type: node.type,
@@ -424,13 +426,13 @@ export default function MapPage() {
           },
           targetPosition: Position.Top,
           sourcePosition: Position.Bottom,
-        };
+        });
       });
 
-      // Step 5: Create a map of existing node IDs for validation
+      // Step 6: Create a map of existing node IDs for validation
       const existingNodeIds = new Set(activeTopic.nodes.map(n => n.id));
 
-      // Step 6: Format new edges, mapping "new-X" IDs to actual IDs
+      // Step 7: Format new edges, mapping "new-X" IDs to actual IDs
       const newEdgesFormatted = pendingMapUpdate.newEdges
         .map(edge => {
           // Map source and target IDs
@@ -490,7 +492,7 @@ export default function MapPage() {
       console.log('   Nodes to add:', newNodesFormatted.length);
       console.log('   Edges to add:', newEdgesFormatted.length);
 
-      // Step 7: Update both React Flow state and topic with merged nodes and edges
+      // Step 8: Update both React Flow state and topic with merged nodes and edges
       // First, update React Flow state directly (for immediate rendering)
       setNodes((prevNodes) => [...prevNodes, ...newNodesFormatted]);
       setEdges((prevEdges) => [...prevEdges, ...newEdgesFormatted]);
@@ -507,7 +509,7 @@ export default function MapPage() {
           : topic
       ));
 
-      // Step 8: Close modal and show success
+      // Step 9: Close modal and show success
       setShowAddToMapPrompt(false);
       setPendingMapUpdate(null);
 
@@ -2070,6 +2072,9 @@ const onSave = useCallback(() => {
                   </h3>
                   <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
                     I found {pendingMapUpdate.newNodes.length} new concept{pendingMapUpdate.newNodes.length !== 1 ? 's' : ''} to add to your map:
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                    💡 New nodes will be positioned to avoid overlapping with existing concepts
                   </p>
                 </div>
               </div>
