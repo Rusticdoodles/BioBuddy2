@@ -683,6 +683,13 @@ export default function MapPage() {
 
     const userMessage_trimmed = userMessage.trim();
 
+    // Safety check: ensure we have an active topic
+    if (!activeTopicId || !activeTopic) {
+      console.error('❌ No active topic - cannot send message');
+      toast.error('Please select or create a topic first');
+      return;
+    }
+
     // PHASE 3c: Detect and handle map update requests
     if (wantsToUpdateMap(userMessage_trimmed) && activeTopic && activeTopic.nodes.length > 0) {
       console.log('🎯 DETECTED: User wants to update map');
@@ -697,6 +704,15 @@ export default function MapPage() {
         toast.error('No recent information to add to map');
         return;
       }
+      
+      // Add user message to chat first so user sees their message
+      const userMsg = { role: 'user' as const, content: userMessage_trimmed };
+      setTopicChats(prev => prev.map(topic =>
+        topic.id === activeTopicId
+          ? { ...topic, messages: [...topic.messages, userMsg], updatedAt: new Date().toISOString() }
+          : topic
+      ));
+      setChatInput("");
       
       setIsLoadingMapUpdate(true);
       
@@ -768,8 +784,22 @@ export default function MapPage() {
     const updatedChatMessages = [...chatMessages, userMsg];
     
     // Decide whether to generate concept map based on intent (early check)
-    // Pass chatMessages (not updatedChatMessages) to check if this is the first message in the topic
-    const shouldGenerate = autoGenerateMap && shouldGenerateConceptMap(userMessage_trimmed, chatMessages);
+    // Use activeTopic.messages directly to ensure we get the current state, not a stale memoized value
+    // This checks if this will be the first message in the topic (before we add it)
+    const currentMessages = activeTopic?.messages || [];
+    console.log('🔍 DEBUG shouldGenerate check:', {
+      activeTopicId,
+      activeTopicExists: !!activeTopic,
+      activeTopicMessages: activeTopic?.messages,
+      currentMessagesLength: currentMessages.length,
+      currentMessages: currentMessages,
+      chatMessagesLength: chatMessages.length,
+      chatMessages: chatMessages,
+      autoGenerateMap,
+      userMessage: userMessage_trimmed.substring(0, 50)
+    });
+    const shouldGenerate = autoGenerateMap && shouldGenerateConceptMap(userMessage_trimmed, currentMessages);
+    console.log('🔍 shouldGenerate final result:', shouldGenerate);
 
     // Check if there's an unsaved map ONLY if we're going to generate a new map
     if (shouldGenerate && nodes.length > 0 && !savedMaps.some(m => 
@@ -853,6 +883,8 @@ export default function MapPage() {
       }
 
       // Add assistant response with images
+      // Only include conceptMapData if we should be generating a map
+      // Otherwise, ignore any map data from the API (for follow-up messages)
       setTopicChats(prev => prev.map(topic =>
         topic.id === activeTopicId
           ? { 
@@ -864,7 +896,9 @@ export default function MapPage() {
                 imageSource: 'wikimedia',
                 searchTerms: data.searchTerms,
               }], 
-              conceptMapData: data.conceptMap || topic.conceptMapData,
+              // Only update conceptMapData if we should be generating a map
+              // This prevents the API from overriding our decision to skip generation
+              conceptMapData: shouldGenerate ? (data.conceptMap || topic.conceptMapData) : topic.conceptMapData,
               loadingState: 'success' as LoadingState,
               updatedAt: new Date().toISOString()
             }
@@ -872,10 +906,12 @@ export default function MapPage() {
       ));
 
       console.log("✅ Chat message processed successfully!");
+      console.log('🔍 After API response - shouldGenerate:', shouldGenerate, 'data.conceptMap exists:', !!(data.conceptMap && data.conceptMap.nodes && data.conceptMap.edges));
 
       // shouldGenerate was already determined earlier, no need to recalculate
 
       if (shouldGenerate) {
+        console.log('✅ shouldGenerate is TRUE - proceeding with map generation');
         // If Claude provided a concept map, use it directly (already set above)
         if (data.conceptMap && data.conceptMap.nodes && data.conceptMap.edges) {
           console.log('📊 Using concept map from Claude');
@@ -883,12 +919,13 @@ export default function MapPage() {
           setTimeout(() => setShowSuccessBanner(false), 5000);
         } else {
           // Fallback: generate from explanation if Claude didn't provide concept map
-          console.log('⚠️ No concept map in response, generating from explanation');
+          console.log('⚠️ No concept map in response, generating from explanation via generateConceptMapFromText');
           await generateConceptMapFromText(data.message);
         }
       } else {
-        console.log('⏭️ Skipping concept map generation (follow-up/clarification question)');
-        // Keep existing map visible
+        console.log('⏭️ shouldGenerate is FALSE - Skipping concept map generation (follow-up/clarification question)');
+        console.log('⏭️ Keeping existing map visible - NOT updating conceptMapData');
+        // Keep existing map visible - don't update conceptMapData
       }
 
     } catch (error) {
@@ -1266,23 +1303,29 @@ export default function MapPage() {
     // Only show toast if this is a different map than the last one we toasted for
     if (currentMapHash === lastToastedMapHashRef.current) return;
   
-    toast('Mindmap too confusing? Click regenerate', {
-      description: 'You can try a different structure by regenerating the map.',
-      position: 'bottom-right',
-      duration: 8000,
-      action: { label: 'Regenerate', onClick: () => handleRegenerateMindmap() },
-      className: 'bg-amber-50 text-amber-900 border border-amber-200',
-      style: {
-        backgroundColor: 'rgba(35, 117, 224, 0.9)',
-        color: '#ffffff',
-        borderRadius: '10px',
-        fontSize: '16px',
-        fontWeight: 'bold',
-        textAlign: 'left',
-      },
-    });
+    // Add a small delay to ensure the map is fully rendered before showing the toast
+    // This prevents the toast from appearing too quickly or confusingly
+    const timeoutId = setTimeout(() => {
+      toast('Mindmap too confusing? Click regenerate', {
+        description: 'You can try a different structure by regenerating the map.',
+        position: 'bottom-right',
+        duration: 8000,
+        action: { label: 'Regenerate', onClick: () => handleRegenerateMindmap() },
+        className: 'bg-amber-50 text-amber-900 border border-amber-200',
+        style: {
+          backgroundColor: 'rgba(35, 117, 224, 0.9)',
+          color: '#ffffff',
+          borderRadius: '10px',
+          fontSize: '16px',
+          fontWeight: 'bold',
+          textAlign: 'left',
+        },
+      });
+    }, 1000); // 1 second delay
   
     lastToastedMapHashRef.current = currentMapHash;
+    
+    return () => clearTimeout(timeoutId);
   }, [isRestoringFromStorage, isChatMode, loadingState, conceptMapData, handleRegenerateMindmap]);
 
   const handleClearChat = () => {

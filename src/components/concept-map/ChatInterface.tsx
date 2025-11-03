@@ -17,6 +17,7 @@ interface ChatInterfaceProps {
   setAutoGenerateMap: (value: boolean) => void;
   onSearchBetterImages: (messageIndex: number, searchTerms: string[]) => void;
   loadingBetterImages: number | null;
+  isLoadingMapUpdate: boolean;
 }
 
 export const ChatInterface: React.FC<ChatInterfaceProps> = ({
@@ -31,7 +32,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   autoGenerateMap,
   setAutoGenerateMap,
   onSearchBetterImages,
-  loadingBetterImages
+  loadingBetterImages,
+  isLoadingMapUpdate
 }) => {
   const chatMessagesEndRef = useRef<HTMLDivElement>(null);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
@@ -42,6 +44,16 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       chatMessagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [chatMessages]);
+
+  useEffect(() => {
+    // Auto-scroll to bottom when loading map update starts
+    if (isLoadingMapUpdate && chatMessagesEndRef.current) {
+      console.log('🔄 isLoadingMapUpdate is true - showing loading indicator');
+      setTimeout(() => {
+        chatMessagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  }, [isLoadingMapUpdate]);
 
   const handleCopyMessage = (content: string, index: number) => {
     navigator.clipboard.writeText(content).then(() => {
@@ -146,7 +158,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       : 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white'
                   }`}
                 >
-                  {/* Show loading state if this is being regenerated */}
+                  {/* Show loading state if this message is being generated/regenerated */}
                   {message.role === 'assistant' && isChatLoading && index === chatMessages.length - 1 ? (
                     <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                       <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
@@ -165,7 +177,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                         />
                       </svg>
-                      <span className="text-sm">Regenerating...</span>
+                      <span className="text-sm">Thinking...</span>
                     </div>
                   ) : (
                     <>  {/* Code for visual resources/images in AI chat */}
@@ -305,7 +317,34 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         )}
         {/* Scroll anchor */}
         <div ref={chatMessagesEndRef} />
-        {isChatLoading && (
+        {isLoadingMapUpdate && (
+          <div className="flex justify-start">
+            <div className="max-w-[80%] rounded-lg px-4 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+              <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    fill="none"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                <span className="text-sm">Preparing map update...</span>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Only show bottom loading indicator if there's no last message being loaded */}
+        {/* (The last message bubble already shows "Thinking..." if it's an assistant message) */}
+        {isChatLoading && (chatMessages.length === 0 || chatMessages[chatMessages.length - 1]?.role !== 'assistant') && (
           <div className="flex justify-start">
             <div className="max-w-[80%] rounded-lg px-4 py-2 bg-slate-100 dark:bg-slate-700">
               <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
