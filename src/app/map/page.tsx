@@ -86,6 +86,15 @@ export default function MapPage() {
   const [autoGenerateMap, setAutoGenerateMap] = useState(true);
   const [loadingBetterImages, setLoadingBetterImages] = useState<number | null>(null);
 
+  // Phase 3c: Map update confirmation state
+  const [showAddToMapPrompt, setShowAddToMapPrompt] = useState(false);
+  const [pendingMapUpdate, setPendingMapUpdate] = useState<{
+    newNodes: any[];
+    newEdges: any[];
+    newInformation: string;
+  } | null>(null);
+  const [isLoadingMapUpdate, setIsLoadingMapUpdate] = useState(false);
+
   // Topic-based chat system
   const [topicChats, setTopicChats] = useState<TopicChat[]>([]);
   const [activeTopicId, setActiveTopicId] = useState<string | null>(null);
@@ -263,6 +272,19 @@ export default function MapPage() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showLoadMenu]);
+
+  // Close modal on ESC key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showAddToMapPrompt) {
+        setShowAddToMapPrompt(false);
+        setPendingMapUpdate(null);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [showAddToMapPrompt]);
 
   const handleDeleteNode = useCallback((nodeId: string) => {
     pushHistory();
@@ -661,18 +683,84 @@ export default function MapPage() {
 
     const userMessage_trimmed = userMessage.trim();
 
-    // PHASE 3a: Detect update map intent (logging only, no action yet)
-    if (wantsToUpdateMap(userMessage_trimmed)) {
+    // PHASE 3c: Detect and handle map update requests
+    if (wantsToUpdateMap(userMessage_trimmed) && activeTopic && activeTopic.nodes.length > 0) {
       console.log('🎯 DETECTED: User wants to update map');
-      console.log('   Message:', userMessage_trimmed);
-      console.log('   Current topic:', activeTopic?.name);
-      console.log('   Current nodes:', activeTopic?.nodes.length);
-      // TODO Phase 3b: Call /api/update-map endpoint
-      // TODO Phase 3c: Show confirmation modal
-      // TODO Phase 3d: Merge new nodes with existing map
-      // For now, just continue with normal response
-    } else {
-      console.log('📝 Regular message (not a map update request)');
+      
+      // Get the last assistant message (the content to add to map)
+      const lastAssistantMessage = activeTopic.messages
+        .slice()
+        .reverse()
+        .find(m => m.role === 'assistant');
+      
+      if (!lastAssistantMessage) {
+        toast.error('No recent information to add to map');
+        return;
+      }
+      
+      setIsLoadingMapUpdate(true);
+      
+      try {
+        console.log('🔄 Calling update-map API...');
+        
+        const response = await fetch('/api/update-map', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            currentMap: {
+              nodes: activeTopic.nodes,
+              edges: activeTopic.edges
+            },
+            newInformation: lastAssistantMessage.content,
+            userMessage: userMessage_trimmed
+          })
+        });
+        
+        if (!response.ok) {
+          let errorMessage = `Request failed with status ${response.status}`;
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorData.details || errorMessage;
+          } catch {
+            // If JSON parsing fails, try text (but don't fail if that fails too)
+            try {
+              const errorText = await response.text();
+              errorMessage = errorText.substring(0, 200) || errorMessage;
+            } catch {
+              // Give up and use default message
+            }
+          }
+          throw new Error(errorMessage);
+        }
+        
+        const data = await response.json();
+        
+        if (data.newNodes && data.newNodes.length > 0) {
+          console.log('✅ Received map update:', data.newNodes.length, 'new nodes');
+          
+          // Store pending update and show confirmation
+          setPendingMapUpdate({
+            newNodes: data.newNodes,
+            newEdges: data.newEdges || [],
+            newInformation: lastAssistantMessage.content
+          });
+          setShowAddToMapPrompt(true);
+        } else {
+          console.log('⚠️ No new nodes to add');
+          toast.info('No new concepts to add to the map');
+        }
+        
+      } catch (error) {
+        console.error('❌ Error getting map update:', error);
+        toast.error('Failed to generate map update', {
+          description: error instanceof Error ? error.message : 'Unknown error',
+        });
+      } finally {
+        setIsLoadingMapUpdate(false);
+      }
+      
+      // Don't continue with normal message flow - user made a map update request
+      return;
     }
 
     // Prepare user message (but don't add to state yet)
@@ -1607,6 +1695,7 @@ const onSave = useCallback(() => {
                     setAutoGenerateMap={setAutoGenerateMap}
                     onSearchBetterImages={handleSearchBetterImages}
                     loadingBetterImages={loadingBetterImages}
+                    isLoadingMapUpdate={isLoadingMapUpdate}
                   />
               )}
               </>
@@ -1680,6 +1769,77 @@ const onSave = useCallback(() => {
           onCancel={() => { setShowSaveDialog(false); setSaveMapName(''); }}
           onSave={() => handleSaveMap(saveMapName)}
         />
+
+        {/* Add to Map Confirmation Modal */}
+        {showAddToMapPrompt && pendingMapUpdate && (
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+            onClick={() => {
+              setShowAddToMapPrompt(false);
+              setPendingMapUpdate(null);
+            }}
+          >
+            <div 
+              className="bg-white dark:bg-slate-800 rounded-lg shadow-xl p-6 max-w-md w-full mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-start gap-3 mb-4">
+                <div className="flex-shrink-0 w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                  <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                    Add to Concept Map?
+                  </h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                    I found {pendingMapUpdate.newNodes.length} new concept{pendingMapUpdate.newNodes.length !== 1 ? 's' : ''} to add to your map:
+                  </p>
+                </div>
+              </div>
+              
+              {/* Show preview of new nodes */}
+              <div className="mb-4 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg max-h-32 overflow-y-auto">
+                <ul className="space-y-1 text-sm">
+                  {pendingMapUpdate.newNodes.map((node, idx) => (
+                    <li key={idx} className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                      <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                      <span className="font-medium">{node.label}</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">({node.type})</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              
+              {/* Action buttons */}
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => {
+                    setShowAddToMapPrompt(false);
+                    setPendingMapUpdate(null);
+                    toast.info('Map update cancelled');
+                  }}
+                  className="px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    // TODO: Phase 3d will implement the actual merge logic
+                    console.log('✅ User confirmed - will merge nodes in Phase 3d');
+                    setShowAddToMapPrompt(false);
+                    toast.info('Phase 3d: Merge logic coming next!');
+                    // Keep pendingMapUpdate for Phase 3d
+                  }}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+                >
+                  Add to Map
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
         )}
       </div>
