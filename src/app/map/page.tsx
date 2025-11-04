@@ -19,7 +19,6 @@ import {
   MapUpdateConfirmationModal,
   WelcomeScreen,
 } from '@/components/concept-map';
-import { SaveMapDialog } from '@/components/concept-map/SaveMapDialog';
 import { WelcomeModal } from '@/components/WelcomeModal';
 
 // Import types and utilities
@@ -34,7 +33,6 @@ import { useChatHandlers } from '@/hooks/useChatHandlers';
 import { useMapUpdate } from '@/hooks/useMapUpdate';
 
 const flowKey = 'biobuddy-concept-map-flow';
-const SAVED_MAPS_KEY = 'biobuddy-saved-maps';
 const TOPIC_CHATS_KEY = 'biobuddy-topic-chats';
 
 // Debug helper for localStorage
@@ -46,15 +44,6 @@ if (typeof window !== 'undefined') {
     console.log('Parsed:', JSON.parse(saved || '[]'));
     console.log('Size:', new Blob([saved || '']).size, 'bytes');
   };
-}
-
-interface SavedMap {
-  id: string;
-  name: string;
-  timestamp: string;
-  nodes: Node[];
-  edges: Edge[];
-  chatHistory: ChatMessage[];
 }
 
 export default function MapPage() {
@@ -73,10 +62,6 @@ export default function MapPage() {
   const [isRegeneratingMap, setIsRegeneratingMap] = useState(false);
   const [forceRegenerateMap, setForceRegenerateMap] = useState(false);
   const lastToastedMapHashRef = useRef<string>('');
-  const [savedMaps, setSavedMaps] = useState<SavedMap[]>([]);
-  const [showSaveDialog, setShowSaveDialog] = useState(false);
-  const [saveMapName, setSaveMapName] = useState('');
-  const [showLoadMenu, setShowLoadMenu] = useState(false);
   const [autoGenerateMap, setAutoGenerateMap] = useState(true);
 
   // Topic management
@@ -174,10 +159,8 @@ export default function MapPage() {
     chatMessages,
     nodes,
     edges,
-    savedMaps,
     autoGenerateMap,
     generateConceptMapFromText,
-    setShowSaveDialog,
     setShowSuccessBanner,
     setPendingMapUpdate,
     setShowAddToMapPrompt,
@@ -398,20 +381,6 @@ export default function MapPage() {
     }
   }, [loadingState]);
 
-  // Load saved maps from localStorage on mount
-  useEffect(() => {
-    try {
-      const savedMapsJson = localStorage.getItem(SAVED_MAPS_KEY);
-      if (savedMapsJson) {
-        const maps = JSON.parse(savedMapsJson);
-        setSavedMaps(maps);
-        console.log('📚 Loaded saved maps:', maps.length);
-      }
-    } catch (error) {
-      console.error('Error loading saved maps:', error);
-    }
-  }, []);
-
   // Handle text change
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputText(e.target.value);
@@ -424,47 +393,6 @@ export default function MapPage() {
       setErrorMessage("");
     }
   };
-
-  // Handle save map
-  const handleSaveMap = useCallback((name: string) => {
-    if (!name.trim()) {
-      toast.error('Please enter a name for the map');
-      return;
-    }
-
-    if (nodes.length === 0) {
-      toast.error('No map to save');
-      return;
-    }
-
-    const newMap: SavedMap = {
-      id: `map-${Date.now()}`,
-      name: name.trim(),
-      timestamp: new Date().toISOString(),
-      nodes: nodes,
-      edges: edges,
-      chatHistory: chatMessages,
-    };
-
-    const updatedMaps = [...savedMaps, newMap];
-    setSavedMaps(updatedMaps);
-    
-    try {
-      localStorage.setItem(SAVED_MAPS_KEY, JSON.stringify(updatedMaps));
-      toast.success('Map saved successfully!', {
-        description: `Saved as "${name}"`,
-      });
-      console.log('💾 Saved map:', name);
-    } catch (error) {
-      console.error('Error saving map:', error);
-      toast.error('Failed to save map', {
-        description: 'Storage limit may have been reached',
-      });
-    }
-
-    setShowSaveDialog(false);
-    setSaveMapName('');
-  }, [nodes, edges, chatMessages, savedMaps]);
 
   // Handle regenerate mindmap
   const handleRegenerateMindmap = useCallback(async () => {
@@ -878,18 +806,9 @@ Make sure EVERY concept from the list above is included in the new map.`;
                   isRestoringFromStorage={isRestoringFromStorage}
                   onRegenerateMindmap={handleRegenerateMindmap}
                   isRegeneratingMap={isRegeneratingMap}
-                  onSaveMap={() => setShowSaveDialog(true)}
                 />
               </div>
             </div>
-
-            <SaveMapDialog
-              open={showSaveDialog}
-              name={saveMapName}
-              onChangeName={setSaveMapName}
-              onCancel={() => { setShowSaveDialog(false); setSaveMapName(''); }}
-              onSave={() => handleSaveMap(saveMapName)}
-            />
 
             <MapUpdateConfirmationModal
               isOpen={showAddToMapPrompt}

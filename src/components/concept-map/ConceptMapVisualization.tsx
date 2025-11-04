@@ -60,7 +60,6 @@ interface ConceptMapVisualizationProps {
   isRestoringFromStorage: boolean;
   onRegenerateMindmap: () => void;
   isRegeneratingMap: boolean;
-  onSaveMap: () => void;
 }
 
 export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = ({
@@ -86,8 +85,7 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
   onToggleChatMode,
   isRestoringFromStorage,
   onRegenerateMindmap,
-  isRegeneratingMap,
-  onSaveMap
+  isRegeneratingMap
 }) => {
   // DEBUG: Log what we're receiving
   console.log('🎨 ConceptMapVisualization render:', {
@@ -427,10 +425,10 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
             </svg>
           </div>
           <h3 className="text-lg font-medium text-slate-700 dark:text-slate-300 mb-2">
-            Analyzing your notes...
+            Analyzing data...
           </h3>
           <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xs">
-            Our AI is identifying key concepts and relationships from your text. This may take a few moments.
+            Our AI is identifying key concepts and relationships. This may take a few moments.
           </p>
         </div>
       )}
@@ -603,32 +601,20 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
             
             {/* Floating Action Buttons */}
             <div className="absolute bottom-56 right-4 flex flex-col gap-2">
-              {/* Save and Regenerate buttons */}
+              {/* Regenerate button */}
               {loadingState === 'success' && nodes.length > 0 && (
-                <div className="flex flex-col gap-2 mb-2">
-                  <button
-                    onClick={onSaveMap}
-                    className="w-12 h-12 bg-teal-600 hover:bg-teal-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group"
-                    title="Save this map"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                    </svg>
-                  </button>
-                  
-                  <button
-                    onClick={onRegenerateMindmap}
-                    disabled={isRegeneratingMap}
-                    className={`w-12 h-12 rounded-full shadow-lg transition-all duration-200 flex items-center justify-center group ${
-                      isRegeneratingMap
-                        ? 'bg-slate-400 text-slate-200 cursor-not-allowed'
-                        : 'bg-amber-600 hover:bg-amber-700 text-white hover:shadow-xl'
-                    }`}
-                    title="Regenerate the mindmap from current explanation"
-                  >
-                    <RotateCw className={`w-5 h-5 ${isRegeneratingMap ? 'animate-spin' : ''}`} />
-                  </button>
-                </div>
+                <button
+                  onClick={onRegenerateMindmap}
+                  disabled={isRegeneratingMap}
+                  className={`w-12 h-12 rounded-full shadow-lg transition-all duration-200 flex items-center justify-center group mb-2 ${
+                    isRegeneratingMap
+                      ? 'bg-slate-400 text-slate-200 cursor-not-allowed'
+                      : 'bg-amber-600 hover:bg-amber-700 text-white hover:shadow-xl'
+                  }`}
+                  title="Regenerate the mindmap from current explanation"
+                >
+                  <RotateCw className={`w-5 h-5 ${isRegeneratingMap ? 'animate-spin' : ''}`} />
+                </button>
               )}
 
               {/* Tidy Layout Button */}

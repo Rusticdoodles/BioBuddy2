@@ -5,15 +5,6 @@ import { ChatMessage, LoadingState, TopicChat } from '@/types/concept-map-types'
 import { shouldGenerateConceptMap, wantsToUpdateMap } from '@/utils/intent-detection';
 import { GoogleImage } from '@/utils/google-images';
 
-interface SavedMap {
-  id: string;
-  name: string;
-  timestamp: string;
-  nodes: Node[];
-  edges: Edge[];
-  chatHistory: ChatMessage[];
-}
-
 interface UseChatHandlersProps {
   activeTopicId: string | null;
   activeTopic: TopicChat | undefined;
@@ -22,10 +13,8 @@ interface UseChatHandlersProps {
   chatMessages: ChatMessage[];
   nodes: Node[];
   edges: Edge[];
-  savedMaps: SavedMap[];
   autoGenerateMap: boolean;
   generateConceptMapFromText: (text: string) => Promise<void>;
-  setShowSaveDialog: (show: boolean) => void;
   setShowSuccessBanner: (show: boolean) => void;
   setPendingMapUpdate: (update: { newNodes: any[]; newEdges: any[]; newInformation: string } | null) => void;
   setShowAddToMapPrompt: (show: boolean) => void;
@@ -40,10 +29,8 @@ export const useChatHandlers = ({
   chatMessages,
   nodes,
   edges,
-  savedMaps,
   autoGenerateMap,
   generateConceptMapFromText,
-  setShowSaveDialog,
   setShowSuccessBanner,
   setPendingMapUpdate,
   setShowAddToMapPrompt,
@@ -162,21 +149,6 @@ export const useChatHandlers = ({
     
     const currentMessages = activeTopic?.messages || [];
     const shouldGenerate = autoGenerateMap && shouldGenerateConceptMap(userMessage_trimmed, currentMessages);
-
-    // Check if there's an unsaved map ONLY if we're going to generate a new map
-    if (shouldGenerate && nodes.length > 0 && !savedMaps.some(m => 
-      JSON.stringify(m.nodes) === JSON.stringify(nodes) && 
-      JSON.stringify(m.edges) === JSON.stringify(edges)
-    )) {
-      const shouldSave = window.confirm(
-        'You have an unsaved concept map. Would you like to save it before generating a new one?'
-      );
-      
-      if (shouldSave) {
-        setShowSaveDialog(true);
-        return;
-      }
-    }
 
     setTopicChats(prev => prev.map(topic =>
       topic.id === activeTopicId
@@ -305,10 +277,8 @@ export const useChatHandlers = ({
     chatMessages,
     nodes,
     edges,
-    savedMaps,
     autoGenerateMap,
     generateConceptMapFromText,
-    setShowSaveDialog,
     setShowSuccessBanner,
     setPendingMapUpdate,
     setShowAddToMapPrompt,
