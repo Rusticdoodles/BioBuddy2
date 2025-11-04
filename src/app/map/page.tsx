@@ -71,6 +71,7 @@ export default function MapPage() {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [isRestoringFromStorage, setIsRestoringFromStorage] = useState(true);
   const [isRegeneratingMap, setIsRegeneratingMap] = useState(false);
+  const [forceRegenerateMap, setForceRegenerateMap] = useState(false);
   const lastToastedMapHashRef = useRef<string>('');
   const [savedMaps, setSavedMaps] = useState<SavedMap[]>([]);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
@@ -272,7 +273,14 @@ export default function MapPage() {
     const topic = topicChats.find(t => t.id === activeTopicId);
     const savedNodeCount = topic?.nodes?.length || 0;
     
-    if (savedNodeCount > conceptMapData.nodes.length) {
+    // Allow regeneration to bypass protection
+    if (forceRegenerateMap) {
+      console.log('🔄 FORCE REGENERATE - bypassing protection to create unified map', {
+        savedNodes: savedNodeCount,
+        newConceptMapNodes: conceptMapData.nodes.length
+      });
+      setForceRegenerateMap(false); // Reset flag
+    } else if (savedNodeCount > conceptMapData.nodes.length) {
       console.log('⏭️ SKIPPING conceptMapData conversion - preserving merged map:', {
         savedNodes: savedNodeCount,
         conceptMapNodes: conceptMapData.nodes.length,
@@ -349,7 +357,7 @@ export default function MapPage() {
     setTimeout(() => { isProgrammaticChangeRef.current = false; }, 0);
     
     processedConceptMapRef.current = conceptMapHash;
-  }, [conceptMapData, activeTopicId, nodes.length, topicChats, handleUpdateNode, handleDeleteNode, handleUpdateEdge, handleDeleteEdge, setNodes, setEdges, isProgrammaticChangeRef]);
+  }, [conceptMapData, activeTopicId, nodes.length, topicChats, forceRegenerateMap, handleUpdateNode, handleDeleteNode, handleUpdateEdge, handleDeleteEdge, setNodes, setEdges, isProgrammaticChangeRef]);
 
   // Reset processed conceptMap ref when switching topics
   useEffect(() => {
@@ -460,27 +468,82 @@ export default function MapPage() {
 
   // Handle regenerate mindmap
   const handleRegenerateMindmap = useCallback(async () => {
-    let lastAssistantMessage = '';
-    for (let i = chatMessages.length - 1; i >= 0; i--) {
-      if (chatMessages[i].role === 'assistant') {
-        lastAssistantMessage = chatMessages[i].content;
-        break;
-      }
-    }
-    
-    if (!lastAssistantMessage) {
-      toast.error('No response to regenerate map from');
+    if (!activeTopic || chatMessages.length === 0) {
+      toast.error('No conversation to regenerate map from');
       return;
     }
     
-    console.log('🔄 Regenerating mindmap only');
+    console.log('🔄 Regenerating mindmap with ALL concepts (original + merged)');
     setIsRegeneratingMap(true);
+    setForceRegenerateMap(true); // Bypass protection
     
     try {
-      await generateConceptMapFromText(lastAssistantMessage);
-      toast.success('Mindmap regenerated successfully');
+      // Step 1: Gather ALL information from conversation
+      const allAssistantMessages = chatMessages
+        .filter(msg => msg.role === 'assistant')
+        .map(msg => msg.content)
+        .join('\n\n');
+      
+      if (!allAssistantMessages) {
+        toast.error('No AI responses to regenerate from');
+        setForceRegenerateMap(false);
+        return;
+      }
+      
+      // Step 2: Extract all unique concepts from current nodes (including merged ones)
+      const currentConcepts = activeTopic.nodes.map(node => {
+        const label = (node.data as { label?: string })?.label || '';
+        const type = (node.data as { type?: string })?.type || 'concept';
+        return { label, type };
+      }).filter(c => c.label);
+      
+      console.log('📊 Regenerating with:', {
+        aiMessagesLength: allAssistantMessages.length,
+        currentNodeCount: currentConcepts.length,
+        conceptsList: currentConcepts.map(c => c.label)
+      });
+      
+      // Step 3: Create enhanced prompt for Claude
+      const enhancedPrompt = `${allAssistantMessages}
+
+
+
+IMPORTANT: The student has been studying this topic and has added additional concepts to their map. Please create a comprehensive concept map that includes ALL of these concepts with proper relationships:
+
+
+
+Current concepts on the map:
+
+${currentConcepts.map(c => `- ${c.label} (${c.type})`).join('\n')}
+
+
+
+Please regenerate the concept map with:
+
+1. All the concepts listed above
+
+2. Proper hierarchical relationships between them
+
+3. Clear, educational connections
+
+4. A clean, organized structure
+
+
+
+Make sure EVERY concept from the list above is included in the new map.`;
+
+      console.log('🤖 Sending enhanced prompt to generate unified map');
+      
+      // Step 4: Generate new map with all concepts
+      await generateConceptMapFromText(enhancedPrompt);
+      
+      toast.success('Mindmap regenerated with all concepts!', {
+        description: `Restructured ${currentConcepts.length} concepts with better organization`
+      });
+      
     } catch (error) {
       console.error("❌ Error regenerating mindmap:", error);
+      setForceRegenerateMap(false); // Reset on error
       
       toast.error('Failed to regenerate mindmap', {
         description: error instanceof Error ? error.message : 'Unknown error',
@@ -493,7 +556,7 @@ export default function MapPage() {
     } finally {
       setIsRegeneratingMap(false);
     }
-  }, [chatMessages, generateConceptMapFromText]);
+  }, [chatMessages, activeTopic, generateConceptMapFromText]);
 
   // Show toast notification when a NEW mindmap is generated
   useEffect(() => {
