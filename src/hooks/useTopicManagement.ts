@@ -102,12 +102,25 @@ export const useTopicManagement = () => {
   }, []);
 
   const handleSwitchTopic = useCallback((topicId: string) => {
+    console.log('🔄 handleSwitchTopic called:', {
+      newTopicId: topicId,
+      oldTopicId: activeTopicId
+    });
+    
     setActiveTopicId(topicId);
+    
     const topic = topicChats.find(t => t.id === topicId);
     if (topic) {
-      console.log('🔄 Switched to topic:', topic.name);
+      console.log('✅ Switched to topic:', {
+        name: topic.name,
+        nodes: topic.nodes.length,
+        edges: topic.edges.length,
+        messages: topic.messages.length
+      });
+    } else {
+      console.error('❌ Topic not found:', topicId);
     }
-  }, [topicChats]);
+  }, [topicChats, activeTopicId]);
 
   const handleDeleteTopic = useCallback((topicId: string) => {
     const topic = topicChats.find(t => t.id === topicId);

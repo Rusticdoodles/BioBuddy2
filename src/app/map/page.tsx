@@ -175,45 +175,51 @@ export default function MapPage() {
   const prevActiveTopicIdRef = useRef<string | null>(null);
   const processedConceptMapRef = useRef<string | null>(null);
 
-  // Sync nodes and edges when active topic ID changes
+  // Sync nodes/edges when switching topics
   useEffect(() => {
-    const topic = topicChats.find(t => t.id === activeTopicId);
-    
-    // Handle topic switching
+    // Only run when topic actually changes
     if (activeTopicId !== prevActiveTopicIdRef.current) {
-      console.log('🔄 Topic changed:', {
+      const topic = topicChats.find(t => t.id === activeTopicId);
+      
+      console.log('🔄 TOPIC SWITCH DETECTED:', {
         from: prevActiveTopicIdRef.current,
         to: activeTopicId,
-        topicNodes: topic?.nodes.length || 0,
-        topicEdges: topic?.edges.length || 0
+        topicName: topic?.name || 'none',
+        savedNodes: topic?.nodes.length || 0,
+        savedEdges: topic?.edges.length || 0
       });
       
       if (topic) {
+        // Force update nodes and edges from topic
+        console.log('✅ Loading map for topic:', topic.name);
+        
+        // Mark as programmatic change to prevent history tracking
+        isProgrammaticChangeRef.current = true;
         setNodes(topic.nodes || []);
         setEdges(topic.edges || []);
+        
+        // Reset flag after React processes the updates
+        setTimeout(() => {
+          isProgrammaticChangeRef.current = false;
+        }, 0);
       } else {
+        console.log('⚠️ No topic found, clearing map');
+        
+        isProgrammaticChangeRef.current = true;
         setNodes([]);
         setEdges([]);
+        setTimeout(() => {
+          isProgrammaticChangeRef.current = false;
+        }, 0);
       }
-      prevActiveTopicIdRef.current = activeTopicId;
-    }
-    
-    // Handle initial load (when component first mounts)
-    else if (prevActiveTopicIdRef.current === null && topic && activeTopicId) {
-      console.log('📂 INITIAL LOAD - Restoring from localStorage:', {
-        topicId: activeTopicId,
-        topicName: topic.name,
-        savedNodes: topic.nodes.length,
-        savedEdges: topic.edges.length,
-        currentNodes: nodes.length,
-        currentEdges: edges.length
-      });
       
-      setNodes(topic.nodes || []);
-      setEdges(topic.edges || []);
+      // Update ref
       prevActiveTopicIdRef.current = activeTopicId;
+      
+      // CRITICAL: Reset processedConceptMapRef to allow new map to load
+      processedConceptMapRef.current = null;
     }
-  }, [activeTopicId, setNodes, setEdges, topicChats, nodes.length, edges.length]);
+  }, [activeTopicId, topicChats, setNodes, setEdges, isProgrammaticChangeRef]);
 
   // Update active topic when nodes or edges change
   useEffect(() => {
@@ -255,8 +261,7 @@ export default function MapPage() {
       return;
     }
 
-    // CRITICAL FIX: Check against the topic's saved nodes, not current render state
-    // This prevents race condition where nodes haven't loaded yet
+    // CRITICAL: Check against topic's saved nodes
     const topic = topicChats.find(t => t.id === activeTopicId);
     const savedNodeCount = topic?.nodes?.length || 0;
     
@@ -268,21 +273,18 @@ export default function MapPage() {
       });
       setForceRegenerateMap(false); // Reset flag
     } else if (savedNodeCount > conceptMapData.nodes.length) {
-      console.log('⏭️ SKIPPING conceptMapData conversion - preserving merged map:', {
+      console.log('⏭️ SKIPPING conceptMapData conversion - preserving topic map:', {
         savedNodes: savedNodeCount,
-        conceptMapNodes: conceptMapData.nodes.length,
-        reason: 'Topic has more nodes (user merged additional concepts)'
+        conceptMapNodes: conceptMapData.nodes.length
       });
       return;
     }
 
-    // Don't overwrite if we already have more nodes than conceptMapData
-    // This means user has merged additional nodes that should be preserved
+    // Don't overwrite if we already have more nodes
     if (nodes.length > conceptMapData.nodes.length) {
-      console.log('⏭️ SKIPPING conceptMapData conversion - preserving merged map:', {
+      console.log('⏭️ SKIPPING conceptMapData conversion - preserving current map:', {
         currentNodes: nodes.length,
-        conceptMapNodes: conceptMapData.nodes.length,
-        reason: 'User has merged additional nodes'
+        conceptMapNodes: conceptMapData.nodes.length
       });
       return;
     }
@@ -346,11 +348,18 @@ export default function MapPage() {
     processedConceptMapRef.current = conceptMapHash;
   }, [conceptMapData, activeTopicId, nodes.length, topicChats, forceRegenerateMap, handleUpdateNode, handleDeleteNode, handleUpdateEdge, handleDeleteEdge, setNodes, setEdges, isProgrammaticChangeRef]);
 
-  // Reset processed conceptMap ref when switching topics
+  // Debug function to check state
   useEffect(() => {
-    console.log('🔄 Topic switched - resetting processedConceptMapRef');
-    processedConceptMapRef.current = null;
-  }, [activeTopicId]);
+    console.log('🔍 STATE CHECK:', {
+      activeTopicId,
+      activeTopicName: activeTopic?.name,
+      topicNodesInState: activeTopic?.nodes.length || 0,
+      topicEdgesInState: activeTopic?.edges.length || 0,
+      renderedNodes: nodes.length,
+      renderedEdges: edges.length,
+      conceptMapDataNodes: conceptMapData?.nodes.length || 0
+    });
+  }, [activeTopicId, activeTopic, nodes.length, edges.length, conceptMapData]);
 
   // Check if user has seen onboarding
   useEffect(() => {
