@@ -4,8 +4,8 @@ import { toast } from 'sonner';
 interface MapUpdateConfirmationModalProps {
   isOpen: boolean;
   pendingMapUpdate: {
-    newNodes: Array<{ label: string; type: string }>;
-    newEdges: any[];
+    newNodes: Array<{ id?: string; label: string; type: string }>;
+    newEdges: Array<{ source: string; target: string; label?: string }>;
     newInformation: string;
   } | null;
   onClose: () => void;

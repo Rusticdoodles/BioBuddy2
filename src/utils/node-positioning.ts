@@ -18,7 +18,6 @@ export function findEmptySpace(
   const NODE_WIDTH = 150; // Approximate node width
   const NODE_HEIGHT = 80; // Approximate node height
   const MIN_SPACING = 50; // Minimum space between nodes
-  const SEARCH_RADIUS = 400; // How far to search for empty space
   const GRID_SIZE = 120; // Grid cell size for positioning
   
   // If no existing nodes, just use preferred position
@@ -104,7 +103,6 @@ export function calculateOptimalStartPosition(existingNodes: Node[]): Position {
   const maxY = Math.max(...positions.map(p => p.y));
   
   // Calculate center
-  const centerX = (minX + maxX) / 2;
   const centerY = (minY + maxY) / 2;
   
   // Prefer positioning to the right and slightly down from center
@@ -120,13 +118,24 @@ export function calculateOptimalStartPosition(existingNodes: Node[]): Position {
   return { x: preferredX, y: preferredY };
 }
 
+interface NewNode {
+  id: string;
+  label: string;
+  type: string;
+}
+
+interface NewEdge {
+  source: string;
+  target: string;
+}
+
 /**
  * Groups new nodes to keep related concepts close together.
  */
 export function clusterRelatedNodes(
-  newNodes: any[],
-  newEdges: any[]
-): { node: any; group: number }[] {
+  newNodes: NewNode[],
+  newEdges: NewEdge[]
+): { node: NewNode; group: number }[] {
   // Simple clustering: nodes connected by edges should be near each other
   const groups = new Map<string, number>();
   let currentGroup = 0;

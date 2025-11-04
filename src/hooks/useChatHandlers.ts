@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
-import { Node, Edge } from '@xyflow/react';
 import { ChatMessage, LoadingState, TopicChat } from '@/types/concept-map-types';
 import { shouldGenerateConceptMap, wantsToUpdateMap } from '@/utils/intent-detection';
 import { GoogleImage } from '@/utils/google-images';
@@ -8,15 +7,12 @@ import { GoogleImage } from '@/utils/google-images';
 interface UseChatHandlersProps {
   activeTopicId: string | null;
   activeTopic: TopicChat | undefined;
-  topicChats: TopicChat[];
   setTopicChats: React.Dispatch<React.SetStateAction<TopicChat[]>>;
   chatMessages: ChatMessage[];
-  nodes: Node[];
-  edges: Edge[];
   autoGenerateMap: boolean;
   generateConceptMapFromText: (text: string) => Promise<void>;
   setShowSuccessBanner: (show: boolean) => void;
-  setPendingMapUpdate: (update: { newNodes: any[]; newEdges: any[]; newInformation: string } | null) => void;
+  setPendingMapUpdate: (update: { newNodes: Array<{ id?: string; label: string; type: string }>; newEdges: Array<{ source: string; target: string; label?: string }>; newInformation: string } | null) => void;
   setShowAddToMapPrompt: (show: boolean) => void;
   setIsLoadingMapUpdate: (loading: boolean) => void;
 }
@@ -24,11 +20,8 @@ interface UseChatHandlersProps {
 export const useChatHandlers = ({
   activeTopicId,
   activeTopic,
-  topicChats,
   setTopicChats,
   chatMessages,
-  nodes,
-  edges,
   autoGenerateMap,
   generateConceptMapFromText,
   setShowSuccessBanner,
@@ -296,11 +289,8 @@ export const useChatHandlers = ({
   }, [
     activeTopicId,
     activeTopic,
-    topicChats,
     setTopicChats,
     chatMessages,
-    nodes,
-    edges,
     autoGenerateMap,
     generateConceptMapFromText,
     setShowSuccessBanner,
@@ -414,7 +404,7 @@ export const useChatHandlers = ({
     
     console.log('🔄 Refining message with type:', refinementType);
     await handleSendChatMessage(refinedPrompt);
-  }, [chatMessages, activeTopicId, setTopicChats, autoGenerateMap, generateConceptMapFromText, handleSendChatMessage, setShowSuccessBanner]);
+  }, [chatMessages, activeTopicId, activeTopic, setTopicChats, autoGenerateMap, generateConceptMapFromText, handleSendChatMessage, setShowSuccessBanner]);
 
   const handleSearchBetterImages = useCallback(async (messageIndex: number, searchTerms: string[]) => {
     console.log('🔵 Find Better Images clicked!', { messageIndex, searchTerms });

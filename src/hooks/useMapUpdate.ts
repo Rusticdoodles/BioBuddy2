@@ -9,8 +9,8 @@ import { getLayoutedElements } from '@/utils/layout';
 const TOPIC_CHATS_KEY = 'biobuddy-topic-chats';
 
 interface PendingMapUpdate {
-  newNodes: any[];
-  newEdges: any[];
+  newNodes: Array<{ id?: string; label: string; type: string }>;
+  newEdges: Array<{ source: string; target: string; label?: string }>;
   newInformation: string;
 }
 
@@ -117,12 +117,16 @@ export const useMapUpdate = ({
       const { x: baseX, y: baseY } = calculateOptimalStartPosition(activeTopic.nodes);
       console.log('📍 Starting position for new nodes:', { baseX, baseY });
 
-      // Step 4: Group related nodes
-      const clusteredNodes = clusterRelatedNodes(uniqueNewNodes, pendingMapUpdate.newEdges);
+      // Step 4: Group related nodes (add temporary IDs if missing)
+      const nodesWithIds = uniqueNewNodes.map((node, idx) => ({
+        ...node,
+        id: node.id || `new-${idx}`
+      }));
+      const clusteredNodes = clusterRelatedNodes(nodesWithIds, pendingMapUpdate.newEdges);
       console.log('🔗 Clustered into', new Set(clusteredNodes.map(c => c.group)).size, 'groups');
 
       // Step 5: Format new nodes with smart positioning
-      const newNodesFormatted: any[] = [];
+      const newNodesFormatted: Node[] = [];
       clusteredNodes.forEach(({ node }, index) => {
         const newNodeId = `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         newIdMap.set(node.id, newNodeId);

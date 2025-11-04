@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { Navbar } from "@/components/navbar";
-import { Edge, Node, useNodesState, useEdgesState, Position, ReactFlowInstance, NodeChange, EdgeChange } from '@xyflow/react';
+import { Edge, Node, useNodesState, useEdgesState, Position, ReactFlowInstance } from '@xyflow/react';
 import {
   Edit3, 
   ChevronLeft,
@@ -22,7 +22,7 @@ import {
 import { WelcomeModal } from '@/components/WelcomeModal';
 
 // Import types and utilities
-import { ConceptMapResponse, LoadingState, ChatMessage, TopicChat } from '@/types/concept-map-types';
+import { LoadingState } from '@/types/concept-map-types';
 import { getLayoutedElements } from '@/utils/layout';
 
 // Import custom hooks
@@ -38,7 +38,7 @@ const TOPIC_CHATS_KEY = 'biobuddy-topic-chats';
 
 // Debug helper for localStorage
 if (typeof window !== 'undefined') {
-  (window as any).debugStorage = () => {
+  (window as Window & { debugStorage?: () => void }).debugStorage = () => {
     const saved = localStorage.getItem(TOPIC_CHATS_KEY);
     console.log('=== STORAGE DEBUG ===');
     console.log('Raw data:', saved);
@@ -70,12 +70,10 @@ export default function MapPage() {
     topicChats,
     setTopicChats,
     activeTopicId,
-    setActiveTopicId,
     activeTopic,
     handleCreateTopic,
     handleSwitchTopic,
     handleDeleteTopic,
-    handleRenameTopic,
     handleClearChat,
   } = useTopicManagement();
 
@@ -103,7 +101,6 @@ export default function MapPage() {
     setNodesProgrammatic,
     setEdgesProgrammatic,
     isProgrammaticChangeRef,
-    pushHistory,
   } = useMapOperations(nodes, edges, setNodes, setEdges);
 
   // Create wrapped handlers
@@ -155,11 +152,8 @@ export default function MapPage() {
   } = useChatHandlers({
     activeTopicId,
     activeTopic,
-    topicChats,
     setTopicChats,
     chatMessages,
-    nodes,
-    edges,
     autoGenerateMap,
     generateConceptMapFromText,
     setShowSuccessBanner,
@@ -392,7 +386,7 @@ export default function MapPage() {
 
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [showAddToMapPrompt, setPendingMapUpdate]);
+  }, [showAddToMapPrompt, setPendingMapUpdate, setShowAddToMapPrompt]);
 
   // Show success banner
   useEffect(() => {
@@ -830,8 +824,6 @@ Make sure EVERY concept from the list above is included in the new map.`;
                   onEdgesChange={wrappedOnEdgesChange}
                   onUpdateNode={handleUpdateNode}
                   onDeleteNode={handleDeleteNode}
-                  onUpdateEdge={handleUpdateEdge}
-                  onDeleteEdge={handleDeleteEdge}
                   onConnect={onConnect}
                   onAddNode={handleAddNode}
                   setNodes={setNodesProgrammatic}

@@ -1,5 +1,5 @@
-import { useCallback, useRef, useState, useEffect } from 'react';
-import { Node, Edge, NodeChange, EdgeChange, Position, Connection, addEdge } from '@xyflow/react';
+import { useCallback, useRef, useEffect } from 'react';
+import { Node, Edge, NodeChange, EdgeChange, Connection, addEdge } from '@xyflow/react';
 
 interface SerializableNode {
   id: string;
@@ -30,7 +30,6 @@ export const useMapOperations = (
   setEdges: React.Dispatch<React.SetStateAction<Edge[]>>,
 ) => {
   const historyRef = useRef<{ nodes: SerializableNode[]; edges: SerializableEdge[] }[]>([]);
-  const [historyVersion, setHistoryVersion] = useState(0);
   const isProgrammaticChangeRef = useRef(false);
   const nodesRef = useRef<Node[]>(nodes);
   const edgesRef = useRef<Edge[]>(edges);
@@ -74,7 +73,6 @@ export const useMapOperations = (
     if (isProgrammaticChangeRef.current) return;
     const snapshot = getStorableSnapshot();
     historyRef.current.push(snapshot);
-    setHistoryVersion((v) => v + 1);
   }, [getStorableSnapshot]);
 
   const handleDeleteNode = useCallback((nodeId: string) => {
@@ -182,7 +180,6 @@ export const useMapOperations = (
     if (historyRef.current.length === 0) return;
     const last = historyRef.current.pop()!;
     restoreFromSnapshot(last);
-    setHistoryVersion((v) => v + 1);
   }, [restoreFromSnapshot]);
 
   const createWrappedOnNodesChange = useCallback((onNodesChange: (changes: NodeChange[]) => void) => {

@@ -47,8 +47,6 @@ interface ConceptMapVisualizationProps {
   onEdgesChange: (changes: EdgeChange[]) => void;
   onUpdateNode: (nodeId: string, label: string, type?: string) => void;
   onDeleteNode: (nodeId: string) => void;
-  onUpdateEdge: (edgeId: string, label: string) => void;
-  onDeleteEdge: (edgeId: string) => void;
   onConnect: (params: Connection) => void;
   onAddNode: (label: string, type: string) => void;
   setNodes: React.Dispatch<React.SetStateAction<Node[]>>;
@@ -75,8 +73,6 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
   onEdgesChange,
   onUpdateNode,
   onDeleteNode,
-  onUpdateEdge,
-  onDeleteEdge,
   onConnect,
   onAddNode,
   setNodes,
