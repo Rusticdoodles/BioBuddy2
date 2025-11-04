@@ -19,7 +19,6 @@ import {
   MapUpdateConfirmationModal,
   WelcomeScreen,
 } from '@/components/concept-map';
-import { WelcomeModal } from '@/components/WelcomeModal';
 
 // Import types and utilities
 import { LoadingState } from '@/types/concept-map-types';
@@ -58,7 +57,6 @@ export default function MapPage() {
   const [showSuccessBanner, setShowSuccessBanner] = useState(true);
   const [chatInput, setChatInput] = useState("");
   const [isChatMode, setIsChatMode] = useState(true);
-  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [isRestoringFromStorage, setIsRestoringFromStorage] = useState(true);
   const [isRegeneratingMap, setIsRegeneratingMap] = useState(false);
   const [forceRegenerateMap, setForceRegenerateMap] = useState(false);
@@ -355,13 +353,6 @@ export default function MapPage() {
     });
   }, [activeTopicId, activeTopic, nodes.length, edges.length, conceptMapData]);
 
-  // Check if user has seen onboarding
-  useEffect(() => {
-    const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
-    if (!hasSeenOnboarding) {
-      setShowWelcomeModal(true);
-    }
-  }, []);
 
   // Start tour automatically for first-time users
   useEffect(() => {
@@ -686,11 +677,6 @@ Make sure EVERY concept from the list above is included in the new map.`;
     restoreData();
   }, [onRestore]);
 
-  const handleCloseWelcomeModal = () => {
-    setShowWelcomeModal(false);
-    localStorage.setItem('hasSeenOnboarding', 'true');
-    console.log('👋 Onboarding completed');
-  };
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
@@ -701,11 +687,6 @@ Make sure EVERY concept from the list above is included in the new map.`;
         toastOptions={{
           className: 'text-sm',
         }}
-      />
-      
-      <WelcomeModal 
-        isOpen={showWelcomeModal} 
-        onClose={handleCloseWelcomeModal}
       />
       
       <TopicsSidebar
