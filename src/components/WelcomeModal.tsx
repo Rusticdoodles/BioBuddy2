@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { X, ChevronLeft, ChevronRight, MessageSquare, FileText, Sparkles, Scaling, BadgeInfo, Plus, Dot, Download, FileImage, Info } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, MessageSquare, FileText, Sparkles, Scaling, BadgeInfo, Plus, Dot, Download, Info } from 'lucide-react';
 
 interface WelcomeModalProps {
   isOpen: boolean;
@@ -47,7 +47,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) =
         <ul className="ml-8 text-sm space-y-2 text-left">
           <li>• Edit nodes and connections directly on the map</li>
           <li>• Use &quot;Simplify&quot; or &quot;Add Detail&quot; to refine explanations</li>
-          <li>• Export as PNG or JSON to save your work</li>
+          <li>• Export as JSON to save your work</li>
           <li>• Everything saves automatically - never lose progress</li>
         </ul>
       ),
@@ -68,10 +68,6 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) =
           <div>
             <p className="text-lg font-semibold text-green-600 dark:text-green-400">Exporting and Importing Saved Maps</p>
             <p className="text-sm">To export and import the JSON files of saved maps, click on the <FileText className="inline w-4 h-4 align-[-0.125em]" aria-hidden="true" /> and <Download className="inline w-4 h-4 align-[-0.125em]" aria-hidden="true"/> icons respectively.</p>
-          </div>
-          <div>
-            <p className="text-lg font-semibold text-red-600 dark:text-red-400">Saving an Image of the Map</p>
-            <p className="text-sm">To take a screenshot of the map, click on the <FileImage className="inline w-4 h-4 align-[-0.125em]" aria-hidden="true" /> icon.</p>
           </div>
           <div>
             <p className="text-lg font-semibold text-yellow-600 dark:text-yellow-400">Accessing the Legend</p>
