@@ -145,7 +145,10 @@ export const useTopicManagement = () => {
     if (!topic) return;
     
     if (window.confirm(`Clear all messages and map for "${topic.name}"?`)) {
-      setTopicChats(prev => prev.map(t =>
+      console.log('🗑️ Clearing all data for topic:', topic.name);
+      
+      // Create updated topics with cleared data
+      const updatedTopics = topicChats.map(t =>
         t.id === activeTopicId
           ? {
               ...t,
@@ -153,13 +156,47 @@ export const useTopicManagement = () => {
               nodes: [],
               edges: [],
               conceptMapData: null,
-              loadingState: 'idle',
+              loadingState: 'idle' as const,
               updatedAt: new Date().toISOString()
             }
           : t
-      ));
+      );
       
-      toast.success('Topic cleared');
+      // Update state
+      setTopicChats(updatedTopics);
+      
+      // CRITICAL: Force immediate save to localStorage
+      try {
+        localStorage.setItem(TOPIC_CHATS_KEY, JSON.stringify(updatedTopics));
+        console.log('✅ Cleared topic data saved to localStorage');
+        
+        // Verify the save
+        const verification = localStorage.getItem(TOPIC_CHATS_KEY);
+        const verified = JSON.parse(verification || '[]');
+        const verifiedTopic = verified.find((t: TopicChat) => t.id === activeTopicId);
+        
+        console.log('🔍 Verification:', {
+          topicName: verifiedTopic?.name,
+          nodes: verifiedTopic?.nodes.length,
+          edges: verifiedTopic?.edges.length,
+          messages: verifiedTopic?.messages.length,
+          conceptMapData: verifiedTopic?.conceptMapData ? 'exists' : 'null'
+        });
+        
+        if (verifiedTopic?.nodes.length === 0 && verifiedTopic?.edges.length === 0) {
+          toast.success('Topic cleared successfully', {
+            description: 'All chat history and map data removed'
+          });
+        } else {
+          throw new Error('Verification failed - data still present');
+        }
+        
+      } catch (error) {
+        console.error('❌ Failed to save cleared data:', error);
+        toast.error('Failed to clear topic properly', {
+          description: 'Please try again or refresh the page'
+        });
+      }
     }
   }, [activeTopicId, topicChats]);
 

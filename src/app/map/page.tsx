@@ -486,6 +486,18 @@ Make sure EVERY concept from the list above is included in the new map.`;
     }
   }, [chatMessages, activeTopic, generateConceptMapFromText]);
 
+  // Wrapper function to clear chat and also reset React Flow state
+  const handleClearChatWithMapReset = useCallback(() => {
+    // Clear topic data
+    handleClearChat();
+    
+    // Also clear React Flow state immediately
+    setNodes([]);
+    setEdges([]);
+    
+    console.log('🗑️ Cleared React Flow state');
+  }, [handleClearChat, setNodes, setEdges]);
+
   // Show toast notification when a NEW mindmap is generated
   useEffect(() => {
     if (isRestoringFromStorage) return;
@@ -730,7 +742,7 @@ Make sure EVERY concept from the list above is included in the new map.`;
                         loadingState={loadingState}
                         isChatMode={isChatMode}
                         onToggleChatMode={() => setIsChatMode(!isChatMode)}
-                        onClearAll={handleClearChat}
+                        onClearAll={handleClearChatWithMapReset}
                       />
                     ) : (
                       <ChatInterface
@@ -739,7 +751,7 @@ Make sure EVERY concept from the list above is included in the new map.`;
                         setChatInput={setChatInput}
                         onSendMessage={handleSendChatMessage}
                         isChatLoading={isChatLoading}
-                        onClearChat={handleClearChat}
+                        onClearChat={handleClearChatWithMapReset}
                         onToggleChatMode={() => setIsChatMode(!isChatMode)}
                         onRefineMessage={handleRefineMessage}
                         autoGenerateMap={autoGenerateMap}
