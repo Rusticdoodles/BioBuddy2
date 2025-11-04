@@ -4,6 +4,7 @@ import { Node, Edge } from '@xyflow/react';
 import { TopicChat } from '@/types/concept-map-types';
 import { calculateOptimalStartPosition, clusterRelatedNodes, findEmptySpace } from '@/utils/node-positioning';
 import { Position } from '@xyflow/react';
+import { getLayoutedElements } from '@/utils/layout';
 
 const TOPIC_CHATS_KEY = 'biobuddy-topic-chats';
 
@@ -203,16 +204,26 @@ export const useMapUpdate = ({
 
       console.log('✅ Formatted nodes and edges');
 
-      // Step 8: Update React Flow state and topic
-      setNodes((prevNodes) => [...prevNodes, ...newNodesFormatted]);
-      setEdges((prevEdges) => [...prevEdges, ...newEdgesFormatted]);
+      // Step 8: Merge nodes and edges
+      const mergedNodes = [...activeTopic.nodes, ...newNodesFormatted];
+      const mergedEdges = [...activeTopic.edges, ...newEdgesFormatted];
+
+      // Step 9: Apply Dagre layout to entire graph for clean positioning
+      const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+        mergedNodes,
+        mergedEdges
+      );
+
+      // Step 10: Update React Flow state and topic with layouted graph
+      setNodes(layoutedNodes);
+      setEdges(layoutedEdges);
 
       const updatedTopics = topicChats.map(topic =>
         topic.id === activeTopicId
           ? {
               ...topic,
-              nodes: [...topic.nodes, ...newNodesFormatted],
-              edges: [...topic.edges, ...newEdgesFormatted],
+              nodes: layoutedNodes,
+              edges: layoutedEdges,
               updatedAt: new Date().toISOString()
             }
           : topic
@@ -239,14 +250,14 @@ export const useMapUpdate = ({
 
       // Remove highlight after 12 seconds
       setTimeout(() => {
-        setNodes((prevNodes) => prevNodes.map(node => ({
+        const nodesWithoutHighlight = layoutedNodes.map(node => ({
           ...node,
           data: {
             ...node.data,
             isNew: false
           }
-        })));
-        setEdges((prevEdges) => prevEdges.map(edge => ({
+        }));
+        const edgesWithoutHighlight = layoutedEdges.map(edge => ({
           ...edge,
           style: { stroke: '#64748b', strokeWidth: 2 },
           markerEnd: { type: 'arrowclosed' as const, color: '#64748b' },
@@ -254,28 +265,17 @@ export const useMapUpdate = ({
             ...edge.data,
             isNew: false
           }
-        })));
+        }));
+
+        setNodes(nodesWithoutHighlight);
+        setEdges(edgesWithoutHighlight);
 
         setTopicChats(prev => prev.map(topic =>
           topic.id === activeTopicId
             ? {
                 ...topic,
-                nodes: topic.nodes.map(node => ({
-                  ...node,
-                  data: {
-                    ...node.data,
-                    isNew: false
-                  }
-                })),
-                edges: topic.edges.map(edge => ({
-                  ...edge,
-                  style: { stroke: '#64748b', strokeWidth: 2 },
-                  markerEnd: { type: 'arrowclosed' as const, color: '#64748b' },
-                  data: {
-                    ...edge.data,
-                    isNew: false
-                  }
-                }))
+                nodes: nodesWithoutHighlight,
+                edges: edgesWithoutHighlight
               }
             : topic
         ));
