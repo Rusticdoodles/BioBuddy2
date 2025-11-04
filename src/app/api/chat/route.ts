@@ -66,9 +66,7 @@ For better organization, I recommend creating a new topic chat specifically for 
 
 - Keep your study sessions organized
 - Build focused concept maps for each subject
-- Easily review specific topics later
-
-Would you like me to answer this question here anyway, or would you prefer to create a new topic? 💡`,
+- Easily review specific topics later`,
           isSuggestion: true,
           suggestedTopicName: topicAnalysis.suggestedTopicName,
           success: true
