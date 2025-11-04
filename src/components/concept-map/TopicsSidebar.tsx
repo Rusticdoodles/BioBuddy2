@@ -17,13 +17,14 @@ export const TopicsSidebar: React.FC<TopicsSidebarProps> = ({
   onDeleteTopic,
 }) => {
   return (
-    <div className="w-64 border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex flex-col">
+    <div data-tour="topics-sidebar" className="w-64 border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex flex-col">
       {/* Sidebar Header */}
       <div className="p-4 border-b border-slate-200 dark:border-slate-700">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-3">
           My Topics
         </h2>
         <button
+          data-tour="create-topic-btn"
           onClick={() => {
             const name = prompt('Topic name:');
             if (name) onCreateTopic(name);

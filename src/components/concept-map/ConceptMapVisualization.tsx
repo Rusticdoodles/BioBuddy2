@@ -463,7 +463,7 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
         <div className="w-full h-full flex flex-col">
           
           {/* ReactFlow Visualization */}
-          <div className="flex-1 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden relative">
+          <div data-tour="concept-map" className="flex-1 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden relative">
             <ReactFlow
               nodes={nodes}
               edges={edges}
@@ -600,7 +600,7 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
             </ReactFlow>
             
             {/* Floating Action Buttons */}
-            <div className="absolute bottom-56 right-4 flex flex-col gap-2">
+            <div data-tour="map-controls" className="absolute bottom-56 right-4 flex flex-col gap-2">
               {/* Regenerate button */}
               {loadingState === 'success' && nodes.length > 0 && (
                 <button

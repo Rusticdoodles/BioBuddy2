@@ -31,6 +31,7 @@ import { useMapOperations } from '@/hooks/useMapOperations';
 import { useConceptMapGeneration } from '@/hooks/useConceptMapGeneration';
 import { useChatHandlers } from '@/hooks/useChatHandlers';
 import { useMapUpdate } from '@/hooks/useMapUpdate';
+import { useTour } from '@/hooks/useTour';
 
 const flowKey = 'biobuddy-concept-map-flow';
 const TOPIC_CHATS_KEY = 'biobuddy-topic-chats';
@@ -166,6 +167,9 @@ export default function MapPage() {
     setShowAddToMapPrompt,
     setIsLoadingMapUpdate,
   });
+
+  // Tour hook
+  const { hasSeenTour, startTour } = useTour();
 
   // Refs for tracking state
   const prevActiveTopicIdRef = useRef<string | null>(null);
@@ -355,6 +359,18 @@ export default function MapPage() {
       setShowWelcomeModal(true);
     }
   }, []);
+
+  // Start tour automatically for first-time users
+  useEffect(() => {
+    if (!hasSeenTour && activeTopicId) {
+      // Small delay to ensure UI is ready
+      const timer = setTimeout(() => {
+        startTour();
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [hasSeenTour, startTour, activeTopicId]);
 
   // Close modal on ESC key
   useEffect(() => {

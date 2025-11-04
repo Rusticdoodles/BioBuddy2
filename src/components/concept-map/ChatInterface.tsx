@@ -95,6 +95,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             Clear All
           </button>
           <button
+            data-tour="notes-mode-toggle"
             onClick={onToggleChatMode}
             className="px-3 py-1.5 text-sm bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors flex items-center gap-2 shrink-0 mr-12"
             title="Switch to Notes Mode"
@@ -378,6 +379,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         {chatMessages.length > 0 && (
           <div className="flex items-center gap-2">
             <input
+              data-tour="auto-generate-toggle"
               type="checkbox"
               id="auto-generate-map"
               checked={autoGenerateMap}
@@ -395,6 +397,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         
         <div className="flex gap-2">
           <input
+            data-tour="chat-input"
             type="text"
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
