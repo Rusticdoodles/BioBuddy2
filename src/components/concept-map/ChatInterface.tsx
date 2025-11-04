@@ -67,6 +67,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const handleSendMessage = () => {
     if (chatInput.trim() && !isChatLoading) {
       onSendMessage(chatInput);
+      setChatInput('');
     }
   };
 
