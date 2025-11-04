@@ -14,6 +14,7 @@ import {
   NodeChange,
   EdgeChange,
   ReactFlowInstance,
+  SelectionMode,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { 
@@ -486,6 +487,15 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
               nodesDraggable={true}
               nodesConnectable={true}
               elementsSelectable={true}
+              multiSelectionKeyCode="Control"
+              selectionKeyCode="Shift"
+              deleteKeyCode="Delete"
+              selectionMode={SelectionMode.Partial}
+              onSelectionChange={(params) => {
+                if (params.nodes.length > 0) {
+                  console.log(`✅ Selected ${params.nodes.length} nodes`);
+                }
+              }}
             >
               <Background 
                 variant={BackgroundVariant.Dots} 

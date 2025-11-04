@@ -1,0 +1,17 @@
+/* React Flow Multi-Selection Styles */
+/* Style for selected nodes */
+.react-flow__node.selected {
+  box-shadow: 0 0 0 3px #3b82f6 !important;
+}
+
+/* Style for selection box while dragging */
+.react-flow__selection {
+  background: rgba(59, 130, 246, 0.08);
+  border: 2px dashed #3b82f6;
+}
+
+/* Selected nodes hover effect */
+.react-flow__node.selected:hover {
+  box-shadow: 0 0 0 3px #2563eb !important;
+}
+
