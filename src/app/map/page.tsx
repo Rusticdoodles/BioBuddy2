@@ -58,6 +58,9 @@ interface SavedMap {
 }
 
 export default function MapPage() {
+
+  
+
   // Basic UI state
   const [inputText, setInputText] = useState("");
   const [errorMessage, setErrorMessage] = useState<string>("");
@@ -186,8 +189,17 @@ export default function MapPage() {
 
   // Sync nodes and edges when active topic ID changes
   useEffect(() => {
+    const topic = topicChats.find(t => t.id === activeTopicId);
+    
+    // Handle topic switching
     if (activeTopicId !== prevActiveTopicIdRef.current) {
-      const topic = topicChats.find(t => t.id === activeTopicId);
+      console.log('🔄 Topic changed:', {
+        from: prevActiveTopicIdRef.current,
+        to: activeTopicId,
+        topicNodes: topic?.nodes.length || 0,
+        topicEdges: topic?.edges.length || 0
+      });
+      
       if (topic) {
         setNodes(topic.nodes || []);
         setEdges(topic.edges || []);
@@ -197,7 +209,23 @@ export default function MapPage() {
       }
       prevActiveTopicIdRef.current = activeTopicId;
     }
-  }, [activeTopicId, setNodes, setEdges, topicChats]);
+    
+    // Handle initial load (when component first mounts)
+    else if (prevActiveTopicIdRef.current === null && topic && activeTopicId) {
+      console.log('📂 INITIAL LOAD - Restoring from localStorage:', {
+        topicId: activeTopicId,
+        topicName: topic.name,
+        savedNodes: topic.nodes.length,
+        savedEdges: topic.edges.length,
+        currentNodes: nodes.length,
+        currentEdges: edges.length
+      });
+      
+      setNodes(topic.nodes || []);
+      setEdges(topic.edges || []);
+      prevActiveTopicIdRef.current = activeTopicId;
+    }
+  }, [activeTopicId, setNodes, setEdges, topicChats, nodes.length, edges.length]);
 
   // Update active topic when nodes or edges change
   useEffect(() => {
@@ -213,7 +241,16 @@ export default function MapPage() {
           return prev;
         }
         
-        console.log('🔄 Syncing node/edge changes to topic state');
+        // SAFETY: Don't sync if nodes array is empty while topic has nodes (mid-load state)
+        if (nodes.length === 0 && topic.nodes.length > 0) {
+          console.log('⚠️ BLOCKED premature sync - nodes empty during load');
+          return prev;
+        }
+        
+        console.log('🔄 Syncing node/edge changes to topic state:', {
+          nodeCount: nodes.length,
+          edgeCount: edges.length
+        });
         
         return prev.map(t => 
           t.id === activeTopicId
@@ -230,12 +267,41 @@ export default function MapPage() {
       return;
     }
 
+    // CRITICAL FIX: Check against the topic's saved nodes, not current render state
+    // This prevents race condition where nodes haven't loaded yet
+    const topic = topicChats.find(t => t.id === activeTopicId);
+    const savedNodeCount = topic?.nodes?.length || 0;
+    
+    if (savedNodeCount > conceptMapData.nodes.length) {
+      console.log('⏭️ SKIPPING conceptMapData conversion - preserving merged map:', {
+        savedNodes: savedNodeCount,
+        conceptMapNodes: conceptMapData.nodes.length,
+        reason: 'Topic has more nodes (user merged additional concepts)'
+      });
+      return;
+    }
+
+    // Don't overwrite if we already have more nodes than conceptMapData
+    // This means user has merged additional nodes that should be preserved
+    if (nodes.length > conceptMapData.nodes.length) {
+      console.log('⏭️ SKIPPING conceptMapData conversion - preserving merged map:', {
+        currentNodes: nodes.length,
+        conceptMapNodes: conceptMapData.nodes.length,
+        reason: 'User has merged additional nodes'
+      });
+      return;
+    }
+
     const conceptMapHash = `${conceptMapData.nodes.length}-${conceptMapData.edges.length}-${activeTopicId}`;
     if (processedConceptMapRef.current === conceptMapHash) {
       return;
     }
 
-    console.log('🔄 Converting conceptMapData to ReactFlow format...');
+    console.log('🔄 Converting conceptMapData to ReactFlow format...', {
+      conceptMapNodes: conceptMapData.nodes.length,
+      currentNodes: nodes.length,
+      savedNodes: savedNodeCount
+    });
     
     const reactFlowNodes: Node[] = conceptMapData.nodes.map((node) => ({
       id: node.id,
@@ -283,10 +349,11 @@ export default function MapPage() {
     setTimeout(() => { isProgrammaticChangeRef.current = false; }, 0);
     
     processedConceptMapRef.current = conceptMapHash;
-  }, [conceptMapData, activeTopicId, handleUpdateNode, handleDeleteNode, handleUpdateEdge, handleDeleteEdge, setNodes, setEdges, isProgrammaticChangeRef]);
+  }, [conceptMapData, activeTopicId, nodes.length, topicChats, handleUpdateNode, handleDeleteNode, handleUpdateEdge, handleDeleteEdge, setNodes, setEdges, isProgrammaticChangeRef]);
 
   // Reset processed conceptMap ref when switching topics
   useEffect(() => {
+    console.log('🔄 Topic switched - resetting processedConceptMapRef');
     processedConceptMapRef.current = null;
   }, [activeTopicId]);
 
