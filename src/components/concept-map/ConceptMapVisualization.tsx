@@ -267,77 +267,21 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
   const handleTidyLayout = useCallback(() => {
     if (nodes.length === 0) return;
     
-    // Simple force-directed layout simulation
-    const ITERATIONS = 50;
-    const REPULSION = 150;
-    const ATTRACTION = 0.01;
-    const DAMPING = 0.8;
+    console.log('🧹 Tidying layout with Dagre hierarchical algorithm...');
     
-    let positions = nodes.map(n => ({ ...n.position }));
-    let velocities = nodes.map(() => ({ x: 0, y: 0 }));
+    // Import is already at top of file
+    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+      nodes,
+      edges
+    );
     
-    for (let iter = 0; iter < ITERATIONS; iter++) {
-      const forces = nodes.map(() => ({ x: 0, y: 0 }));
-      
-      // Repulsion between all nodes
-      for (let i = 0; i < nodes.length; i++) {
-        for (let j = i + 1; j < nodes.length; j++) {
-          const dx = positions[j].x - positions[i].x;
-          const dy = positions[j].y - positions[i].y;
-          const distance = Math.sqrt(dx * dx + dy * dy) || 1;
-          
-          const force = REPULSION / (distance * distance);
-          const fx = (dx / distance) * force;
-          const fy = (dy / distance) * force;
-          
-          forces[i].x -= fx;
-          forces[i].y -= fy;
-          forces[j].x += fx;
-          forces[j].y += fy;
-        }
-      }
-      
-      // Attraction along edges
-      edges.forEach(edge => {
-        const sourceIdx = nodes.findIndex(n => n.id === edge.source);
-        const targetIdx = nodes.findIndex(n => n.id === edge.target);
-        
-        if (sourceIdx >= 0 && targetIdx >= 0) {
-          const dx = positions[targetIdx].x - positions[sourceIdx].x;
-          const dy = positions[targetIdx].y - positions[sourceIdx].y;
-          const distance = Math.sqrt(dx * dx + dy * dy) || 1;
-          
-          const force = distance * ATTRACTION;
-          const fx = (dx / distance) * force;
-          const fy = (dy / distance) * force;
-          
-          forces[sourceIdx].x += fx;
-          forces[sourceIdx].y += fy;
-          forces[targetIdx].x -= fx;
-          forces[targetIdx].y -= fy;
-        }
-      });
-      
-      // Update velocities and positions
-      for (let i = 0; i < nodes.length; i++) {
-        velocities[i].x = (velocities[i].x + forces[i].x) * DAMPING;
-        velocities[i].y = (velocities[i].y + forces[i].y) * DAMPING;
-        
-        positions[i].x += velocities[i].x;
-        positions[i].y += velocities[i].y;
-      }
-    }
+    setNodes(layoutedNodes);
+    setEdges(layoutedEdges);
     
-    // Apply new positions
-    const updatedNodes = nodes.map((node, i) => ({
-      ...node,
-      position: positions[i]
-    }));
-    
-    setNodes(updatedNodes);
-    toast.success('Layout organized!');
-    
-  }, [nodes, edges, setNodes]);
+    toast.success('Layout organized!', {
+      description: 'Nodes arranged in hierarchical structure'
+    });
+  }, [nodes, edges, setNodes, setEdges]);
 
   return (
     <div className="flex-1 bg-slate-50 dark:bg-slate-700 rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-600 flex items-center justify-center p-6">
