@@ -775,6 +775,7 @@ Make sure EVERY concept from the list above is included in the new map.`;
                         onSearchBetterImages={handleSearchBetterImages}
                         loadingBetterImages={loadingBetterImages}
                         isLoadingMapUpdate={isLoadingMapUpdate}
+                        onCreateNewTopic={handleCreateTopic}
                       />
                     )}
                   </>

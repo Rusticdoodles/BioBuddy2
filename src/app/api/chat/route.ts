@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest, NextResponse } from 'next/server';
 import { searchWikimediaImages, extractKeywords } from '@/utils/wikimedia';
 import { shouldGenerateConceptMap } from '@/utils/intent-detection';
+import { analyzeTopicDrift } from '@/utils/topic-detection';
 import { ChatMessage } from '@/types/concept-map-types';
 
 // Function to get Anthropic client (lazy initialization)
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
     // Initialize Anthropic client (only when API is called)
     const anthropic = getAnthropicClient();
     
-    const { message, conversationHistory } = await request.json();
+    const { message, conversationHistory, currentTopic } = await request.json();
 
     if (!message || typeof message !== 'string') {
       return NextResponse.json(
@@ -44,7 +45,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('🤖 Received chat request:', { message, historyLength: conversationHistory?.length || 0 });
+    console.log('🤖 Received chat request:', { message, historyLength: conversationHistory?.length || 0, currentTopic });
+
+    // Check if user is asking about a different topic
+    if (currentTopic && conversationHistory && conversationHistory.length > 0) {
+      const topicAnalysis = analyzeTopicDrift(
+        message,
+        currentTopic,
+        conversationHistory
+      );
+      
+      if (topicAnalysis.isDifferentTopic && topicAnalysis.confidence !== 'low') {
+        console.log('🔔 Different topic detected:', topicAnalysis);
+        
+        // Return a suggestion to create new topic instead of normal response
+        return NextResponse.json({
+          message: `I notice you're asking about **${topicAnalysis.suggestedTopicName}**, which seems different from your current topic "${currentTopic}". 
+
+For better organization, I recommend creating a new topic chat specifically for ${topicAnalysis.suggestedTopicName}! This will help you:
+
+- Keep your study sessions organized
+- Build focused concept maps for each subject
+- Easily review specific topics later
+
+Would you like me to answer this question here anyway, or would you prefer to create a new topic? 💡`,
+          isSuggestion: true,
+          suggestedTopicName: topicAnalysis.suggestedTopicName,
+          success: true
+        });
+      }
+    }
 
     // Build conversation history for Claude
     interface HistoryMessage {

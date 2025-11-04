@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from 'react';
-import { Send, MessageSquare, Trash2, Copy, Check, FileText, ArrowDown, ArrowUp, RotateCw } from 'lucide-react';
+import { Send, MessageSquare, Trash2, Copy, Check, FileText, ArrowDown, ArrowUp, RotateCw, Plus } from 'lucide-react';
 import { ChatMessage } from '@/types/concept-map-types';
 
 interface ChatInterfaceProps {
@@ -18,6 +18,7 @@ interface ChatInterfaceProps {
   onSearchBetterImages: (messageIndex: number, searchTerms: string[]) => void;
   loadingBetterImages: number | null;
   isLoadingMapUpdate: boolean;
+  onCreateNewTopic?: (topicName: string) => void;
 }
 
 export const ChatInterface: React.FC<ChatInterfaceProps> = ({
@@ -33,7 +34,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   setAutoGenerateMap,
   onSearchBetterImages,
   loadingBetterImages,
-  isLoadingMapUpdate
+  isLoadingMapUpdate,
+  onCreateNewTopic
 }) => {
   const chatMessagesEndRef = useRef<HTMLDivElement>(null);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
@@ -184,6 +186,17 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   ) : (
                     <>  {/* Code for visual resources/images in AI chat */}
                       <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      {message.isSuggestion && message.suggestedTopicName && onCreateNewTopic && (
+                        <button
+                          onClick={() => {
+                            onCreateNewTopic(message.suggestedTopicName!);
+                          }}
+                          className="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Create "{message.suggestedTopicName}" Topic
+                        </button>
+                      )}
                       {message.images && message.images.length > 0 && (
                         <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-600">
                           <div className="flex items-center gap-1 mb-2">

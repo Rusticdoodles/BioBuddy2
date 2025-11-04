@@ -167,7 +167,8 @@ export const useChatHandlers = ({
         },
         body: JSON.stringify({
           message: userMessage_trimmed,
-          conversationHistory: updatedChatMessages
+          conversationHistory: updatedChatMessages,
+          currentTopic: activeTopic?.name || null
         })
       });
 
@@ -194,6 +195,29 @@ export const useChatHandlers = ({
 
       if (!data.message) {
         throw new Error('Invalid response format from chat API');
+      }
+
+      // Handle topic drift suggestion
+      if (data.isSuggestion && data.suggestedTopicName) {
+        console.log('💡 AI suggested creating new topic:', data.suggestedTopicName);
+        
+        // Show the suggestion message in chat
+        setTopicChats(prev => prev.map(topic =>
+          topic.id === activeTopicId
+            ? { 
+                ...topic, 
+                messages: [...topic.messages, { 
+                  role: 'assistant', 
+                  content: data.message,
+                  isSuggestion: true,
+                  suggestedTopicName: data.suggestedTopicName
+                }], 
+                updatedAt: new Date().toISOString()
+              }
+            : topic
+        ));
+        
+        return; // Don't generate concept map for suggestions
       }
 
       let sanitizedMessage = data.message;
@@ -305,7 +329,8 @@ export const useChatHandlers = ({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             message: originalQuestion,
-            conversationHistory
+            conversationHistory,
+            currentTopic: activeTopic?.name || null
           }),
         });
 

@@ -52,4 +52,6 @@ export interface ChatMessage {
   images?: WikimediaImage[];
   imageSource?: 'wikimedia' | 'google';
   searchTerms?: string[];
+  isSuggestion?: boolean;
+  suggestedTopicName?: string;
 }
