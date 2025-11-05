@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { searchWikimediaImages, extractKeywords } from '@/utils/wikimedia';
 import { shouldGenerateConceptMap } from '@/utils/intent-detection';
 import { analyzeTopicDrift } from '@/utils/topic-detection';
-import { ChatMessage } from '@/types/concept-map-types';
+import { ChatMessage, ConceptMapResponse } from '@/types/concept-map-types';
 
 // Function to get Anthropic client (lazy initialization)
 const getAnthropicClient = () => {
@@ -152,95 +152,224 @@ RULES FOR IMAGE_SEARCH_TERMS:
 - Avoid ambiguous terms that could match non-educational content
 - Focus on visual, diagram-friendly terms
 
-RULES FOR CONCEPT MAP:
-- Include 6-12 key concepts (not too few, not too many)
-- Use clear, concise labels (2-4 words max)
-- Choose appropriate types: process, molecule, organelle, system, structure, function, enzyme, pathway, organ, tissue, cell, protein, concept
-- Use descriptive relationship labels: "produces", "requires", "contains", "regulates", "part of", "leads to", "inhibits", "activates", "transforms into"
-- Create a logical hierarchy (main concept at top, details below)
-- Ensure all edge IDs match node IDs
-- Focus on the MOST important relationships only
+RULES FOR CONCEPT MAP - PEDAGOGICAL STRUCTURE:
 
-CRITICAL - CONNECTION LIMITS:
-- Each node should have 2-4 connections MAXIMUM (incoming + outgoing combined)
-- NO node should have more than 4 edges total
-- Prioritize DIRECT relationships only (A→B, not A→C if A→B→C exists)
-- Avoid hub nodes that connect to everything
-- Skip redundant connections (if A→B→C, don't add A→C)
-- Create clear parent→child flow, avoid cross-layer connections when possible
-- If a concept is central, split it into sub-concepts rather than connecting everything to it
+LEARNING PHILOSOPHY:
+Your concept map should TEACH, not just organize information. Students should be able to:
+- Identify the main concept immediately (at the top)
+- Follow a clear learning path from top to bottom
+- Understand how concepts relate in a hierarchy
+- See the "story" of the topic unfold
 
-BAD EXAMPLE (too connected):
+HIERARCHICAL STRUCTURE (CRITICAL):
+Create exactly 3-5 LEVELS in your map, flowing TOP to BOTTOM:
+
+LEVEL 1 (Top): Main Concept
+- Exactly 1 node
+- The overarching topic being explained
+- Example: "Photosynthesis" or "Cell Division"
+
+LEVEL 2: Context/Location
+- 1-2 nodes
+- Where does this happen? What's the setting?
+- Example: "Chloroplast" or "Mitochondria"
+
+LEVEL 3: Major Stages/Components
+- 2-4 nodes
+- The key processes or main parts (in sequence if process-oriented)
+- Example: "Light Reactions" → "Calvin Cycle"
+
+LEVEL 4: Key Mechanisms/Details
+- 4-6 nodes
+- Important supporting concepts under each major stage
+- Example: "Chlorophyll", "ATP", "Electron Transport"
+
+LEVEL 5 (Bottom): Outcomes/Products
+- 2-3 nodes
+- What results from this process? What's produced?
+- Example: "Glucose", "Oxygen"
+
+NODE COUNT TARGET: 10-15 nodes total (not more, not less)
+
+CONNECTION RULES FOR HIERARCHY:
+- Nodes should primarily connect to adjacent levels (Level 1→2, 2→3, 3→4, 4→5)
+- Avoid "skip connections" across multiple levels
+- Maximum 3 edges per node
+- Create DOWNWARD flow (parent → child relationships)
+- Avoid horizontal connections between same-level nodes unless showing sequence
+
+SEQUENCE vs STRUCTURE:
+- For PROCESSES (photosynthesis, respiration, replication):
+  Show clear sequential flow with arrows indicating "then" or "next"
+  Example: Step 1 → Step 2 → Step 3
+
+- For STRUCTURES (cell anatomy, organ systems):
+  Show hierarchical composition with "contains" or "part of"
+  Example: Whole → Major Parts → Sub-components
+
+CLARITY OVER COMPLETENESS:
+- Include only the MOST IMPORTANT concepts (10-15 max)
+- Skip minor details that don't aid understanding
+- Group related items when possible
+- Better to be clear with fewer nodes than comprehensive but confusing
+
+NODE LABELING FOR CONTEXT:
+- Make labels self-explanatory
+- Add brief context when helpful
+- BAD: "ATP"
+- GOOD: "ATP (Energy)"
+- BAD: "Calvin Cycle"  
+- GOOD: "Calvin Cycle (Sugar Production)"
+
+EDGE LABELS FOR NARRATIVE:
+Use descriptive relationship labels that tell the story:
+- "occurs in"
+- "begins with"
+- "produces"
+- "requires"
+- "converts to"
+- "powers"
+- "results in"
+
+Avoid vague labels like "related to" or "connects to"
+
+BAD EXAMPLE (Flat Web - No Hierarchy):
 {
   "nodes": [
-    {"id": "1", "label": "Krebs Cycle", "type": "pathway"},
-    {"id": "2", "label": "Acetyl-CoA", "type": "molecule"},
-    {"id": "3", "label": "Citric Acid", "type": "molecule"},
-    {"id": "4", "label": "ATP", "type": "molecule"},
-    {"id": "5", "label": "NADH", "type": "molecule"},
-    {"id": "6", "label": "FADH2", "type": "molecule"},
-    {"id": "7", "label": "CO2", "type": "molecule"},
-    {"id": "8", "label": "Cellular Respiration", "type": "process"}
+    {"id": "1", "label": "Photosynthesis", "type": "process"},
+    {"id": "2", "label": "Chlorophyll", "type": "molecule"},
+    {"id": "3", "label": "Light", "type": "concept"},
+    {"id": "4", "label": "Water", "type": "molecule"},
+    {"id": "5", "label": "ATP", "type": "molecule"},
+    {"id": "6", "label": "Glucose", "type": "molecule"},
+    {"id": "7", "label": "Oxygen", "type": "molecule"},
+    {"id": "8", "label": "CO2", "type": "molecule"},
+    {"id": "9", "label": "Calvin Cycle", "type": "process"},
+    {"id": "10", "label": "Thylakoid", "type": "structure"}
   ],
   "edges": [
     {"source": "1", "target": "2", "label": "uses"},
-    {"source": "1", "target": "3", "label": "produces"},
-    {"source": "1", "target": "4", "label": "produces"},
-    {"source": "1", "target": "5", "label": "produces"},
+    {"source": "1", "target": "3", "label": "uses"},
+    {"source": "1", "target": "4", "label": "uses"},
+    {"source": "2", "target": "5", "label": "produces"},
     {"source": "1", "target": "6", "label": "produces"},
     {"source": "1", "target": "7", "label": "produces"},
-    {"source": "1", "target": "8", "label": "part of"},
-    {"source": "2", "target": "3", "label": "converted to"},
-    {"source": "4", "target": "8", "label": "powers"},
-    {"source": "5", "target": "8", "label": "powers"}
+    {"source": "9", "target": "6", "label": "produces"},
+    {"source": "3", "target": "10", "label": "hits"}
   ]
 }
-// PROBLEM: Node "1" (Krebs Cycle) has 7 edges! Too many connections.
+// PROBLEM: Flat structure, no clear levels, confusing flow, everything connects to everything
 
-GOOD EXAMPLE (focused, clean):
+GOOD EXAMPLE (Clear Hierarchy - Easy to Learn):
 {
   "nodes": [
-    {"id": "1", "label": "Cellular Respiration", "type": "process"},
-    {"id": "2", "label": "Krebs Cycle", "type": "pathway"},
-    {"id": "3", "label": "Acetyl-CoA", "type": "molecule"},
-    {"id": "4", "label": "Energy Products", "type": "concept"},
-    {"id": "5", "label": "ATP", "type": "molecule"},
-    {"id": "6", "label": "Electron Carriers", "type": "concept"},
-    {"id": "7", "label": "NADH", "type": "molecule"},
-    {"id": "8", "label": "FADH2", "type": "molecule"}
+    // LEVEL 1: Main Concept
+    {"id": "1", "label": "Photosynthesis", "type": "process"},
+    
+    // LEVEL 2: Location
+    {"id": "2", "label": "Chloroplast", "type": "organelle"},
+    
+    // LEVEL 3: Major Stages (Sequential)
+    {"id": "3", "label": "Light Reactions", "type": "process"},
+    {"id": "4", "label": "Calvin Cycle", "type": "process"},
+    
+    // LEVEL 4: Key Components
+    {"id": "5", "label": "Chlorophyll (Light Absorber)", "type": "molecule"},
+    {"id": "6", "label": "Water (H2O)", "type": "molecule"},
+    {"id": "7", "label": "ATP (Energy Carrier)", "type": "molecule"},
+    {"id": "8", "label": "CO2 (Carbon Source)", "type": "molecule"},
+    
+    // LEVEL 5: Products/Outcomes
+    {"id": "9", "label": "Glucose (Sugar)", "type": "molecule"},
+    {"id": "10", "label": "Oxygen (O2)", "type": "molecule"}
   ],
   "edges": [
-    {"source": "1", "target": "2", "label": "includes"},
-    {"source": "2", "target": "3", "label": "uses"},
-    {"source": "2", "target": "4", "label": "produces"},
-    {"source": "4", "target": "5", "label": "includes"},
-    {"source": "2", "target": "6", "label": "produces"},
-    {"source": "6", "target": "7", "label": "includes"},
-    {"source": "6", "target": "8", "label": "includes"}
+    // Level 1 → 2
+    {"source": "1", "target": "2", "label": "occurs in"},
+    
+    // Level 2 → 3 (sequence)
+    {"source": "2", "target": "3", "label": "begins with"},
+    {"source": "3", "target": "4", "label": "followed by"},
+    
+    // Level 3 → 4 (components under each stage)
+    {"source": "3", "target": "5", "label": "uses"},
+    {"source": "3", "target": "6", "label": "splits"},
+    {"source": "3", "target": "7", "label": "produces"},
+    {"source": "4", "target": "8", "label": "uses"},
+    {"source": "4", "target": "7", "label": "powered by"},
+    
+    // Level 4 → 5 (outcomes)
+    {"source": "3", "target": "10", "label": "releases"},
+    {"source": "4", "target": "9", "label": "produces"}
   ]
 }
-// BETTER: Max 3 edges per node. Clear hierarchy. Grouped related concepts.
+// BETTER: Clear 5-level hierarchy, obvious flow, 10 nodes, easy to follow top→bottom
 
-KEY PRINCIPLES:
-1. Group similar outputs (ATP, NADH, FADH2 → "Energy Products" → specific molecules)
-2. Avoid connecting every detail to main concept
-3. Create intermediate grouping nodes when needed
-4. Linear flow preferred over hub-and-spoke
-5. Maximum 3-4 edges per node, aim for 2-3
+VALIDATION CHECKLIST (verify before returning):
+✓ Does the map have 3-5 clear levels?
+✓ Is there exactly 1 main concept at the top?
+✓ Do edges flow primarily downward (parent → child)?
+✓ Are there 10-15 nodes total?
+✓ Can a student follow a clear learning path?
+✓ Is each node in the right hierarchical level?
+✓ Are node labels self-explanatory with context?
+✓ Does the map tell a coherent story?
 
-ABSOLUTE REQUIREMENT - WILL REJECT IF VIOLATED:
-- NO node may have more than 3 edges (incoming + outgoing combined)
-- Maps with hub nodes (4+ connections) will be rejected
-- Prioritize quality over quantity
-- Better to have 8 nodes with clean connections than 15 nodes with messy connections
+If NO to any of these, restructure the map before returning.
+
+TOPIC-SPECIFIC GUIDANCE:
+
+For BIOLOGICAL PROCESSES (metabolism, respiration, photosynthesis, replication):
+Level 1: Process name
+Level 2: Where it occurs
+Level 3: Major stages (in order: Stage 1 → Stage 2 → Stage 3)
+Level 4: Key molecules/enzymes for each stage
+Level 5: Products/outcomes
+
+For BIOLOGICAL STRUCTURES (cell, organ, tissue):
+Level 1: Main structure
+Level 2: Location in organism
+Level 3: Major components/parts
+Level 4: Sub-structures within each part
+Level 5: Functions/purposes
+
+For SYSTEMS (nervous, circulatory, digestive):
+Level 1: System name
+Level 2: Main organs involved
+Level 3: Key processes that occur
+Level 4: Important molecules/signals
+Level 5: Outcomes/functions
+
+REMEMBER: You're teaching a student who knows nothing about this topic. Make it crystal clear.
+
+TECHNICAL NOTE - LAYOUT COMPATIBILITY:
+Your hierarchical structure will be automatically laid out using Dagre algorithm with:
+- direction: TB (top-to-bottom)
+- ranksep: 120 (vertical spacing between levels)
+- nodesep: 100 (horizontal spacing)
+
+To ensure clean layouts:
+- Keep same-level nodes to 2-4 maximum
+- Avoid excessive cross-connections
+- Maintain clear parent→child relationships
+- This will result in beautiful, readable maps automatically
+
+ABSOLUTE REQUIREMENT - MAPS WILL BE REJECTED IF:
+- More than 1 node at the top level (no clear main concept)
+- Same-level nodes connect to each other (breaks hierarchy)
+- Skip connections across multiple levels (confusing flow)
+- More than 16 nodes or fewer than 9 nodes
+- No clear top-to-bottom progression
+
+Your map MUST be hierarchical or it will fail validation.
 
 EXAMPLE for "What is photosynthesis?":
 
 EXPLANATION:
-Photosynthesis is the process by which plants convert light energy into chemical energy. It occurs in chloroplasts and involves two main stages: the light-dependent reactions and the Calvin cycle. During the light reactions, chlorophyll absorbs sunlight and splits water molecules, producing oxygen and ATP. The Calvin cycle then uses this ATP to convert carbon dioxide into glucose.
+Photosynthesis is the process by which plants convert light energy into chemical energy in the form of glucose. It occurs in chloroplasts and consists of two main stages that work sequentially. First, the light-dependent reactions use chlorophyll to absorb sunlight and split water molecules, producing ATP and releasing oxygen. Then, the Calvin cycle uses that ATP to convert carbon dioxide into glucose through carbon fixation.
 
 IMAGE_SEARCH_TERMS:
-["photosynthesis diagram", "chloroplast structure", "light reactions"]
+["photosynthesis diagram", "chloroplast structure", "light reactions calvin cycle"]
 
 CONCEPT_MAP:
 {
@@ -249,22 +378,28 @@ CONCEPT_MAP:
     {"id": "2", "label": "Chloroplast", "type": "organelle"},
     {"id": "3", "label": "Light Reactions", "type": "process"},
     {"id": "4", "label": "Calvin Cycle", "type": "process"},
-    {"id": "5", "label": "Glucose", "type": "molecule"},
-    {"id": "6", "label": "Oxygen", "type": "molecule"},
-    {"id": "7", "label": "ATP", "type": "molecule"}
+    {"id": "5", "label": "Chlorophyll (Pigment)", "type": "molecule"},
+    {"id": "6", "label": "Water (H2O)", "type": "molecule"},
+    {"id": "7", "label": "ATP (Energy)", "type": "molecule"},
+    {"id": "8", "label": "CO2 (Carbon)", "type": "molecule"},
+    {"id": "9", "label": "Glucose (Sugar)", "type": "molecule"},
+    {"id": "10", "label": "Oxygen (O2)", "type": "molecule"}
   ],
   "edges": [
     {"source": "1", "target": "2", "label": "occurs in"},
-    {"source": "1", "target": "3", "label": "includes"},
-    {"source": "1", "target": "4", "label": "includes"},
-    {"source": "3", "target": "6", "label": "produces"},
+    {"source": "2", "target": "3", "label": "begins with"},
+    {"source": "3", "target": "4", "label": "followed by"},
+    {"source": "3", "target": "5", "label": "uses"},
+    {"source": "3", "target": "6", "label": "splits"},
     {"source": "3", "target": "7", "label": "produces"},
-    {"source": "4", "target": "5", "label": "produces"},
-    {"source": "7", "target": "4", "label": "powers"}
+    {"source": "3", "target": "10", "label": "releases"},
+    {"source": "4", "target": "8", "label": "uses"},
+    {"source": "7", "target": "4", "label": "powers"},
+    {"source": "4", "target": "9", "label": "produces"}
   ]
 }
 
-NOTE: Only 7 edges for 7 nodes. No node has more than 3 connections. Clear hierarchy.
+NOTE: Clear 5-level hierarchy, 10 nodes, sequential flow, obvious learning path.
 
 CRITICAL EXAMPLES:
 
@@ -335,7 +470,7 @@ CRITICAL: Always include both sections (EXPLANATION and IMAGE_SEARCH_TERMS) in y
 
     // Parse the structured response with robust error handling
     let explanation = '';
-    let conceptMapData = null;
+    let conceptMapData: ConceptMapResponse | null = null;
     let searchTerms: string[] = [];
 
     try {
@@ -368,31 +503,56 @@ CRITICAL: Always include both sections (EXPLANATION and IMAGE_SEARCH_TERMS) in y
             conceptMapData = JSON.parse(conceptMapMatch[1]);
             console.log('📊 Claude provided concept map');
             
-            // Validate connection limits
+            // Validate hierarchical structure and connection limits
             if (conceptMapData?.edges && conceptMapData?.nodes) {
+              const map = conceptMapData; // Type narrowing helper
               const edgeCounts = new Map<string, number>();
               
-              conceptMapData.edges.forEach((edge: { source: string; target: string }) => {
+              map.edges.forEach((edge: { source: string; target: string }) => {
                 edgeCounts.set(edge.source, (edgeCounts.get(edge.source) || 0) + 1);
                 edgeCounts.set(edge.target, (edgeCounts.get(edge.target) || 0) + 1);
               });
               
               const maxConnections = Math.max(...Array.from(edgeCounts.values()), 0);
-              const avgConnectionsPerNode = conceptMapData.nodes.length > 0
-                ? (conceptMapData.edges.length * 2) / conceptMapData.nodes.length
+              const avgConnectionsPerNode = map.nodes.length > 0
+                ? (map.edges.length * 2) / map.nodes.length
                 : 0;
               
-              console.log('📊 Connection analysis:', {
-                totalNodes: conceptMapData.nodes.length,
-                totalEdges: conceptMapData.edges.length,
+              // Count nodes per level (rough heuristic based on edges)
+              const nodesWithoutIncoming = map.nodes.filter(
+                (n) => !map.edges.some((e) => e.target === n.id)
+              );
+              
+              const nodesWithoutOutgoing = map.nodes.filter(
+                (n) => !map.edges.some((e) => e.source === n.id)
+              );
+              
+              console.log('📊 Map Structure Analysis:', {
+                totalNodes: map.nodes.length,
+                totalEdges: map.edges.length,
+                topLevelNodes: nodesWithoutIncoming.length,
+                leafNodes: nodesWithoutOutgoing.length,
                 maxConnectionsPerNode: maxConnections,
-                avgConnectionsPerNode: avgConnectionsPerNode.toFixed(2)
+                avgConnectionsPerNode: avgConnectionsPerNode.toFixed(1)
               });
               
-              if (maxConnections > 4) {
+              // Validation
+              if (nodesWithoutIncoming.length !== 1) {
+                console.warn('⚠️ Map should have exactly 1 top-level node, found:', nodesWithoutIncoming.length);
+              } else {
+                console.log('✅ Clean hierarchical structure detected (1 top-level node)');
+              }
+              
+              if (map.nodes.length < 8 || map.nodes.length > 17) {
+                console.warn('⚠️ Node count outside ideal range (10-15):', map.nodes.length);
+              } else {
+                console.log('✅ Node count within ideal range');
+              }
+              
+              if (maxConnections > 3) {
                 console.warn('⚠️ AI exceeded connection limit! Node has', maxConnections, 'edges');
               } else if (maxConnections <= 3) {
-                console.log('✅ All nodes within connection limits');
+                console.log('✅ All nodes within connection limits (max 3 edges)');
               }
             }
           } catch (error) {
