@@ -161,7 +161,7 @@ export default function MapPage() {
   });
 
   // Tour hook
-  const { hasSeenTour, startTour } = useTour();
+  const { hasSeenTour, hasSeenPart1, hasSeenPart2, startInitialTour, startMapTour, startFullTour } = useTour();
 
   // Refs for tracking state
   const prevActiveTopicIdRef = useRef<string | null>(null);
@@ -354,17 +354,28 @@ export default function MapPage() {
   }, [activeTopicId, activeTopic, nodes.length, edges.length, conceptMapData]);
 
 
-  // Start tour automatically for first-time users
+  // Trigger Part 1 of tour for first-time users
   useEffect(() => {
-    if (!hasSeenTour && activeTopicId) {
-      // Small delay to ensure UI is ready
+    if (!hasSeenPart1 && activeTopicId) {
       const timer = setTimeout(() => {
-        startTour();
+        startInitialTour();
       }, 1000);
       
       return () => clearTimeout(timer);
     }
-  }, [hasSeenTour, startTour, activeTopicId]);
+  }, [hasSeenPart1, startInitialTour, activeTopicId]);
+
+  // Trigger Part 2 when first map loads (after Part 1 is complete)
+  useEffect(() => {
+    if (hasSeenPart1 && !hasSeenPart2 && nodes.length > 0 && loadingState === 'success') {
+      console.log('🎉 First map loaded! Starting Part 2 of tour...');
+      const timer = setTimeout(() => {
+        startMapTour();
+      }, 1500); // Small delay to let map render
+      
+      return () => clearTimeout(timer);
+    }
+  }, [hasSeenPart1, hasSeenPart2, nodes.length, loadingState, startMapTour]);
 
   // Close modal on ESC key
   useEffect(() => {
