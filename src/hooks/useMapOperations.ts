@@ -30,6 +30,7 @@ export const useMapOperations = (
   setEdges: React.Dispatch<React.SetStateAction<Edge[]>>,
 ) => {
   const historyRef = useRef<{ nodes: SerializableNode[]; edges: SerializableEdge[] }[]>([]);
+  const redoRef = useRef<{ nodes: SerializableNode[]; edges: SerializableEdge[] }[]>([]);
   const isProgrammaticChangeRef = useRef(false);
   const nodesRef = useRef<Node[]>(nodes);
   const edgesRef = useRef<Edge[]>(edges);
@@ -73,6 +74,8 @@ export const useMapOperations = (
     if (isProgrammaticChangeRef.current) return;
     const snapshot = getStorableSnapshot();
     historyRef.current.push(snapshot);
+    // Clear redo stack when new action is performed
+    redoRef.current = [];
   }, [getStorableSnapshot]);
 
   const handleDeleteNode = useCallback((nodeId: string) => {
@@ -178,9 +181,21 @@ export const useMapOperations = (
 
   const handleUndo = useCallback(() => {
     if (historyRef.current.length === 0) return;
+    // Save current state to redo stack before undoing
+    const currentSnapshot = getStorableSnapshot();
+    redoRef.current.push(currentSnapshot);
     const last = historyRef.current.pop()!;
     restoreFromSnapshot(last);
-  }, [restoreFromSnapshot]);
+  }, [restoreFromSnapshot, getStorableSnapshot]);
+
+  const handleRedo = useCallback(() => {
+    if (redoRef.current.length === 0) return;
+    // Save current state to history stack before redoing
+    const currentSnapshot = getStorableSnapshot();
+    historyRef.current.push(currentSnapshot);
+    const next = redoRef.current.pop()!;
+    restoreFromSnapshot(next);
+  }, [restoreFromSnapshot, getStorableSnapshot]);
 
   const createWrappedOnNodesChange = useCallback((onNodesChange: (changes: NodeChange[]) => void) => {
     return (changes: NodeChange[]) => {
@@ -220,6 +235,7 @@ export const useMapOperations = (
     onConnect,
     handleAddNode,
     handleUndo,
+    handleRedo,
     createWrappedOnNodesChange,
     createWrappedOnEdgesChange,
     setNodesProgrammatic,

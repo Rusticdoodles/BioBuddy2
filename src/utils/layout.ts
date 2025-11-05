@@ -7,15 +7,29 @@ export const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'T
   
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
+  
+  // IMPROVED: Add comprehensive layout parameters
   dagreGraph.setGraph({ 
-    rankdir: direction,
-    ranksep: 100,
-    nodesep: 80,
-    edgesep: 20,
+    rankdir: direction,      // Direction: TB (top-bottom), LR (left-right)
+    // align: 'UR',             // Align to upper-left for consistency
+    nodesep: 100,            // Horizontal space between nodes in same rank (increased from default 50)
+    edgesep: 60,             // Space between edges (increased from default 10)
+    ranksep: 120,            // Vertical space between ranks (increased from default 50)
+    marginx: 50,             // Horizontal margin around graph
+    marginy: 50,             // Vertical margin around graph
+    acyclicer: 'greedy',     // Break cycles for cleaner hierarchy
+    ranker: 'network-simplex' // Better ranking algorithm for balanced layouts
   });
 
+  // IMPROVED: Larger node dimensions to prevent text overflow and crowding
+  const NODE_WIDTH = 220;   // Increased from 200
+  const NODE_HEIGHT = 90;   // Increased from 80
+  
   nodes.forEach((node) => {
-    dagreGraph.setNode(node.id, { width: 200, height: 80 });
+    dagreGraph.setNode(node.id, { 
+      width: NODE_WIDTH, 
+      height: NODE_HEIGHT 
+    });
     console.log(`📍 Set node: ${node.id}`);
   });
 
@@ -26,6 +40,7 @@ export const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'T
 
   dagre.layout(dagreGraph);
 
+  // Map positions back to React Flow nodes
   const layoutedNodes = nodes.map((node) => {
     const nodeWithPosition = dagreGraph.node(node.id);
     return {
@@ -33,10 +48,17 @@ export const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'T
       targetPosition: Position.Top,
       sourcePosition: Position.Bottom,
       position: {
-        x: nodeWithPosition.x - 100,
-        y: nodeWithPosition.y - 40,
+        x: nodeWithPosition.x - (NODE_WIDTH / 2),
+        y: nodeWithPosition.y - (NODE_HEIGHT / 2),
       },
     };
+  });
+
+  console.log('📐 Layout params:', {
+    nodeCount: nodes.length,
+    edgeCount: edges.length,
+    nodesep: 100,
+    ranksep: 120
   });
 
   console.log('✅ Layout complete:', { 

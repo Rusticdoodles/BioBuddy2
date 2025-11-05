@@ -94,6 +94,7 @@ export default function MapPage() {
     onConnect,
     handleAddNode,
     handleUndo,
+    handleRedo,
     createWrappedOnNodesChange,
     createWrappedOnEdgesChange,
     setNodesProgrammatic,
@@ -660,21 +661,30 @@ Make sure EVERY concept from the list above is included in the new map.`;
     }
   }, [nodes, edges, rfInstance, onSave]);
 
-  // Ctrl/Cmd + Z keyboard shortcut
+  // Ctrl/Cmd + Z keyboard shortcut for undo, Ctrl/Cmd + Shift + Z for redo
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       const tag = target?.tagName?.toLowerCase();
       const isEditable = (target as HTMLElement)?.isContentEditable ?? false;
       if (tag === 'input' || tag === 'textarea' || isEditable) return;
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
+      
+      const isCtrlOrCmd = e.ctrlKey || e.metaKey;
+      const isShift = e.shiftKey;
+      const isZ = e.key === 'z' || e.key === 'Z';
+      
+      if (isCtrlOrCmd && isZ) {
         e.preventDefault();
-        handleUndo();
+        if (isShift) {
+          handleRedo();
+        } else {
+          handleUndo();
+        }
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [handleUndo]);
+  }, [handleUndo, handleRedo]);
 
   // Restore concept map from localStorage on mount
   useEffect(() => {
