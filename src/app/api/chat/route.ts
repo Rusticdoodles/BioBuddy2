@@ -161,6 +161,79 @@ RULES FOR CONCEPT MAP:
 - Ensure all edge IDs match node IDs
 - Focus on the MOST important relationships only
 
+CRITICAL - CONNECTION LIMITS:
+- Each node should have 2-4 connections MAXIMUM (incoming + outgoing combined)
+- NO node should have more than 4 edges total
+- Prioritize DIRECT relationships only (A→B, not A→C if A→B→C exists)
+- Avoid hub nodes that connect to everything
+- Skip redundant connections (if A→B→C, don't add A→C)
+- Create clear parent→child flow, avoid cross-layer connections when possible
+- If a concept is central, split it into sub-concepts rather than connecting everything to it
+
+BAD EXAMPLE (too connected):
+{
+  "nodes": [
+    {"id": "1", "label": "Krebs Cycle", "type": "pathway"},
+    {"id": "2", "label": "Acetyl-CoA", "type": "molecule"},
+    {"id": "3", "label": "Citric Acid", "type": "molecule"},
+    {"id": "4", "label": "ATP", "type": "molecule"},
+    {"id": "5", "label": "NADH", "type": "molecule"},
+    {"id": "6", "label": "FADH2", "type": "molecule"},
+    {"id": "7", "label": "CO2", "type": "molecule"},
+    {"id": "8", "label": "Cellular Respiration", "type": "process"}
+  ],
+  "edges": [
+    {"source": "1", "target": "2", "label": "uses"},
+    {"source": "1", "target": "3", "label": "produces"},
+    {"source": "1", "target": "4", "label": "produces"},
+    {"source": "1", "target": "5", "label": "produces"},
+    {"source": "1", "target": "6", "label": "produces"},
+    {"source": "1", "target": "7", "label": "produces"},
+    {"source": "1", "target": "8", "label": "part of"},
+    {"source": "2", "target": "3", "label": "converted to"},
+    {"source": "4", "target": "8", "label": "powers"},
+    {"source": "5", "target": "8", "label": "powers"}
+  ]
+}
+// PROBLEM: Node "1" (Krebs Cycle) has 7 edges! Too many connections.
+
+GOOD EXAMPLE (focused, clean):
+{
+  "nodes": [
+    {"id": "1", "label": "Cellular Respiration", "type": "process"},
+    {"id": "2", "label": "Krebs Cycle", "type": "pathway"},
+    {"id": "3", "label": "Acetyl-CoA", "type": "molecule"},
+    {"id": "4", "label": "Energy Products", "type": "concept"},
+    {"id": "5", "label": "ATP", "type": "molecule"},
+    {"id": "6", "label": "Electron Carriers", "type": "concept"},
+    {"id": "7", "label": "NADH", "type": "molecule"},
+    {"id": "8", "label": "FADH2", "type": "molecule"}
+  ],
+  "edges": [
+    {"source": "1", "target": "2", "label": "includes"},
+    {"source": "2", "target": "3", "label": "uses"},
+    {"source": "2", "target": "4", "label": "produces"},
+    {"source": "4", "target": "5", "label": "includes"},
+    {"source": "2", "target": "6", "label": "produces"},
+    {"source": "6", "target": "7", "label": "includes"},
+    {"source": "6", "target": "8", "label": "includes"}
+  ]
+}
+// BETTER: Max 3 edges per node. Clear hierarchy. Grouped related concepts.
+
+KEY PRINCIPLES:
+1. Group similar outputs (ATP, NADH, FADH2 → "Energy Products" → specific molecules)
+2. Avoid connecting every detail to main concept
+3. Create intermediate grouping nodes when needed
+4. Linear flow preferred over hub-and-spoke
+5. Maximum 3-4 edges per node, aim for 2-3
+
+ABSOLUTE REQUIREMENT - WILL REJECT IF VIOLATED:
+- NO node may have more than 3 edges (incoming + outgoing combined)
+- Maps with hub nodes (4+ connections) will be rejected
+- Prioritize quality over quantity
+- Better to have 8 nodes with clean connections than 15 nodes with messy connections
+
 EXAMPLE for "What is photosynthesis?":
 
 EXPLANATION:
@@ -173,25 +246,25 @@ CONCEPT_MAP:
 {
   "nodes": [
     {"id": "1", "label": "Photosynthesis", "type": "process"},
-    {"id": "2", "label": "Light Reactions", "type": "process"},
-    {"id": "3", "label": "Calvin Cycle", "type": "process"},
-    {"id": "4", "label": "Chloroplast", "type": "organelle"},
+    {"id": "2", "label": "Chloroplast", "type": "organelle"},
+    {"id": "3", "label": "Light Reactions", "type": "process"},
+    {"id": "4", "label": "Calvin Cycle", "type": "process"},
     {"id": "5", "label": "Glucose", "type": "molecule"},
     {"id": "6", "label": "Oxygen", "type": "molecule"},
-    {"id": "7", "label": "Carbon Dioxide", "type": "molecule"},
-    {"id": "8", "label": "ATP", "type": "molecule"}
+    {"id": "7", "label": "ATP", "type": "molecule"}
   ],
   "edges": [
-    {"source": "1", "target": "4", "label": "occurs in"},
-    {"source": "1", "target": "2", "label": "includes"},
+    {"source": "1", "target": "2", "label": "occurs in"},
     {"source": "1", "target": "3", "label": "includes"},
-    {"source": "2", "target": "6", "label": "produces"},
-    {"source": "2", "target": "8", "label": "produces"},
-    {"source": "3", "target": "7", "label": "uses"},
-    {"source": "3", "target": "5", "label": "produces"},
-    {"source": "8", "target": "3", "label": "powers"}
+    {"source": "1", "target": "4", "label": "includes"},
+    {"source": "3", "target": "6", "label": "produces"},
+    {"source": "3", "target": "7", "label": "produces"},
+    {"source": "4", "target": "5", "label": "produces"},
+    {"source": "7", "target": "4", "label": "powers"}
   ]
 }
+
+NOTE: Only 7 edges for 7 nodes. No node has more than 3 connections. Clear hierarchy.
 
 CRITICAL EXAMPLES:
 
@@ -294,6 +367,34 @@ CRITICAL: Always include both sections (EXPLANATION and IMAGE_SEARCH_TERMS) in y
           try {
             conceptMapData = JSON.parse(conceptMapMatch[1]);
             console.log('📊 Claude provided concept map');
+            
+            // Validate connection limits
+            if (conceptMapData?.edges && conceptMapData?.nodes) {
+              const edgeCounts = new Map<string, number>();
+              
+              conceptMapData.edges.forEach((edge: { source: string; target: string }) => {
+                edgeCounts.set(edge.source, (edgeCounts.get(edge.source) || 0) + 1);
+                edgeCounts.set(edge.target, (edgeCounts.get(edge.target) || 0) + 1);
+              });
+              
+              const maxConnections = Math.max(...Array.from(edgeCounts.values()), 0);
+              const avgConnectionsPerNode = conceptMapData.nodes.length > 0
+                ? (conceptMapData.edges.length * 2) / conceptMapData.nodes.length
+                : 0;
+              
+              console.log('📊 Connection analysis:', {
+                totalNodes: conceptMapData.nodes.length,
+                totalEdges: conceptMapData.edges.length,
+                maxConnectionsPerNode: maxConnections,
+                avgConnectionsPerNode: avgConnectionsPerNode.toFixed(2)
+              });
+              
+              if (maxConnections > 4) {
+                console.warn('⚠️ AI exceeded connection limit! Node has', maxConnections, 'edges');
+              } else if (maxConnections <= 3) {
+                console.log('✅ All nodes within connection limits');
+              }
+            }
           } catch (error) {
             console.error('Error parsing concept map JSON:', error);
           }
