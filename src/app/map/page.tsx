@@ -320,6 +320,10 @@ export default function MapPage() {
         type: 'arrowclosed',
         color: '#64748b',
       },
+      pathOptions: {
+        offset: 20,
+        borderRadius: 10,
+      },
       data: {
         onUpdateEdge: handleUpdateEdge,
         onDeleteEdge: handleDeleteEdge,
@@ -612,6 +616,10 @@ Make sure EVERY concept from the list above is included in the new map.`;
         animated: true,
         style: { stroke: '#64748b', strokeWidth: 2 },
         markerEnd: { type: 'arrowclosed' as const, color: '#64748b' },
+        pathOptions: {
+          offset: 20,
+          borderRadius: 10,
+        },
         data: {
           onUpdateEdge: handleUpdateEdge,
           onDeleteEdge: handleDeleteEdge,

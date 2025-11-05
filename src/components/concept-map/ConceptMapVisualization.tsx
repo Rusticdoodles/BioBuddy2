@@ -24,7 +24,8 @@ import {
   X,
   Upload,
   MessageSquare,
-  RotateCw
+  RotateCw,
+  Sparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -77,6 +78,7 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
   onAddNode,
   setNodes,
   setEdges,
+  rfInstance,
   setRfInstance,
   onImportJSON,
   onToggleChatMode,
@@ -277,6 +279,72 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
       description: 'Nodes arranged in hierarchical structure'
     });
   }, [nodes, edges, setNodes, setEdges]);
+
+  const handlePerfectLayout = useCallback(() => {
+    if (nodes.length === 0) return;
+    
+    console.log('✨ Running perfect layout algorithm...');
+    
+    // Step 1: Apply Dagre layout with optimized settings
+    const { nodes: dagreNodes, edges: dagreEdges } = getLayoutedElements(
+      nodes,
+      edges,
+      'TB' // Top to bottom
+    );
+    
+    // Step 2: Center the graph in viewport
+    const centerX = dagreNodes.reduce((sum, n) => sum + n.position.x, 0) / dagreNodes.length;
+    const centerY = dagreNodes.reduce((sum, n) => sum + n.position.y, 0) / dagreNodes.length;
+    
+    const viewportCenterX = (window.innerWidth - 300) / 2; // Account for sidebar
+    const viewportCenterY = window.innerHeight / 2;
+    
+    const offsetX = viewportCenterX - centerX;
+    const offsetY = viewportCenterY - centerY;
+    
+    const centeredNodes = dagreNodes.map(node => ({
+      ...node,
+      position: {
+        x: node.position.x + offsetX,
+        y: node.position.y + offsetY
+      }
+    }));
+    
+    // Step 3: Apply with animation
+    setNodes(centeredNodes);
+    setEdges(dagreEdges);
+    
+    // Step 4: Fit view to show entire graph
+    if (rfInstance) {
+      setTimeout(() => {
+        rfInstance.fitView({ 
+          padding: 0.2,
+          duration: 500,
+          maxZoom: 1.2
+        });
+      }, 100);
+    }
+    
+    toast.success('Layout optimized!', {
+      description: 'Graph reorganized for clarity'
+    });
+    
+    console.log('✅ Perfect layout complete');
+  }, [nodes, edges, setNodes, setEdges, rfInstance]);
+
+  // Keyboard shortcut for Perfect Layout
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Cmd+Shift+L or Ctrl+Shift+L for "Perfect Layout"
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'l') {
+        e.preventDefault();
+        handlePerfectLayout();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [handlePerfectLayout]);
 
   return (
     <div className="flex-1 bg-slate-50 dark:bg-slate-700 rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-600 flex items-center justify-center p-6">
@@ -622,6 +690,17 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
                   <RotateCw className={`w-5 h-5 ${isRegeneratingMap ? 'animate-spin' : ''}`} />
                 </button>
               )}
+
+              {/* Perfect Layout Button */}
+              <button
+                onClick={handlePerfectLayout}
+                disabled={nodes.length === 0}
+                className="w-12 h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Optimize layout for maximum clarity"
+                aria-label="Perfect layout"
+              >
+                <Sparkles className="w-5 h-5" />
+              </button>
 
               {/* Tidy Layout Button */}
               <button

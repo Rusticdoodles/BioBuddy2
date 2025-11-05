@@ -197,6 +197,10 @@ export const useMapUpdate = ({
               type: 'arrowclosed' as const, 
               color: '#3b82f6' 
             },
+            pathOptions: {
+              offset: 20,
+              borderRadius: 10,
+            },
             data: {
               onUpdateEdge: handleUpdateEdge,
               onDeleteEdge: handleDeleteEdge,

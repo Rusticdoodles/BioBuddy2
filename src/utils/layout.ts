@@ -59,46 +59,92 @@ function fixOverlappingNodes(nodes: Node[], nodeWidth = 220, nodeHeight = 90): N
   return workingNodes;
 }
 
-// Layout function using dagre
+/**
+ * Adaptive layout that chooses optimal parameters based on graph size
+ */
 export const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'TB') => {
-  console.log('📐 Starting layout with:', { nodes: nodes.length, edges: edges.length });
+  const nodeCount = nodes.length;
+  
+  // Determine layout strategy based on size
+  let layoutParams;
+  
+  if (nodeCount <= 5) {
+    // SMALL GRAPHS: Extra spacious, very clear
+    layoutParams = {
+      nodesep: 140,
+      ranksep: 140,
+      edgesep: 80,
+      nodeWidth: 240,
+      nodeHeight: 100,
+      strategy: 'spacious',
+    };
+    console.log('📐 Using SPACIOUS layout for small graph');
+    
+  } else if (nodeCount <= 12) {
+    // MEDIUM GRAPHS: Balanced spacing
+    layoutParams = {
+      nodesep: 100,
+      ranksep: 120,
+      edgesep: 60,
+      nodeWidth: 220,
+      nodeHeight: 90,
+      strategy: 'balanced',
+    };
+    console.log('📐 Using BALANCED layout for medium graph');
+    
+  } else if (nodeCount <= 20) {
+    // LARGE GRAPHS: Tighter but still readable
+    layoutParams = {
+      nodesep: 80,
+      ranksep: 100,
+      edgesep: 40,
+      nodeWidth: 200,
+      nodeHeight: 85,
+      strategy: 'compact',
+    };
+    console.log('📐 Using COMPACT layout for large graph');
+    
+  } else {
+    // VERY LARGE GRAPHS: Maximum density
+    layoutParams = {
+      nodesep: 60,
+      ranksep: 80,
+      edgesep: 30,
+      nodeWidth: 180,
+      nodeHeight: 80,
+      strategy: 'dense',    
+    };
+    console.log('📐 Using DENSE layout for very large graph');
+  }
   
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
   
-  // IMPROVED: Add comprehensive layout parameters
   dagreGraph.setGraph({ 
-    rankdir: direction,      // Direction: TB (top-bottom), LR (left-right)
-    // align: 'UR',             // Align to upper-left for consistency
-    nodesep: 100,            // Horizontal space between nodes in same rank (increased from default 50)
-    edgesep: 60,             // Space between edges (increased from default 10)
-    ranksep: 120,            // Vertical space between ranks (increased from default 50)
-    marginx: 50,             // Horizontal margin around graph
-    marginy: 50,             // Vertical margin around graph
-    acyclicer: 'greedy',     // Break cycles for cleaner hierarchy
+    rankdir: direction, // Direction: TB (top-bottom), LR (left-right)
+    // align: 'UL', // Align to upper-left for consistency
+    nodesep: layoutParams.nodesep, // Horizontal space between nodes in same rank (increased from default 50)
+    edgesep: layoutParams.edgesep, // Space between edges (increased from default 10)
+    ranksep: layoutParams.ranksep, // Vertical space between ranks (increased from default 50)
+    marginx: 50, // Horizontal margin around graph
+    marginy: 50, // Vertical margin around graph
+    acyclicer: 'greedy', // Break cycles for cleaner hierarchy
     ranker: 'network-simplex' // Better ranking algorithm for balanced layouts
   });
 
-  // IMPROVED: Larger node dimensions to prevent text overflow and crowding
-  const NODE_WIDTH = 220;   // Increased from 200
-  const NODE_HEIGHT = 90;   // Increased from 80
-  
   nodes.forEach((node) => {
     dagreGraph.setNode(node.id, { 
-      width: NODE_WIDTH, 
-      height: NODE_HEIGHT 
+      width: layoutParams.nodeWidth, 
+      height: layoutParams.nodeHeight 
     });
-    console.log(`📍 Set node: ${node.id}`);
   });
 
   edges.forEach((edge) => {
     dagreGraph.setEdge(edge.source, edge.target);
-    console.log(`🔗 Set edge: ${edge.source} -> ${edge.target}`);
   });
 
   dagre.layout(dagreGraph);
 
-  // Map positions back to React Flow nodes
   const layoutedNodes = nodes.map((node) => {
     const nodeWithPosition = dagreGraph.node(node.id);
     return {
@@ -106,26 +152,23 @@ export const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'T
       targetPosition: Position.Top,
       sourcePosition: Position.Bottom,
       position: {
-        x: nodeWithPosition.x - (NODE_WIDTH / 2),
-        y: nodeWithPosition.y - (NODE_HEIGHT / 2),
+        x: nodeWithPosition.x - (layoutParams.nodeWidth / 2),
+        y: nodeWithPosition.y - (layoutParams.nodeHeight / 2),
       },
     };
   });
 
-  console.log('📐 Layout params:', {
-    nodeCount: nodes.length,
-    edgeCount: edges.length,
-    nodesep: 100,
-    ranksep: 120
-  });
+  // Fix overlaps (from previous prompt)
+  const noOverlapNodes = fixOverlappingNodes(
+    layoutedNodes, 
+    layoutParams.nodeWidth, 
+    layoutParams.nodeHeight
+  );
 
-  // Post-process: Fix any overlapping nodes
-  const noOverlapNodes = fixOverlappingNodes(layoutedNodes, NODE_WIDTH, NODE_HEIGHT);
-
-  console.log('📐 Layout complete:', {
-    totalNodes: noOverlapNodes.length,
-    totalEdges: edges.length,
-    dimensions: `${NODE_WIDTH}x${NODE_HEIGHT}`
+  console.log(`✅ ${layoutParams.strategy.toUpperCase()} layout complete:`, {
+    nodes: nodeCount,
+    edges: edges.length,
+    spacing: `${layoutParams.nodesep}x${layoutParams.ranksep}`
   });
 
   return {

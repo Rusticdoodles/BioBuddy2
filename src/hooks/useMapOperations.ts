@@ -130,6 +130,10 @@ export const useMapOperations = (
         label: 'relationship',
         style: { stroke: '#64748b', strokeWidth: 2 },
         markerEnd: { type: 'arrowclosed', color: '#64748b' },
+        pathOptions: {
+          offset: 20,
+          borderRadius: 10,
+        },
         data: {
           onUpdateEdge: handleUpdateEdge,
           onDeleteEdge: handleDeleteEdge,
@@ -166,13 +170,20 @@ export const useMapOperations = (
         onDeleteNode: handleDeleteNode,
       },
     }));
-    const reconstructedEdges: Edge[] = snapshot.edges.map((edge: SerializableEdge) => ({
-      ...edge,
-      data: {
-        onUpdateEdge: handleUpdateEdge,
-        onDeleteEdge: handleDeleteEdge,
-      },
-    } as Edge));
+    const reconstructedEdges: Edge[] = snapshot.edges.map((edge: SerializableEdge) => {
+      const restoredEdge = {
+        ...edge,
+        pathOptions: {
+          offset: 20,
+          borderRadius: 10,
+        },
+        data: {
+          onUpdateEdge: handleUpdateEdge,
+          onDeleteEdge: handleDeleteEdge,
+        },
+      };
+      return restoredEdge as Edge;
+    });
     isProgrammaticChangeRef.current = true;
     setNodes(reconstructedNodes);
     setEdges(reconstructedEdges);
