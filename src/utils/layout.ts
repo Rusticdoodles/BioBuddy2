@@ -1,6 +1,64 @@
 import dagre from 'dagre';
 import { Node, Edge, Position } from '@xyflow/react';
 
+/**
+ * Detects and fixes overlapping nodes using collision detection
+ * Pushes overlapping nodes apart while maintaining overall structure
+ */
+function fixOverlappingNodes(nodes: Node[], nodeWidth = 220, nodeHeight = 90): Node[] {
+  const MIN_HORIZONTAL_DISTANCE = nodeWidth + 30;  // Node width + padding
+  const MIN_VERTICAL_DISTANCE = nodeHeight + 30;   // Node height + padding
+  const MAX_ITERATIONS = 5; // Prevent infinite loops
+  
+  let hasOverlaps = true;
+  let iteration = 0;
+  let workingNodes = [...nodes];
+  
+  while (hasOverlaps && iteration < MAX_ITERATIONS) {
+    hasOverlaps = false;
+    iteration++;
+    
+    // Check all pairs of nodes for overlaps
+    for (let i = 0; i < workingNodes.length; i++) {
+      for (let j = i + 1; j < workingNodes.length; j++) {
+        const node1 = workingNodes[i];
+        const node2 = workingNodes[j];
+        
+        const dx = node2.position.x - node1.position.x;
+        const dy = node2.position.y - node1.position.y;
+        
+        const horizontalOverlap = Math.abs(dx) < MIN_HORIZONTAL_DISTANCE;
+        const verticalOverlap = Math.abs(dy) < MIN_VERTICAL_DISTANCE;
+        
+        // If nodes overlap, push them apart
+        if (horizontalOverlap && verticalOverlap) {
+          hasOverlaps = true;
+          
+          // Calculate push direction
+          const angle = Math.atan2(dy, dx) || 0;
+          const pushDistance = 15; // Pixels to push per iteration
+          
+          // Push nodes apart along the line connecting their centers
+          workingNodes[i].position.x -= Math.cos(angle) * pushDistance;
+          workingNodes[i].position.y -= Math.sin(angle) * pushDistance;
+          workingNodes[j].position.x += Math.cos(angle) * pushDistance;
+          workingNodes[j].position.y += Math.sin(angle) * pushDistance;
+          
+          console.log(`🔧 Fixed overlap between node ${i} and ${j} (iteration ${iteration})`);
+        }
+      }
+    }
+  }
+  
+  if (iteration >= MAX_ITERATIONS && hasOverlaps) {
+    console.warn('⚠️ Could not resolve all overlaps within max iterations');
+  } else if (iteration > 1) {
+    console.log(`✅ Resolved overlaps in ${iteration} iterations`);
+  }
+  
+  return workingNodes;
+}
+
 // Layout function using dagre
 export const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'TB') => {
   console.log('📐 Starting layout with:', { nodes: nodes.length, edges: edges.length });
@@ -61,10 +119,17 @@ export const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'T
     ranksep: 120
   });
 
-  console.log('✅ Layout complete:', { 
-    layoutedNodes: layoutedNodes.length, 
-    layoutedEdges: edges.length 
+  // Post-process: Fix any overlapping nodes
+  const noOverlapNodes = fixOverlappingNodes(layoutedNodes, NODE_WIDTH, NODE_HEIGHT);
+
+  console.log('📐 Layout complete:', {
+    totalNodes: noOverlapNodes.length,
+    totalEdges: edges.length,
+    dimensions: `${NODE_WIDTH}x${NODE_HEIGHT}`
   });
 
-  return { nodes: layoutedNodes, edges };
+  return {
+    nodes: noOverlapNodes,
+    edges
+  };
 };
