@@ -4,7 +4,6 @@ import { Node, Edge } from '@xyflow/react';
 import { TopicChat } from '@/types/concept-map-types';
 import { calculateOptimalStartPosition, clusterRelatedNodes, findEmptySpace } from '@/utils/node-positioning';
 import { Position } from '@xyflow/react';
-import { getLayoutedElements } from '@/utils/layout';
 
 const TOPIC_CHATS_KEY = 'biobuddy-topic-chats';
 
@@ -212,26 +211,121 @@ export const useMapUpdate = ({
 
       console.log('✅ Formatted nodes and edges');
 
-      // Step 8: Merge nodes and edges
-      const mergedNodes = [...activeTopic.nodes, ...newNodesFormatted];
+      // Step 8: Calculate smart positions for new nodes WITHOUT re-layouting existing ones
+      console.log('📍 Positioning new nodes intelligently...');
+
+      // Helper: Find position for a new node based on its connections
+      const calculateSmartPosition = (newNode: any, newEdges: any[], existingNodes: any[]) => {
+        // Find which existing nodes this new node connects to
+        const connectedNodeIds = newEdges
+          .filter(e => e.source === newNode.id || e.target === newNode.id)
+          .map(e => {
+            if (e.source === newNode.id && existingNodeIds.has(e.target)) return e.target;
+            if (e.target === newNode.id && existingNodeIds.has(e.source)) return e.source;
+            return null;
+          })
+          .filter(Boolean);
+
+        if (connectedNodeIds.length > 0) {
+          // Position near connected nodes (average position + offset)
+          const connectedNodes = existingNodes.filter(n => connectedNodeIds.includes(n.id));
+          const avgX = connectedNodes.reduce((sum, n) => sum + n.position.x, 0) / connectedNodes.length;
+          const avgY = connectedNodes.reduce((sum, n) => sum + n.position.y, 0) / connectedNodes.length;
+          
+          // Offset to the right and slightly down to avoid overlap
+          const offsetX = 300; // Position to the right
+          const offsetY = Math.random() * 100 - 50; // Random vertical offset (-50 to +50)
+          
+          console.log(`  📌 "${newNode.data.label}" positioned near connected nodes`);
+          
+          return {
+            x: avgX + offsetX,
+            y: avgY + offsetY
+          };
+        } else {
+          // No connections to existing nodes - position at bottom center
+          const maxY = Math.max(...existingNodes.map(n => n.position.y), 0);
+          const centerX = existingNodes.reduce((sum, n) => sum + n.position.x, 0) / existingNodes.length;
+          
+          console.log(`  📌 "${newNode.data.label}" positioned at bottom (no connections)`);
+          
+          return {
+            x: centerX,
+            y: maxY + 200
+          };
+        }
+      };
+
+      // Position each new node
+      const positionedNewNodes = newNodesFormatted.map((newNode: any) => {
+        const position = calculateSmartPosition(newNode, newEdgesFormatted, activeTopic.nodes);
+        
+        return {
+          ...newNode,
+          position
+        };
+      });
+
+      // Check for overlaps with existing nodes and adjust if needed
+      const adjustForOverlaps = (newNodes: any[], existingNodes: any[]) => {
+        const MIN_DISTANCE = 150; // Minimum distance between nodes
+        
+        return newNodes.map(newNode => {
+          let adjustedPosition = { ...newNode.position };
+          let attempts = 0;
+          const MAX_ATTEMPTS = 10;
+          
+          while (attempts < MAX_ATTEMPTS) {
+            // Check if too close to any existing node
+            const tooClose = existingNodes.some(existing => {
+              const dx = adjustedPosition.x - existing.position.x;
+              const dy = adjustedPosition.y - existing.position.y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+              return distance < MIN_DISTANCE;
+            });
+            
+            if (!tooClose) break;
+            
+            // Move down and slightly right if overlapping
+            adjustedPosition.y += 100;
+            adjustedPosition.x += 50;
+            attempts++;
+          }
+          
+          if (attempts > 0) {
+            console.log(`  🔧 Adjusted "${newNode.data.label}" position to avoid overlap`);
+          }
+          
+          return {
+            ...newNode,
+            position: adjustedPosition
+          };
+        });
+      };
+
+      const finalNewNodes = adjustForOverlaps(positionedNewNodes, activeTopic.nodes);
+
+      // Step 9: Merge nodes WITHOUT re-layout
+      const mergedNodes = [...activeTopic.nodes, ...finalNewNodes];
       const mergedEdges = [...activeTopic.edges, ...newEdgesFormatted];
 
-      // Step 9: Apply Dagre layout to entire graph for clean positioning
-      const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
-        mergedNodes,
-        mergedEdges
-      );
+      console.log('✅ Merged nodes intelligently positioned:', {
+        existingNodes: activeTopic.nodes.length,
+        newNodes: finalNewNodes.length,
+        totalNodes: mergedNodes.length,
+        totalEdges: mergedEdges.length
+      });
 
-      // Step 10: Update React Flow state and topic with layouted graph
-      setNodes(layoutedNodes);
-      setEdges(layoutedEdges);
+      // Step 10: Update state directly (NO Dagre re-layout)
+      setNodes(mergedNodes);
+      setEdges(mergedEdges);
 
       const updatedTopics = topicChats.map(topic =>
         topic.id === activeTopicId
           ? {
               ...topic,
-              nodes: layoutedNodes,
-              edges: layoutedEdges,
+              nodes: mergedNodes,
+              edges: mergedEdges,
               updatedAt: new Date().toISOString()
             }
           : topic
@@ -258,14 +352,14 @@ export const useMapUpdate = ({
 
       // Remove highlight after 12 seconds
       setTimeout(() => {
-        const nodesWithoutHighlight = layoutedNodes.map(node => ({
+        const nodesWithoutHighlight = mergedNodes.map(node => ({
           ...node,
           data: {
             ...node.data,
             isNew: false
           }
         }));
-        const edgesWithoutHighlight = layoutedEdges.map(edge => ({
+        const edgesWithoutHighlight = mergedEdges.map(edge => ({
           ...edge,
           style: { stroke: '#64748b', strokeWidth: 2 },
           markerEnd: { type: 'arrowclosed' as const, color: '#64748b' },
@@ -287,7 +381,7 @@ export const useMapUpdate = ({
               }
             : topic
         ));
-      }, 12000);
+      }, 5000);
 
     } catch (error) {
       console.error('❌ Error merging nodes:', error);
