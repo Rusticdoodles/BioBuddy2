@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { toast } from 'sonner';
+import { feedback } from '@/lib/feedback';
 import { ChatMessage, LoadingState, TopicChat } from '@/types/concept-map-types';
 import { shouldGenerateConceptMap, wantsToUpdateMap } from '@/utils/intent-detection';
 import { GoogleImage } from '@/utils/google-images';
@@ -39,19 +39,19 @@ export const useChatHandlers = ({
 
     if (!activeTopicId || !activeTopic) {
       console.error('❌ No active topic - cannot send message');
-      toast.error('Please select or create a topic first');
+      feedback.noTopicSelected();
       return;
     }
 
     // Detect and handle map update requests
     if (wantsToUpdateMap(userMessage_trimmed)) {
       if (!activeTopic) {
-        toast.error('Please create or select a topic first');
+        feedback.noTopicSelected();
         return;
       }
       
       if (!activeTopic.nodes || activeTopic.nodes.length === 0) {
-        toast.error('No existing map to update. Please ask a question first to generate a concept map.');
+        feedback.noMapToUpdate();
         return;
       }
       
@@ -63,7 +63,7 @@ export const useChatHandlers = ({
         .find(m => m.role === 'assistant');
       
       if (!lastAssistantMessage) {
-        toast.error('No recent information to add to map');
+        feedback.noRecentInfo();
         return;
       }
       
@@ -121,14 +121,12 @@ export const useChatHandlers = ({
           setShowAddToMapPrompt(true);
         } else {
           console.log('⚠️ No new nodes to add');
-          toast.info('No new concepts to add to the map');
+          feedback.noNewConcepts();
         }
         
       } catch (error) {
         console.error('❌ Error getting map update:', error);
-        toast.error('Failed to generate map update', {
-          description: error instanceof Error ? error.message : 'Unknown error',
-        });
+        feedback.failedToUpdate(error instanceof Error ? error.message : undefined);
       } finally {
         setIsLoadingMapUpdate(false);
       }
@@ -262,21 +260,7 @@ export const useChatHandlers = ({
       
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       
-      toast.error('AI chat failed', {
-        description: `Sorry, I encountered an error: ${errorMessage}`,
-        action: {
-          label: 'Retry',
-          onClick: () => {
-            setTopicChats(prev => prev.map(topic =>
-              topic.id === activeTopicId
-                ? { ...topic, messages: topic.messages.slice(0, -1), updatedAt: new Date().toISOString() }
-                : topic
-            ));
-            handleSendChatMessage(userMessage);
-          }
-        },
-        duration: 5000,
-      });
+      feedback.error(`Sorry, I encountered an error: ${errorMessage}`, undefined);
       
       setTopicChats(prev => prev.map(topic =>
         topic.id === activeTopicId
@@ -380,14 +364,7 @@ export const useChatHandlers = ({
       } catch (error) {
         console.error("❌ Error regenerating response:", error);
         
-        toast.error('Failed to regenerate response', {
-          description: error instanceof Error ? error.message : 'Unknown error',
-          action: {
-            label: 'Retry',
-            onClick: () => handleRefineMessage(messageIndex, 'regenerate')
-          },
-          duration: 5000,
-        });
+        feedback.error('Failed to regenerate response', error instanceof Error ? error.message : undefined);
       } finally {
         setIsChatLoading(false);
       }
@@ -437,9 +414,7 @@ export const useChatHandlers = ({
       }
       
       if (images.length === 0) {
-        toast.error('No additional images found', {
-          description: 'Try refining your question or topic',
-        });
+        feedback.noAdditionalImages();
         return;
       }
       
@@ -462,11 +437,11 @@ export const useChatHandlers = ({
         return topic;
       }));
       
-      toast.success('Updated with Google images!');
+      feedback.imagesUpdated();
       
     } catch (error) {
       console.error('Error searching better images:', error);
-      toast.error('Failed to search additional sources');
+      feedback.error('Failed to search additional sources');
     } finally {
       setLoadingBetterImages(null);
     }

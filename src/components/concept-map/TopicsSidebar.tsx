@@ -7,6 +7,7 @@ interface TopicsSidebarProps {
   onCreateTopic: (name: string) => void;
   onSwitchTopic: (topicId: string) => void;
   onDeleteTopic: (topicId: string) => void;
+  onRenameTopic: (topicId: string, newName: string) => void;
 }
 
 export const TopicsSidebar: React.FC<TopicsSidebarProps> = ({
@@ -15,6 +16,7 @@ export const TopicsSidebar: React.FC<TopicsSidebarProps> = ({
   onCreateTopic,
   onSwitchTopic,
   onDeleteTopic,
+  onRenameTopic,
 }) => {
   return (
     <div data-tour="topics-sidebar" className="w-64 border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex flex-col">
@@ -76,22 +78,43 @@ export const TopicsSidebar: React.FC<TopicsSidebarProps> = ({
                     </p>
                   </div>
                   
-                  {/* Delete button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (window.confirm(`Delete "${topic.name}"?`)) {
-                        onDeleteTopic(topic.id);
-                      }
-                    }}
-                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded hover-scale-sm transition-opacity"
-                    title="Delete topic"
-                    aria-label="Delete topic"
-                  >
-                    <svg className="w-4 h-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
+                  {/* Action buttons */}
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {/* Rename button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const newName = prompt('Rename topic:', topic.name);
+                        if (newName && newName.trim() && newName.trim() !== topic.name) {
+                          onRenameTopic(topic.id, newName.trim());
+                        }
+                      }}
+                      className="p-1 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded hover-scale-sm"
+                      title="Rename topic"
+                      aria-label="Rename topic"
+                    >
+                      <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                    
+                    {/* Delete button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (window.confirm(`Delete "${topic.name}"?`)) {
+                          onDeleteTopic(topic.id);
+                        }
+                      }}
+                      className="p-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded hover-scale-sm"
+                      title="Delete topic"
+                      aria-label="Delete topic"
+                    >
+                      <svg className="w-4 h-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

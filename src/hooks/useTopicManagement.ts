@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { toast } from 'sonner';
+import { feedback } from '@/lib/feedback';
 import { TopicChat } from '@/types/concept-map-types';
 
 const TOPIC_CHATS_KEY = 'biobuddy-topic-chats';
@@ -119,9 +119,7 @@ export const useTopicManagement = () => {
     setTopicChats(prev => [...prev, newTopic]);
     setActiveTopicId(newTopic.id);
     
-    toast.success('New topic created!', {
-      description: `Created "${newTopic.name}"`,
-    });
+    feedback.topicCreated(newTopic.name);
     
     console.log('📝 Created new topic:', newTopic.name);
   }, []);
@@ -159,22 +157,25 @@ export const useTopicManagement = () => {
       setActiveTopicId(remaining.length > 0 ? remaining[0].id : null);
     }
     
-    toast.success('Topic deleted', {
-      description: `Deleted "${topic.name}"`,
-    });
+    feedback.topicDeleted(topic.name);
     
     console.log('🗑️ Deleted topic:', topic.name);
   }, [topicChats, activeTopicId]);
 
   const handleRenameTopic = useCallback((topicId: string, newName: string) => {
+    const oldTopic = topicChats.find(t => t.id === topicId);
+    const oldName = oldTopic?.name || '';
+    
     setTopicChats(prev => prev.map(topic =>
       topic.id === topicId
         ? { ...topic, name: newName.trim(), updatedAt: new Date().toISOString() }
         : topic
     ));
     
-    toast.success('Topic renamed');
-  }, []);
+    if (oldName) {
+      feedback.topicRenamed(oldName, newName.trim());
+    }
+  }, [topicChats]);
 
   const handleClearChat = useCallback(() => {
     if (!activeTopicId) return;
@@ -222,18 +223,14 @@ export const useTopicManagement = () => {
         });
         
         if (verifiedTopic?.nodes.length === 0 && verifiedTopic?.edges.length === 0) {
-          toast.success('Topic cleared successfully', {
-            description: 'All chat history and map data removed'
-          });
+          feedback.topicCleared();
         } else {
           throw new Error('Verification failed - data still present');
         }
         
       } catch (error) {
         console.error('❌ Failed to save cleared data:', error);
-        toast.error('Failed to clear topic properly', {
-          description: 'Please try again or refresh the page'
-        });
+        feedback.error('Failed to clear topic properly', 'Please try again or refresh the page');
       }
     }
   }, [activeTopicId, topicChats]);
