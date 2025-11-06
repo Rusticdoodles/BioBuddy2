@@ -187,15 +187,26 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     <>  {/* Code for visual resources/images in AI chat */}
                       <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                       {message.isSuggestion && message.suggestedTopicName && onCreateNewTopic && (
-                        <button
-                          onClick={() => {
-                            onCreateNewTopic(message.suggestedTopicName!);
-                          }}
-                          className="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2"
-                        >
-                          <Plus className="w-4 h-4" />
-                          Create &quot;{message.suggestedTopicName}&quot; Topic
-                        </button>
+                        <div className="flex gap-2 mt-3">
+                          <button
+                            onClick={() => {
+                              onCreateNewTopic(message.suggestedTopicName!);
+                            }}
+                            className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2"
+                          >
+                            <Plus className="w-4 h-4" />
+                            Create &quot;{message.suggestedTopicName}&quot; Topic
+                          </button>
+                          <button
+                            onClick={() => {
+                              // Send override message
+                              onSendMessage("No, add it here anyway");
+                            }}
+                            className="flex-1 px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg transition-colors"
+                          >
+                            Continue in This Topic
+                          </button>
+                        </div>
                       )}
                       {message.images && message.images.length > 0 && (
                         <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-600">

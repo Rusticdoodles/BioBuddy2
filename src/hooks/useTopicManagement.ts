@@ -15,27 +15,52 @@ export const useTopicManagement = () => {
     [topicChats, activeTopicId]
   );
 
-  // Load topic chats from localStorage on mount
+  // Load topics from localStorage with validation
   useEffect(() => {
     try {
-      const savedTopics = localStorage.getItem(TOPIC_CHATS_KEY);
+      const stored = localStorage.getItem(TOPIC_CHATS_KEY);
       const savedActiveId = localStorage.getItem(ACTIVE_TOPIC_KEY);
       
-      if (savedTopics) {
-        const topics: TopicChat[] = JSON.parse(savedTopics);
-        setTopicChats(topics);
+      if (stored) {
+        const parsed = JSON.parse(stored);
         
-        // Set active topic (either saved one, or first one, or null)
-        if (savedActiveId && topics.find(t => t.id === savedActiveId)) {
-          setActiveTopicId(savedActiveId);
-        } else if (topics.length > 0) {
-          setActiveTopicId(topics[0].id);
+        console.log('📥 Loading from localStorage:', {
+          topicCount: parsed.length,
+          topics: parsed.map((t: any) => ({
+            name: t.name,
+            nodes: t.nodes?.length || 0,
+            edges: t.edges?.length || 0
+          }))
+        });
+        
+        // Validate data structure
+        const validTopics = parsed.filter((topic: any) => {
+          const isValid = topic.id && topic.name && Array.isArray(topic.messages);
+          if (!isValid) {
+            console.warn('⚠️ Invalid topic found, skipping:', topic);
+          }
+          return isValid;
+        });
+        
+        if (validTopics.length !== parsed.length) {
+          console.warn('⚠️ Some topics were invalid and removed');
         }
         
-        console.log('📚 Loaded', topics.length, 'topic chats from localStorage');
+        setTopicChats(validTopics);
+        
+        // Set active topic (either saved one, or first one, or null)
+        if (savedActiveId && validTopics.find(t => t.id === savedActiveId)) {
+          setActiveTopicId(savedActiveId);
+        } else if (validTopics.length > 0) {
+          setActiveTopicId(validTopics[0].id);
+        }
+        
+        console.log('✅ Topics loaded successfully');
       }
     } catch (error) {
-      console.error('Error loading topic chats:', error);
+      console.error('❌ Failed to load from localStorage:', error);
+      // Clear corrupted data
+      localStorage.removeItem(TOPIC_CHATS_KEY);
     }
   }, []);
 

@@ -49,28 +49,60 @@ export async function POST(request: NextRequest) {
 
     // Check if user is asking about a different topic
     if (currentTopic && conversationHistory && conversationHistory.length > 0) {
-      const topicAnalysis = analyzeTopicDrift(
-        message,
-        currentTopic,
-        conversationHistory
-      );
+      // Check if user is explicitly overriding a previous suggestion
+      const overrideSignals = [
+        'no, i am correct',
+        'no i am correct',
+        'tell me anyway',
+        'add it here',
+        'add it to this',
+        'keep it here',
+        'stay in this topic',
+        'add to this map',
+        'merge it here',
+        'just add it',
+        'ignore that',
+        'override',
+        'continue here',
+        'add anyway',
+        'add it here anyway',
+        'tell me anyway',
+        'just tell me',
+        'continue in this topic'
+      ];
       
-      if (topicAnalysis.isDifferentTopic && topicAnalysis.confidence !== 'low') {
-        console.log('🔔 Different topic detected:', topicAnalysis);
+      const messageLower = message.toLowerCase();
+      const isOverride = overrideSignals.some(signal => messageLower.includes(signal));
+      
+      if (isOverride) {
+        console.log('✓ User override detected - skipping topic drift check');
+      } else {
+        // Only run topic drift detection if NOT an override
+        const topicAnalysis = analyzeTopicDrift(
+          message,
+          currentTopic,
+          conversationHistory
+        );
         
-        // Return a suggestion to create new topic instead of normal response
-        return NextResponse.json({
-          message: `I notice you're asking about **${topicAnalysis.suggestedTopicName}**, which seems different from your current topic "${currentTopic}". 
+        if (topicAnalysis.isDifferentTopic && topicAnalysis.confidence !== 'low') {
+          console.log('🔔 Different topic detected:', topicAnalysis);
+          
+          // Return a suggestion to create new topic instead of normal response
+          return NextResponse.json({
+            message: `I notice you're asking about **${topicAnalysis.suggestedTopicName}**, which seems different from your current topic "${currentTopic}". 
 
 For better organization, I recommend creating a new topic chat specifically for ${topicAnalysis.suggestedTopicName}! This will help you:
 
 - Keep your study sessions organized
 - Build focused concept maps for each subject
-- Easily review specific topics later`,
-          isSuggestion: true,
-          suggestedTopicName: topicAnalysis.suggestedTopicName,
-          success: true
-        });
+- Easily review specific topics later
+
+**Want to continue in this topic anyway?** Just reply with "add it here" or "tell me anyway" and I'll answer your question. 💡`,
+            isSuggestion: true,
+            suggestedTopicName: topicAnalysis.suggestedTopicName,
+            success: true
+          });
+        }
       }
     }
 

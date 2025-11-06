@@ -168,45 +168,57 @@ export default function MapPage() {
   const prevActiveTopicIdRef = useRef<string | null>(null);
   const processedConceptMapRef = useRef<string | null>(null);
 
-  // Sync nodes/edges when switching topics
+  // Sync nodes and edges when active topic ID changes
   useEffect(() => {
-    // Only run when topic actually changes
-    if (activeTopicId !== prevActiveTopicIdRef.current) {
-      const topic = topicChats.find(t => t.id === activeTopicId);
-      
-      console.log('🔄 TOPIC SWITCH DETECTED:', {
-        from: prevActiveTopicIdRef.current,
-        to: activeTopicId,
-        topicName: topic?.name || 'none',
-        savedNodes: topic?.nodes.length || 0,
-        savedEdges: topic?.edges.length || 0
+    const previousTopicId = prevActiveTopicIdRef.current;
+    
+    if (activeTopicId !== previousTopicId) {
+      console.log('🔄 TOPIC SWITCH:', {
+        from: previousTopicId,
+        to: activeTopicId
       });
       
-      if (topic) {
-        // Force update nodes and edges from topic
-        console.log('✅ Loading map for topic:', topic.name);
+      // Set flag to prevent corruption during switch
+      isProgrammaticChangeRef.current = true;
+      
+      const newTopic = topicChats.find(t => t.id === activeTopicId);
+      
+      if (newTopic) {
+        console.log('📂 Loading topic:', {
+          name: newTopic.name,
+          nodes: newTopic.nodes?.length || 0,
+          edges: newTopic.edges?.length || 0,
+          nodeIds: newTopic.nodes?.slice(0, 3).map(n => n.id) || []
+        });
         
-        // Mark as programmatic change to prevent history tracking
-        isProgrammaticChangeRef.current = true;
-        setNodes(topic.nodes || []);
-        setEdges(topic.edges || []);
-        
-        // Reset flag after React processes the updates
-        setTimeout(() => {
-          isProgrammaticChangeRef.current = false;
-        }, 0);
-      } else {
-        console.log('⚠️ No topic found, clearing map');
-        
-        isProgrammaticChangeRef.current = true;
+        // CRITICAL: Clear first to ensure no stale data
         setNodes([]);
         setEdges([]);
+        
+        // Load new data in next tick
+        setTimeout(() => {
+          setNodes(newTopic.nodes || []);
+          setEdges(newTopic.edges || []);
+          
+          console.log('✅ Topic loaded successfully');
+          
+          // Clear flag after data is set
+          setTimeout(() => {
+            isProgrammaticChangeRef.current = false;
+            console.log('🔓 Programmatic flag cleared - user edits now allowed');
+          }, 100);
+        }, 0);
+        
+      } else {
+        console.warn('⚠️ Topic not found:', activeTopicId);
+        setNodes([]);
+        setEdges([]);
+        
         setTimeout(() => {
           isProgrammaticChangeRef.current = false;
-        }, 0);
+        }, 100);
       }
       
-      // Update ref
       prevActiveTopicIdRef.current = activeTopicId;
       
       // CRITICAL: Reset processedConceptMapRef to allow new map to load
@@ -214,39 +226,80 @@ export default function MapPage() {
     }
   }, [activeTopicId, topicChats, setNodes, setEdges, isProgrammaticChangeRef]);
 
-  // Update active topic when nodes or edges change
+  // Update active topic when nodes or edges change (with corruption prevention)
   useEffect(() => {
-    if (activeTopicId) {
-      setTopicChats(prev => {
-        const topic = prev.find(t => t.id === activeTopicId);
-        if (!topic) return prev;
-        
-        const nodesChanged = JSON.stringify(topic.nodes) !== JSON.stringify(nodes);
-        const edgesChanged = JSON.stringify(topic.edges) !== JSON.stringify(edges);
-        
-        if (!nodesChanged && !edgesChanged) {
-          return prev;
-        }
-        
-        // SAFETY: Don't sync if nodes array is empty while topic has nodes (mid-load state)
-        if (nodes.length === 0 && topic.nodes.length > 0) {
-          console.log('⚠️ BLOCKED premature sync - nodes empty during load');
-          return prev;
-        }
-        
-        console.log('🔄 Syncing node/edge changes to topic state:', {
-          nodeCount: nodes.length,
-          edgeCount: edges.length
+    if (!activeTopicId) return;
+    
+    // CRITICAL: Don't save if we're in the middle of a topic switch
+    if (isProgrammaticChangeRef.current) {
+      console.log('⏸️ Skipping save - programmatic change in progress');
+      return;
+    }
+    
+    // CRITICAL: Verify that the current nodes/edges actually belong to this topic
+    // by checking if they match what's in topicChats
+    setTopicChats(prev => {
+      const topic = prev.find(t => t.id === activeTopicId);
+      if (!topic) {
+        console.warn('⚠️ No topic found for activeTopicId:', activeTopicId);
+        return prev;
+      }
+      
+      // Get current state
+      const currentNodes = nodes;
+      const currentEdges = edges;
+      const topicNodes = topic.nodes || [];
+      const topicEdges = topic.edges || [];
+      
+      // Check if nodes actually changed
+      const nodesChanged = JSON.stringify(topicNodes) !== JSON.stringify(currentNodes);
+      const edgesChanged = JSON.stringify(topicEdges) !== JSON.stringify(currentEdges);
+      
+      if (!nodesChanged && !edgesChanged) {
+        return prev; // No changes, don't update
+      }
+      
+      // VALIDATION: Check if this looks like a corruption scenario
+      // If we're about to save data that looks very different (different node IDs),
+      // it might be stale data from another topic
+      const topicNodeIds = new Set(topicNodes.map(n => n.id));
+      const currentNodeIds = new Set(currentNodes.map(n => n.id));
+      
+      // Calculate overlap
+      const matchingIds = [...currentNodeIds].filter(id => topicNodeIds.has(id));
+      const overlapPercent = topicNodeIds.size > 0 
+        ? (matchingIds.length / topicNodeIds.size) * 100 
+        : 100;
+      
+      // If less than 50% of node IDs match, this is likely stale data
+      if (topicNodeIds.size > 0 && currentNodeIds.size > 0 && overlapPercent < 50) {
+        console.error('🚨 CORRUPTION DETECTED - Blocking save!', {
+          topicName: topic.name,
+          topicNodeCount: topicNodeIds.size,
+          currentNodeCount: currentNodeIds.size,
+          overlapPercent: overlapPercent.toFixed(1) + '%',
+          topicNodeIds: Array.from(topicNodeIds).slice(0, 5),
+          currentNodeIds: Array.from(currentNodeIds).slice(0, 5)
         });
         
-        return prev.map(t => 
-          t.id === activeTopicId
-            ? { ...t, nodes, edges, updatedAt: new Date().toISOString() }
-            : t
-        );
+        // DON'T save - this is corruption
+        return prev;
+      }
+      
+      console.log('💾 Syncing user changes to topic:', {
+        topicName: topic.name,
+        nodeChange: `${topicNodeIds.size} → ${currentNodeIds.size}`,
+        edgeChange: `${topicEdges.length} → ${currentEdges.length}`,
+        overlapPercent: overlapPercent.toFixed(1) + '%'
       });
-    }
-  }, [nodes, edges, activeTopicId, setTopicChats]);
+      
+      return prev.map(t => 
+        t.id === activeTopicId
+          ? { ...t, nodes: currentNodes, edges: currentEdges, updatedAt: new Date().toISOString() }
+          : t
+      );
+    });
+  }, [nodes, edges, activeTopicId, setTopicChats, isProgrammaticChangeRef]);
 
   // Convert conceptMapData to ReactFlow nodes/edges when it changes
   useEffect(() => {
@@ -357,6 +410,62 @@ export default function MapPage() {
       conceptMapDataNodes: conceptMapData?.nodes.length || 0
     });
   }, [activeTopicId, activeTopic, nodes.length, edges.length, conceptMapData]);
+
+  // Data integrity check - log topic data on mount and after changes
+  useEffect(() => {
+    if (topicChats.length === 0) return;
+    
+    console.log('📊 TOPIC DATA INTEGRITY CHECK:', 
+      topicChats.map(topic => ({
+        id: topic.id,
+        name: topic.name,
+        nodes: topic.nodes?.length || 0,
+        edges: topic.edges?.length || 0,
+        sampleNodeIds: topic.nodes?.slice(0, 3).map(n => n.id) || [],
+        updated: topic.updatedAt
+      }))
+    );
+  }, [topicChats]);
+
+  // Load topics from localStorage with validation (runs once on mount)
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(TOPIC_CHATS_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        
+        console.log('📥 Loading from localStorage:', {
+          topicCount: parsed.length,
+          topics: parsed.map((t: any) => ({
+            name: t.name,
+            nodes: t.nodes?.length || 0,
+            edges: t.edges?.length || 0
+          }))
+        });
+        
+        // Validate data structure
+        const validTopics = parsed.filter((topic: any) => {
+          const isValid = topic.id && topic.name && Array.isArray(topic.messages);
+          if (!isValid) {
+            console.warn('⚠️ Invalid topic found, skipping:', topic);
+          }
+          return isValid;
+        });
+        
+        if (validTopics.length !== parsed.length) {
+          console.warn('⚠️ Some topics were invalid and removed');
+        }
+        
+        // Note: Topics are already loaded by useTopicManagement hook
+        // This validation just logs warnings if corruption is detected
+        console.log('✅ Topics loaded successfully');
+      }
+    } catch (error) {
+      console.error('❌ Failed to load from localStorage:', error);
+      // Clear corrupted data
+      localStorage.removeItem(TOPIC_CHATS_KEY);
+    }
+  }, []); // Run only once on mount
 
 
   // Trigger Part 1 of tour for first-time users
