@@ -34,7 +34,7 @@ export const Navbar = () => {
             </Link>
             <button
               onClick={startFullTour}
-              className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover-scale-sm transition-colors"
               title="Take a tour"
               aria-label="Help - Take a tour"
             >

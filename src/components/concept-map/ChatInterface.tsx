@@ -90,8 +90,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         <div className="flex items-center gap-2">
           <button
             onClick={onClearChat}
-            className="px-3 py-1.5 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors flex items-center gap-2"
+            className="px-3 py-1.5 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 hover-scale-sm transition-colors flex items-center gap-2"
             title="Clear all data (chat history and concept map)"
+            aria-label="Clear all data"
           >
             <Trash2 className="w-4 h-4" />
             Clear All
@@ -99,8 +100,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           <button
             data-tour="notes-mode-toggle"
             onClick={onToggleChatMode}
-            className="px-3 py-1.5 text-sm bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors flex items-center gap-2 shrink-0 mr-12"
+            className="px-3 py-1.5 text-sm bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 hover-scale-sm transition-colors flex items-center gap-2 shrink-0 mr-12"
             title="Switch to Notes Mode"
+            aria-label="Switch to Notes Mode"
           >
             <FileText className="w-4 h-4" />
             Notes Mode
@@ -152,7 +154,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           chatMessages.map((message, index) => (
             <div
               key={index}
-              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in-up`}
+              style={{
+                animationDelay: `${index * 0.05}s`,
+              }}
             >
               <div className="max-w-[80%] flex flex-col gap-2">
                 <div
@@ -192,7 +197,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                             onClick={() => {
                               onCreateNewTopic(message.suggestedTopicName!);
                             }}
-                            className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2"
+                            className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg hover-lift transition-colors flex items-center gap-2"
+                            aria-label={`Create ${message.suggestedTopicName} topic`}
                           >
                             <Plus className="w-4 h-4" />
                             Create &quot;{message.suggestedTopicName}&quot; Topic
@@ -202,7 +208,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                               // Send override message
                               onSendMessage("No, add it here anyway");
                             }}
-                            className="flex-1 px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg transition-colors"
+                            className="flex-1 px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg hover-scale transition-colors"
+                            aria-label="Continue in this topic"
                           >
                             Continue in This Topic
                           </button>
@@ -265,7 +272,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                                   onSearchBetterImages(index, message.searchTerms!);
                                 }}
                                 disabled={loadingBetterImages === index}
-                                className="flex items-center gap-1 px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded transition-colors disabled:opacity-50"
+                                className="flex items-center gap-1 px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded hover-scale-sm transition-colors disabled:opacity-50"
+                                aria-label="Find better images"
                               >
                                 {loadingBetterImages === index ? (
                                   <>
@@ -313,24 +321,27 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   <div className="flex gap-2 px-1">
                     <button
                       onClick={() => onRefineMessage(index, 'simplify')}
-                      className="flex items-center gap-1 px-2 py-1 text-xs bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-700 dark:text-slate-200 rounded transition-colors"
+                      className="flex items-center gap-1 px-2 py-1 text-xs bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-700 dark:text-slate-200 rounded hover-scale-sm transition-colors"
                       title="Explain in simpler terms"
+                      aria-label="Simplify explanation"
                     >
                       <ArrowDown className="w-3 h-3" />
                       Simplify
                     </button>
                     <button
                       onClick={() => onRefineMessage(index, 'detail')}
-                      className="flex items-center gap-1 px-2 py-1 text-xs bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-700 dark:text-slate-200 rounded transition-colors"
+                      className="flex items-center gap-1 px-2 py-1 text-xs bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-700 dark:text-slate-200 rounded hover-scale-sm transition-colors"
                       title="Add more detail"
+                      aria-label="Add more detail"
                     >
                       <ArrowUp className="w-3 h-3" />
                       More Detail
                     </button>
                     <button
                       onClick={() => onRefineMessage(index, 'regenerate')}
-                      className="flex items-center gap-1 px-2 py-1 text-xs bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-700 dark:text-slate-200 rounded transition-colors"
+                      className="flex items-center gap-1 px-2 py-1 text-xs bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-700 dark:text-slate-200 rounded hover-scale-sm transition-colors"
                       title="Regenerate response"
+                      aria-label="Regenerate response"
                     >
                       <RotateCw className="w-3 h-3" />
                       Regenerate
@@ -434,7 +445,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             disabled={!chatInput.trim() || isChatLoading}
             className={`px-4 py-3 rounded-lg transition-colors ${
               chatInput.trim() && !isChatLoading
-                ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                ? 'bg-blue-600 hover:bg-blue-700 text-white hover-lift'
                 : 'bg-slate-300 dark:bg-slate-600 text-slate-500 dark:text-slate-400 cursor-not-allowed'
             }`}
             aria-label="Send message"

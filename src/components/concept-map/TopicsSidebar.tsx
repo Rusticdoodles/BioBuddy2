@@ -29,7 +29,7 @@ export const TopicsSidebar: React.FC<TopicsSidebarProps> = ({
             const name = prompt('Topic name:');
             if (name) onCreateTopic(name);
           }}
-          className="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+          className="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg hover-lift flex items-center justify-center gap-2 text-sm font-medium"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -48,14 +48,17 @@ export const TopicsSidebar: React.FC<TopicsSidebarProps> = ({
           </div>
         ) : (
           <div className="space-y-1">
-            {topicChats.map(topic => (
+            {topicChats.map((topic, index) => (
               <div
                 key={topic.id}
-                className={`group relative p-3 rounded-lg cursor-pointer transition-colors ${
+                className={`group relative p-3 rounded-lg cursor-pointer hover-scale ${
                   topic.id === activeTopicId
                     ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
                     : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'
-                }`}
+                } animate-fade-in-up`}
+                style={{
+                  animationDelay: `${index * 0.05}s`,
+                }}
                 onClick={() => onSwitchTopic(topic.id)}
               >
                 <div className="flex items-start justify-between">
@@ -81,8 +84,9 @@ export const TopicsSidebar: React.FC<TopicsSidebarProps> = ({
                         onDeleteTopic(topic.id);
                       }
                     }}
-                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded transition-opacity"
+                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded hover-scale-sm transition-opacity"
                     title="Delete topic"
+                    aria-label="Delete topic"
                   >
                     <svg className="w-4 h-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

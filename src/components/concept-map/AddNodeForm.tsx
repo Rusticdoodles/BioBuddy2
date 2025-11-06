@@ -26,8 +26,8 @@ export const AddNodeForm: React.FC<AddNodeFormProps> = ({ onClose, onAdd }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in-new" onClick={onClose}>
+      <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-xl max-w-md w-full mx-4 animate-scale-in" onClick={(e) => e.stopPropagation()}>
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Add New Node</h3>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -64,13 +64,15 @@ export const AddNodeForm: React.FC<AddNodeFormProps> = ({ onClose, onAdd }) => {
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
+              className="px-4 py-2 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover-scale-sm transition-colors"
+              aria-label="Cancel"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg hover-lift transition-colors"
+              aria-label="Add node"
             >
               Add Node
             </button>

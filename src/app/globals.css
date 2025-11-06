@@ -39,3 +39,203 @@ body {
 .animate-fade-in {
   animation: fade-in 0.3s ease-out;
 }
+
+/* ============================================
+   SMOOTH TRANSITIONS - FOUNDATION
+   ============================================ */
+
+/* Base transition for all interactive elements */
+button,
+a,
+input,
+textarea,
+select,
+[role="button"],
+[role="tab"],
+[role="menuitem"] {
+  transition: all 0.2s ease;
+}
+
+/* Keyframe animations */
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Utility classes */
+.animate-scale-in {
+  animation: scaleIn 0.3s ease-out;
+}
+
+.animate-fade-in-new {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.3s ease-out;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.3s ease-out;
+}
+
+.animate-slide-in-down {
+  animation: slideInDown 0.3s ease-out;
+}
+
+.animate-pulse-custom {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-spin-custom {
+  animation: spin 1s linear infinite;
+}
+
+/* Hover effects - Apply these classes to interactive elements */
+.hover-lift {
+  transition: all 0.2s ease;
+}
+
+.hover-lift:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.hover-scale {
+  transition: transform 0.2s ease;
+}
+
+.hover-scale:hover:not(:disabled) {
+  transform: scale(1.02);
+}
+
+.hover-scale-sm {
+  transition: transform 0.2s ease;
+}
+
+.hover-scale-sm:hover:not(:disabled) {
+  transform: scale(1.05);
+}
+
+.hover-glow {
+  transition: all 0.2s ease;
+}
+
+.hover-glow:hover:not(:disabled) {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+}
+
+.hover-brightness {
+  transition: filter 0.2s ease;
+}
+
+.hover-brightness:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+/* Focus states */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  transition: outline 0.2s ease;
+}
+
+/* Disabled state */
+button:disabled,
+input:disabled,
+textarea:disabled,
+select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transition: opacity 0.2s ease;
+}
+
+/* Loading state */
+.loading {
+  pointer-events: none;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}

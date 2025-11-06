@@ -40,8 +40,9 @@ export const NotesInput: React.FC<NotesInputProps> = ({
           {onClearAll && (
             <button
               onClick={onClearAll}
-              className="px-3 py-1.5 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors flex items-center gap-2"
+              className="px-3 py-1.5 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 hover-scale-sm transition-colors flex items-center gap-2"
               title="Clear all data (chat history and concept map)"
+              aria-label="Clear all data"
             >
               <Trash2 className="w-4 h-4" />
               Clear All
@@ -49,8 +50,9 @@ export const NotesInput: React.FC<NotesInputProps> = ({
           )}
           <button
             onClick={onToggleChatMode}
-            className="px-3 py-1.5 text-sm rounded-lg transition-colors flex items-center gap-2 shrink-0 mr-12 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50"
+            className="px-3 py-1.5 text-sm rounded-lg hover-scale-sm transition-colors flex items-center gap-2 shrink-0 mr-12 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50"
             title={isChatMode ? "Switch to Notes Mode" : "Switch to Chat Mode"}
+            aria-label={isChatMode ? "Switch to Notes Mode" : "Switch to Chat Mode"}
           >
             <MessageSquare className="w-4 h-4" />
             {isChatMode ? 'Notes Mode' : 'Chat Mode'}
@@ -75,7 +77,7 @@ The cardiovascular system consists of the heart, blood vessels, and blood. The h
           disabled={inputText.trim().length === 0 || loadingState === 'loading'}
           className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2 ${
             inputText.trim().length > 0 && loadingState !== 'loading'
-              ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 cursor-pointer"
+              ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl hover-lift cursor-pointer"
               : "bg-slate-300 dark:bg-slate-600 text-slate-500 dark:text-slate-400 cursor-not-allowed"
           }`}
           aria-label="Generate concept map from your notes"

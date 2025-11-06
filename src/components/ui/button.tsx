@@ -17,10 +17,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(
           "inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
           {
-            "bg-blue-600 text-white hover:bg-blue-700": variant === "default",
-            "border border-blue-600 bg-transparent text-blue-600 hover:bg-blue-600 hover:text-white":
+            "bg-blue-600 text-white hover:bg-blue-700 hover-lift": variant === "default",
+            "border border-blue-600 bg-transparent text-blue-600 hover:bg-blue-600 hover:text-white hover-scale":
               variant === "outline",
-            "hover:bg-slate-100 hover:text-slate-900": variant === "ghost",
+            "hover:bg-slate-100 hover:text-slate-900 hover-scale-sm": variant === "ghost",
             "text-blue-600 underline-offset-4 hover:underline": variant === "link",
           },
           {

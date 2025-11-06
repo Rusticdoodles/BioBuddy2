@@ -528,7 +528,8 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
             <div className="flex flex-col gap-3">
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium shadow-sm"
+                className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg hover-lift transition-colors font-medium shadow-sm"
+                aria-label="Import saved map"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -550,7 +551,8 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
                       textarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
                   }}
-                  className="flex flex-col items-center gap-2 px-4 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition-colors border border-slate-300 dark:border-slate-600"
+                  className="flex flex-col items-center gap-2 px-4 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover-scale transition-colors border border-slate-300 dark:border-slate-600"
+                  aria-label="Paste notes"
                 >
                   <FileText className="w-5 h-5" />
                   <span className="text-sm font-medium">Paste Notes</span>
@@ -558,7 +560,8 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
                 
                 <button
                   onClick={onToggleChatMode}
-                  className="flex flex-col items-center gap-2 px-4 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition-colors border border-slate-300 dark:border-slate-600"
+                  className="flex flex-col items-center gap-2 px-4 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover-scale transition-colors border border-slate-300 dark:border-slate-600"
+                  aria-label="Ask AI"
                 >
                   <MessageSquare className="w-5 h-5" />
                   <span className="text-sm font-medium">Ask AI</span>
@@ -649,7 +652,7 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
                 <span className="text-sm font-medium">Focus Mode Active</span>
                 <button
                   onClick={() => setFocusedNodeId(null)}
-                  className="ml-2 hover:bg-blue-600 rounded p-1 transition-colors"
+                  className="ml-2 hover:bg-blue-600 rounded p-1 hover-scale-sm transition-colors"
                   aria-label="Exit focus mode"
                 >
                   <X className="w-3 h-3" />
@@ -727,7 +730,7 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
               {/* Info Panel Toggle Button */}
               <button
                 onClick={() => setShowInfo(!showInfo)}
-                className="absolute top-4 left-4 z-10 p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-200"
+                className="absolute top-4 left-4 z-10 p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg hover:bg-slate-100 dark:hover:bg-slate-700 hover-scale-sm transition-all duration-200"
                 aria-label="Toggle info panel"
                 title="Show/Hide Legend and Tips"
               >
@@ -743,7 +746,8 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
                       <h4 className="text-sm font-semibold text-slate-900 dark:text-white">Legend</h4>
                       <button
                         onClick={() => setShowInfo(false)}
-                        className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                        className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover-scale-sm transition-colors"
+                        aria-label="Close info panel"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -824,7 +828,7 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
               <button
                 onClick={handlePerfectLayout}
                 disabled={nodes.length === 0}
-                className="w-12 h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-12 h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg hover:shadow-xl hover-scale-sm hover-glow transition-all duration-200 flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Optimize layout for maximum clarity"
                 aria-label="Perfect layout"
               >
@@ -834,7 +838,7 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
               {/* Add Node button */}
               <button
                 onClick={() => setShowAddNodeForm(true)}
-                className="w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group"
+                className="w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl hover-scale-sm transition-all duration-200 flex items-center justify-center group"
                 aria-label="Add new node"
               >
                 <Plus className="w-6 h-6" />
@@ -847,7 +851,7 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
               <div className="relative">
                 <button
                   onClick={() => setShowExportMenu(!showExportMenu)}
-                  className="w-12 h-12 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group"
+                  className="w-12 h-12 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg hover:shadow-xl hover-scale-sm transition-all duration-200 flex items-center justify-center group"
                   aria-label="Export/Import options"
                   title="Export/Import"
                 >
@@ -863,7 +867,8 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
                         handleExportJSON();
                         setShowExportMenu(false);
                       }}
-                      className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2"
+                      className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover-scale-sm flex items-center gap-2 transition-colors"
+                      aria-label="Export JSON"
                     >
                       <FileText className="w-4 h-4 text-purple-600" />
                       Export JSON
@@ -873,7 +878,8 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
                         fileInputRef.current?.click();
                         setShowExportMenu(false);
                       }}
-                      className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2"
+                      className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover-scale-sm flex items-center gap-2 transition-colors"
+                      aria-label="Import JSON"
                     >
                       <Upload className="w-4 h-4 text-orange-600" />
                       Import JSON

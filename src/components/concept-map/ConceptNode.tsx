@@ -131,7 +131,7 @@ export const ConceptNode: React.FC<ConceptNodeProps> = ({ data, id }) => {
           ${shouldDim ? 'opacity-20' : 'opacity-100'}
           ${isFocused ? 'ring-4 ring-blue-500 ring-opacity-50 scale-105' : ''}
           ${isConnected && !isFocused ? 'ring-2 ring-blue-400 ring-opacity-30' : ''}
-          ${data.isNew ? 'ring-2 ring-blue-400 animate-pulse' : ''}
+          ${data.isNew ? 'animate-scale-in' : ''}
         `}
         onMouseEnter={() => setShowDelete(true)}
         onMouseLeave={() => setShowDelete(false)}
@@ -204,7 +204,7 @@ export const ConceptNode: React.FC<ConceptNodeProps> = ({ data, id }) => {
               e.stopPropagation();
               handleDelete();
             }}
-            className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs transition-colors z-10"
+            className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs hover-scale-sm transition-colors z-10"
             aria-label="Delete node"
           >
             <X className="w-3 h-3" />
