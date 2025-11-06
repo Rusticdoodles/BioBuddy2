@@ -100,7 +100,7 @@ export const useTour = () => {
       element: '[data-tour="map-controls"]',
       popover: {
         title: '🛠️ Map Tools',
-        description: '<ul class="text-sm space-y-1 text-left"><li>• <strong>Add Node:</strong> Create custom concepts</li><li>• <strong>Tidy Layout:</strong> Reorganize the map</li><li>• <strong>Export:</strong> Save as JSON</li><li>• <strong>Legend:</strong> Understand node types</li></ul>',
+        description: '<ul class="text-sm space-y-1 text-left"><li>• <strong>Add Node:</strong> Create custom concepts</li><li>• <strong>Export:</strong> Save as JSON</li><li>• <strong>Legend:</strong> Understand node types</li></ul>',
         side: 'left',
         align: 'end'
       }
@@ -191,7 +191,7 @@ export const useTour = () => {
       element: '[data-tour="map-controls"]',
       popover: {
         title: '🛠️ Map Tools',
-        description: '<ul class="text-sm space-y-1 text-left"><li>• <strong>Add Node:</strong> Create custom concepts</li><li>• <strong>Tidy Layout:</strong> Reorganize the map</li><li>• <strong>Export:</strong> Save as JSON</li><li>• <strong>Legend:</strong> Understand node types</li></ul>',
+        description: '<ul class="text-sm space-y-1 text-left"><li>• <strong>Add Node:</strong> Create custom concepts</li><li>• <strong>Export:</strong> Save as JSON</li><li>• <strong>Legend:</strong> Understand node types</li></ul>',
         side: 'left',
         align: 'end'
       }

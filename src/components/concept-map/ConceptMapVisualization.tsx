@@ -261,24 +261,6 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
     editableEdge: EditableEdge,
   }), []);
 
-  const handleTidyLayout = useCallback(() => {
-    if (nodes.length === 0) return;
-    
-    console.log('🧹 Tidying layout with Dagre hierarchical algorithm...');
-    
-    // Import is already at top of file
-    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
-      nodes,
-      edges
-    );
-    
-    setNodes(layoutedNodes);
-    setEdges(layoutedEdges);
-    
-    toast.success('Layout organized!', {
-      description: 'Nodes arranged in hierarchical structure'
-    });
-  }, [nodes, edges, setNodes, setEdges]);
 
   const handlePerfectLayout = useCallback(() => {
     if (nodes.length === 0) return;
@@ -700,18 +682,6 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
                 aria-label="Perfect layout"
               >
                 <Sparkles className="w-5 h-5" />
-              </button>
-
-              {/* Tidy Layout Button */}
-              <button
-                onClick={handleTidyLayout}
-                className="w-12 h-12 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group"
-                aria-label="Tidy layout"
-                title="Auto-arrange nodes"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
               </button>
 
               {/* Add Node button */}
