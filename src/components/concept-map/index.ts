@@ -8,4 +8,3 @@ export { NotesInput } from './NotesInput';
 export { TopicsSidebar } from './TopicsSidebar';
 export { MapUpdateConfirmationModal } from './MapUpdateConfirmationModal';
 export { WelcomeScreen } from './WelcomeScreen';
-export { TypingIndicator } from './TypingIndicator';

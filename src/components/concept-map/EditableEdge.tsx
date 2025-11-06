@@ -7,6 +7,7 @@ interface EditableEdgeProps extends EdgeProps {
   data?: {
     onUpdateEdge?: (edgeId: string, label: string) => void;
     onDeleteEdge?: (edgeId: string) => void;
+    isNew?: boolean;
   };
   pathOptions?: {
     offset?: number;
@@ -281,6 +282,7 @@ export const EditableEdge: React.FC<EditableEdgeProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editLabel, setEditLabel] = useState(typeof label === 'string' ? label : '');
   const [showDelete, setShowDelete] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   
   // Smoothstep path calculation using React Flow's exact logic
@@ -342,23 +344,51 @@ export const EditableEdge: React.FC<EditableEdgeProps> = ({
     }
   };
 
+  // Calculate stroke width - ensure it's a number
+  const baseStrokeWidth = typeof style?.strokeWidth === 'number' ? style.strokeWidth : 2;
+
+  // Handle markerEnd properly - it can be a string or an object
+  // Only update color if markerEnd is already an object, otherwise keep as-is
+  let finalMarkerEnd = markerEnd;
+  if (typeof markerEnd === 'object' && markerEnd !== null && !Array.isArray(markerEnd)) {
+    finalMarkerEnd = {
+      ...(markerEnd as Record<string, unknown>),
+      color: isHovered ? '#3b82f6' : ((markerEnd as Record<string, unknown>).color || '#64748b'),
+    } as typeof markerEnd;
+  }
+
   return (
     <>
+    {/* Edge Path */}
       <path
         id={id}
         style={{
           ...style,
           fill: 'none',
-          stroke: style?.stroke || '#64748b', // Ensure stroke is applied
+          stroke: isHovered 
+            ? '#3b82f6' 
+            : (style?.stroke || '#64748b'),
+          strokeWidth: isHovered 
+            ? baseStrokeWidth + 1 
+            : baseStrokeWidth,
+          transition: 'all 0.2s ease',
         }}
         className="react-flow__edge-path"
         d={edgePath}
-        markerEnd={markerEnd}
+        markerEnd={finalMarkerEnd}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       />
       <g
         transform={`translate(${edgeCenterX}, ${edgeCenterY})`}
-        onMouseEnter={() => setShowDelete(true)}
-        onMouseLeave={() => setShowDelete(false)}
+        onMouseEnter={() => {
+          setShowDelete(true);
+          setIsHovered(true);
+        }}
+        onMouseLeave={() => {
+          setShowDelete(false);
+          setIsHovered(false);
+        }}
         onClick={handleLabelClick}
         opacity={style?.opacity ?? 1}
         style={{
