@@ -658,7 +658,7 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
             {/* Floating Action Buttons */}
             <div data-tour="map-controls" className="absolute bottom-56 right-4 flex flex-col gap-2">
               {/* Regenerate button */}
-              {loadingState === 'success' && nodes.length > 0 && (
+              {/* {loadingState === 'success' && nodes.length > 0 && (
                 <button
                   onClick={onRegenerateMindmap}
                   disabled={isRegeneratingMap}
@@ -671,7 +671,7 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
                 >
                   <RotateCw className={`w-5 h-5 ${isRegeneratingMap ? 'animate-spin' : ''}`} />
                 </button>
-              )}
+              )} */}
 
               {/* Perfect Layout Button */}
               <button

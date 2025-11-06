@@ -645,27 +645,29 @@ Make sure EVERY concept from the list above is included in the new map.`;
     
     if (currentMapHash === lastToastedMapHashRef.current) return;
   
-    const timeoutId = setTimeout(() => {
-      toast('Mindmap too confusing? Click regenerate', {
-        description: 'You can try a different structure by regenerating the map.',
-        position: 'bottom-right',
-        duration: 8000,
-        action: { label: 'Regenerate', onClick: () => handleRegenerateMindmap() },
-        className: 'bg-amber-50 text-amber-900 border border-amber-200',
-        style: {
-          backgroundColor: 'rgba(35, 117, 224, 0.9)',
-          color: '#ffffff',
-          borderRadius: '10px',
-          fontSize: '16px',
-          fontWeight: 'bold',
-          textAlign: 'left',
-        },
-      });
-    }, 1000);
+
+    //For now, we don't need to show this toast
+    // const timeoutId = setTimeout(() => {
+    //   toast('Mindmap too confusing? Click regenerate', {
+    //     description: 'You can try a different structure by regenerating the map.',
+    //     position: 'bottom-right',
+    //     duration: 8000,
+    //     action: { label: 'Regenerate', onClick: () => handleRegenerateMindmap() },
+    //     className: 'bg-amber-50 text-amber-900 border border-amber-200',
+    //     style: {
+    //       backgroundColor: 'rgba(35, 117, 224, 0.9)',
+    //       color: '#ffffff',
+    //       borderRadius: '10px',
+    //       fontSize: '16px',
+    //       fontWeight: 'bold',
+    //       textAlign: 'left',
+    //     },
+    //   });
+    // }, 1000);
   
-    lastToastedMapHashRef.current = currentMapHash;
+    // lastToastedMapHashRef.current = currentMapHash;
     
-    return () => clearTimeout(timeoutId);
+    // return () => clearTimeout(timeoutId);
   }, [isRestoringFromStorage, isChatMode, loadingState, conceptMapData, handleRegenerateMindmap]);
 
   // Handle import JSON
