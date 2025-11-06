@@ -8,7 +8,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
-import { feedback, checkMilestones } from '@/lib/feedback';
+import { Toaster, toast } from 'sonner';
 
 // Import extracted components
 import { 
@@ -72,7 +72,6 @@ export default function MapPage() {
     handleCreateTopic,
     handleSwitchTopic,
     handleDeleteTopic,
-    handleRenameTopic,
     handleClearChat,
   } = useTopicManagement();
 
@@ -428,29 +427,6 @@ export default function MapPage() {
     );
   }, [topicChats]);
 
-  // Milestone tracking: First map creation
-  useEffect(() => {
-    if (loadingState === 'success' && nodes.length > 0) {
-      const hasCreatedFirstMap = localStorage.getItem('hasCreatedFirstMap');
-      if (!hasCreatedFirstMap) {
-        localStorage.setItem('hasCreatedFirstMap', 'true');
-        feedback.firstMap();
-      }
-    }
-  }, [loadingState, nodes.length]);
-
-  // Milestone tracking: Topic and node milestones
-  useEffect(() => {
-    if (topicChats.length > 0) {
-      const totalNodes = topicChats.reduce(
-        (sum, topic) => sum + (topic.nodes?.length || 0), 
-        0
-      );
-      
-      checkMilestones(topicChats.length, totalNodes);
-    }
-  }, [topicChats]);
-
   // Load topics from localStorage with validation (runs once on mount)
   useEffect(() => {
     try {
@@ -556,7 +532,7 @@ export default function MapPage() {
   // Handle regenerate mindmap
   const handleRegenerateMindmap = useCallback(async () => {
     if (!activeTopic || chatMessages.length === 0) {
-      feedback.noConversationToRegenerate();
+      toast.error('No conversation to regenerate map from');
       return;
     }
     
@@ -572,7 +548,7 @@ export default function MapPage() {
         .join('\n\n');
       
       if (!allAssistantMessages) {
-        feedback.noAiResponses();
+        toast.error('No AI responses to regenerate from');
         setForceRegenerateMap(false);
         return;
       }
@@ -624,16 +600,22 @@ Make sure EVERY concept from the list above is included in the new map.`;
       // Step 4: Generate new map with all concepts
       await generateConceptMapFromText(enhancedPrompt);
       
-      feedback.mapRegeneratedWithConcepts(currentConcepts.length);
+      toast.success('Mindmap regenerated with all concepts!', {
+        description: `Restructured ${currentConcepts.length} concepts with better organization`
+      });
       
     } catch (error) {
       console.error("❌ Error regenerating mindmap:", error);
       setForceRegenerateMap(false); // Reset on error
       
-      feedback.failedToRegenerate(
-        error instanceof Error ? error.message : undefined,
-        () => handleRegenerateMindmap()
-      );
+      toast.error('Failed to regenerate mindmap', {
+        description: error instanceof Error ? error.message : 'Unknown error',
+        action: {
+          label: 'Retry',
+          onClick: () => handleRegenerateMindmap()
+        },
+        duration: 5000,
+      });
     } finally {
       setIsRegeneratingMap(false);
     }
@@ -765,13 +747,16 @@ Make sure EVERY concept from the list above is included in the new map.`;
         ));
       }
       
-      feedback.mapImported(importedNodes.length);
+      toast.success('Concept map imported successfully!', {
+        description: `Loaded ${importedNodes.length} nodes and ${importedEdges.length} edges`,
+      });
       
     } catch (error) {
       console.error('❌ Error importing JSON:', error);
-      feedback.failedToImport(
-        error instanceof Error ? error.message : 'Invalid file format. Please select a valid concept map JSON file.'
-      );
+      toast.error('Failed to import JSON file', {
+        description: error instanceof Error ? error.message : 'Invalid file format. Please select a valid concept map JSON file.',
+        duration: 5000,
+      });
     }
   }, [handleUpdateNode, handleDeleteNode, handleUpdateEdge, handleDeleteEdge, activeTopicId, setTopicChats]);
 
@@ -835,6 +820,14 @@ Make sure EVERY concept from the list above is included in the new map.`;
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
+      <Toaster 
+        position="top-center" 
+        richColors 
+        closeButton
+        toastOptions={{
+          className: 'text-sm',
+        }}
+      />
       
       <TopicsSidebar
         topicChats={topicChats}
@@ -842,7 +835,6 @@ Make sure EVERY concept from the list above is included in the new map.`;
         onCreateTopic={handleCreateTopic}
         onSwitchTopic={handleSwitchTopic}
         onDeleteTopic={handleDeleteTopic}
-        onRenameTopic={handleRenameTopic}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">

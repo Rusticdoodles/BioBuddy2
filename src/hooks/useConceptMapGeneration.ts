@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { feedback } from '@/lib/feedback';
+import { toast } from 'sonner';
 import { LoadingState } from '@/types/concept-map-types';
 import { TopicChat } from '@/types/concept-map-types';
 
@@ -90,7 +90,14 @@ export const useConceptMapGeneration = ({
         ));
       }
       
-      feedback.failedToGenerate(errorMessage);
+      toast.error('Failed to generate concept map', {
+        description: errorMessage,
+        action: {
+          label: 'Retry',
+          onClick: () => generateConceptMapFromText(inputText)
+        },
+        duration: 5000,
+      });
     }
   }, [inputText, activeTopicId, setTopicChats]);
 
@@ -104,12 +111,12 @@ export const useConceptMapGeneration = ({
     }
 
     if (inputText.length < 50) {
-      feedback.notesTooShort();
+      toast.error("Notes must be at least 50 characters to generate a meaningful concept map.");
       return;
     }
 
     if (inputText.length > 10000) {
-      feedback.notesTooLong();
+      toast.error("Notes must be less than 10,000 characters.");
       return;
     }
 

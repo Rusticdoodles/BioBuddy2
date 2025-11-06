@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { feedback } from '@/lib/feedback';
+import { toast } from 'sonner';
 import { Node, Edge } from '@xyflow/react';
 import { TopicChat } from '@/types/concept-map-types';
 import { calculateOptimalStartPosition, clusterRelatedNodes, findEmptySpace } from '@/utils/node-positioning';
@@ -101,7 +101,7 @@ export const useMapUpdate = ({
       });
 
       if (uniqueNewNodes.length === 0) {
-        feedback.noNewConcepts();
+        toast.info('No new nodes to add - all concepts already exist on the map');
         setShowAddToMapPrompt(false);
         setPendingMapUpdate(null);
         return;
@@ -340,16 +340,15 @@ export const useMapUpdate = ({
         setTimeout(() => verifyLocalStorageSave(), 100);
       } catch (error) {
         console.error('❌ Failed to save to localStorage:', error);
-        feedback.error('Failed to save changes');
+        toast.error('Failed to save changes');
       }
 
       setShowAddToMapPrompt(false);
       setPendingMapUpdate(null);
 
-      feedback.conceptsMerged(
-        newNodesFormatted.length,
-        newEdgesFormatted.length
-      );
+      toast.success('Map updated!', {
+        description: `Added ${newNodesFormatted.length} new concept${newNodesFormatted.length !== 1 ? 's' : ''}`,
+      });
 
       // Remove highlight after 12 seconds
       setTimeout(() => {
@@ -386,7 +385,9 @@ export const useMapUpdate = ({
 
     } catch (error) {
       console.error('❌ Error merging nodes:', error);
-      feedback.failedToUpdate(error instanceof Error ? error.message : undefined);
+      toast.error('Failed to update map', {
+        description: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
   }, [pendingMapUpdate, activeTopicId, activeTopic, handleUpdateNode, handleDeleteNode, handleUpdateEdge, handleDeleteEdge, topicChats, verifyLocalStorageSave, setNodes, setEdges, setTopicChats]);
 

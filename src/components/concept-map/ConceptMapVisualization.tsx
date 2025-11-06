@@ -28,7 +28,7 @@ import {
   Sparkles,
   Eye
 } from 'lucide-react';
-import { feedback } from '@/lib/feedback';
+import { toast } from 'sonner';
 
 import { ConceptNode } from './ConceptNode';
 import { EditableEdge } from './EditableEdge';
@@ -246,7 +246,9 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
     if (!showSuccessBanner) return;
     if (nodes.length === 0) return;
 
-    feedback.mapGenerated(nodes.length, edges.length);
+    toast.success('Concept map generated successfully!', {
+      description: `Found ${nodes.length} concepts with ${edges.length} relationships`,
+    });
   }, [loadingState, showSuccessBanner, nodes.length, edges.length]);
 
   const handleAddNode = (label: string, type: string) => {
@@ -280,7 +282,9 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
     link.click();
     URL.revokeObjectURL(url);
 
-    feedback.mapExported();
+    toast.success('Concept map exported!', {
+      description: 'JSON file saved to your downloads folder',
+    });
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -293,7 +297,9 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
         const json = JSON.parse(e.target?.result as string);
         onImportJSON(json);
       } catch (error) {
-        feedback.invalidJson();
+        toast.error('Invalid JSON file', {
+          description: 'Please select a valid concept map JSON file.',
+        });
         console.error('Error parsing JSON:', error);
       }
     };
@@ -432,7 +438,9 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
       }, 100);
     }
     
-    feedback.perfectLayout();
+    toast.success('Layout optimized!', {
+      description: 'Graph reorganized for clarity'
+    });
     
     console.log('✅ Perfect layout complete');
   }, [nodes, edges, setNodes, setEdges, rfInstance]);

@@ -1,5 +1,5 @@
 import React from 'react';
-import { feedback } from '@/lib/feedback';
+import { toast } from 'sonner';
 
 interface MapUpdateConfirmationModalProps {
   isOpen: boolean;
@@ -68,7 +68,7 @@ export const MapUpdateConfirmationModal: React.FC<MapUpdateConfirmationModalProp
           <button
             onClick={() => {
               onClose();
-              feedback.mapUpdateCancelled();
+              toast.info('Map update cancelled');
             }}
             className="px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg hover-scale-sm transition-colors"
             aria-label="Cancel"
