@@ -239,3 +239,50 @@ select:disabled {
   opacity: 0.6;
   transition: opacity 0.2s ease;
 }
+
+/* ============================================
+   MICRO-INTERACTIONS - ANIMATIONS
+   ============================================ */
+
+/* Node creation - bounce in */
+@keyframes nodeBounce {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-node-bounce {
+  animation: nodeBounce 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Node deletion - scale out and fade */
+@keyframes nodeDelete {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+}
+
+.animate-node-delete {
+  animation: nodeDelete 0.3s ease-out forwards;
+  pointer-events: none; /* Prevent interaction during deletion */
+}
+
+/* Edge creation - flowing dashes */
+@keyframes dashFlow {
+  to {
+    stroke-dashoffset: -10;
+  }
+}

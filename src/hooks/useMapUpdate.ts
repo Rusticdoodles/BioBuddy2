@@ -350,7 +350,20 @@ export const useMapUpdate = ({
         description: `Added ${newNodesFormatted.length} new concept${newNodesFormatted.length !== 1 ? 's' : ''}`,
       });
 
-      // Remove highlight after 12 seconds
+      // Remove isNew flag from edges after animation completes (2 seconds)
+      setTimeout(() => {
+        setEdges(edges => 
+          edges.map(edge => ({
+            ...edge,
+            data: {
+              ...edge.data,
+              isNew: false,
+            },
+          }))
+        );
+      }, 2000); // Let animation run for 2 seconds
+
+      // Remove highlight from nodes after 5 seconds
       setTimeout(() => {
         const nodesWithoutHighlight = mergedNodes.map(node => ({
           ...node,

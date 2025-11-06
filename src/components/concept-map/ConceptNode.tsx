@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { X } from 'lucide-react';
 import { nodeTypeColors, nodeTypeOptions } from '@/constants/concept-map-constants';
@@ -36,6 +36,17 @@ export const ConceptNode: React.FC<ConceptNodeProps> = ({ data, id }) => {
   const [isEditingType, setIsEditingType] = useState(false);
   const [editType, setEditType] = useState(data.type);
   const typeInputRef = useRef<HTMLSelectElement>(null);
+  
+  // Track if this is the first render for animation
+  const [hasAnimated, setHasAnimated] = useState(false);
+  // Track if node is being deleted to trigger animation
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  useEffect(() => {
+    if (data.isNew && !hasAnimated) {
+      setHasAnimated(true);
+    }
+  }, [data.isNew, hasAnimated]);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -68,12 +79,22 @@ export const ConceptNode: React.FC<ConceptNodeProps> = ({ data, id }) => {
       handleCancel();
     }
   };
-
-  const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this node? This will also remove all connected edges.')) {
-      onDeleteNode(id);
+  // Delete node callback
+  const handleDelete = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!window.confirm(`Delete "${data.label}"?`)) {
+      return;
     }
-  };
+    
+    // Set deleting state to trigger animation
+    setIsDeleting(true);
+    
+    // Wait for animation to complete before actually deleting
+    setTimeout(() => {
+      onDeleteNode(id);
+    }, 300); // Match animation duration
+  }, [id, data.label, onDeleteNode]);
 
   const handleTypeSave = () => {
     if (editType.trim()) {
@@ -127,11 +148,13 @@ export const ConceptNode: React.FC<ConceptNodeProps> = ({ data, id }) => {
         className={`
           px-6 py-4 rounded-lg shadow-md border-2 ${colors.bg} ${colors.border} 
           min-w-[120px] max-w-[200px] relative group
-          transition-all duration-300 ease-in-out
+          transition-all duration-200 ease-in-out
           ${shouldDim ? 'opacity-20' : 'opacity-100'}
           ${isFocused ? 'ring-4 ring-blue-500 ring-opacity-50 scale-105' : ''}
           ${isConnected && !isFocused ? 'ring-2 ring-blue-400 ring-opacity-30' : ''}
-          ${data.isNew ? 'animate-scale-in' : ''}
+          ${data.isNew && !hasAnimated ? 'animate-node-bounce' : ''}
+          ${isDeleting ? 'animate-node-delete' : ''}
+          hover:scale-105 hover:shadow-xl hover:-translate-y-1
         `}
         onMouseEnter={() => setShowDelete(true)}
         onMouseLeave={() => setShowDelete(false)}
@@ -200,10 +223,7 @@ export const ConceptNode: React.FC<ConceptNodeProps> = ({ data, id }) => {
         {/* Delete button - visible on hover */}
         {showDelete && !isEditing && (
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete();
-            }}
+            onClick={handleDelete}
             className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs hover-scale-sm transition-colors z-10"
             aria-label="Delete node"
           >
