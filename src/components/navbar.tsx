@@ -1,12 +1,15 @@
 "use client";
 
 // BioBuddy Navigation Component
+import { useState } from "react";
 import Link from "next/link";
-import { HelpCircle } from "lucide-react";
+import { HelpCircle, MessageSquare } from "lucide-react";
 import { useTour } from "@/hooks/useTour";
+import { FeedbackModal } from "@/components/FeedbackModal";
 
 export const Navbar = () => {
   const { startFullTour } = useTour();
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   return (
     <nav className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
@@ -33,6 +36,17 @@ export const Navbar = () => {
               Concept Map
             </Link>
             <button
+              onClick={() => setIsFeedbackOpen(true)}
+              className="flex items-center gap-2 px-3 py-2 text-sm text-slate-600 dark:text-slate-300 
+                       hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors hover-scale-sm"
+              title="Send feedback"
+              aria-label="Send feedback"
+              tabIndex={0}
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span className="hidden sm:inline">Feedback</span>
+            </button>
+            <button
               onClick={startFullTour}
               className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover-scale-sm transition-colors"
               title="Take a tour"
@@ -43,6 +57,10 @@ export const Navbar = () => {
           </div>
         </div>
       </div>
+      <FeedbackModal 
+        isOpen={isFeedbackOpen} 
+        onClose={() => setIsFeedbackOpen(false)} 
+      />
     </nav>
   );
 };

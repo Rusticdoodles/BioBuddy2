@@ -12,7 +12,7 @@ function fixOverlappingNodes(nodes: Node[], nodeWidth = 220, nodeHeight = 90): N
   
   let hasOverlaps = true;
   let iteration = 0;
-  let workingNodes = [...nodes];
+  const workingNodes = [...nodes];
   
   while (hasOverlaps && iteration < MAX_ITERATIONS) {
     hasOverlaps = false;

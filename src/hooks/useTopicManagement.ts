@@ -15,54 +15,90 @@ export const useTopicManagement = () => {
     [topicChats, activeTopicId]
   );
 
+  const isValidTopicChat = useCallback((topic: unknown): topic is TopicChat => {
+    if (!topic || typeof topic !== 'object') return false;
+
+    const candidate = topic as Partial<TopicChat>;
+
+    if (typeof candidate.id !== 'string') return false;
+    if (typeof candidate.name !== 'string') return false;
+    if (!Array.isArray(candidate.messages)) return false;
+
+    return true;
+  }, []);
+
   // Load topics from localStorage with validation
   useEffect(() => {
     try {
       const stored = localStorage.getItem(TOPIC_CHATS_KEY);
       const savedActiveId = localStorage.getItem(ACTIVE_TOPIC_KEY);
-      
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        
-        console.log('📥 Loading from localStorage:', {
-          topicCount: parsed.length,
-          topics: parsed.map((t: any) => ({
-            name: t.name,
-            nodes: t.nodes?.length || 0,
-            edges: t.edges?.length || 0
-          }))
-        });
-        
-        // Validate data structure
-        const validTopics = parsed.filter((topic: any) => {
-          const isValid = topic.id && topic.name && Array.isArray(topic.messages);
-          if (!isValid) {
-            console.warn('⚠️ Invalid topic found, skipping:', topic);
-          }
-          return isValid;
-        });
-        
-        if (validTopics.length !== parsed.length) {
-          console.warn('⚠️ Some topics were invalid and removed');
-        }
-        
-        setTopicChats(validTopics);
-        
-        // Set active topic (either saved one, or first one, or null)
-        if (savedActiveId && validTopics.find(t => t.id === savedActiveId)) {
-          setActiveTopicId(savedActiveId);
-        } else if (validTopics.length > 0) {
-          setActiveTopicId(validTopics[0].id);
-        }
-        
-        console.log('✅ Topics loaded successfully');
+
+      if (!stored) return;
+
+      const parsed = JSON.parse(stored) as unknown;
+
+      if (!Array.isArray(parsed)) {
+        console.warn('⚠️ Stored topics were not an array, clearing data');
+        localStorage.removeItem(TOPIC_CHATS_KEY);
+        return;
       }
+
+      console.log('📥 Loading from localStorage:', {
+        topicCount: parsed.length,
+        topics: parsed.map((topic) => {
+          if (!isValidTopicChat(topic)) {
+            return {
+              name: 'Invalid topic',
+              nodes: 0,
+              edges: 0,
+            };
+          }
+
+          return {
+            name: topic.name,
+            nodes: topic.nodes?.length || 0,
+            edges: topic.edges?.length || 0,
+          };
+        }),
+      });
+
+      const validTopics = parsed.filter((topic): topic is TopicChat => {
+        const isValid = isValidTopicChat(topic);
+        if (!isValid) {
+          console.warn('⚠️ Invalid topic found, skipping:', topic);
+        }
+        return isValid;
+      });
+
+      if (validTopics.length !== parsed.length) {
+          console.warn('⚠️ Some topics were invalid and removed');
+      }
+
+      if (validTopics.length === 0) {
+        setTopicChats([]);
+        setActiveTopicId(null);
+        return;
+      }
+
+      setTopicChats(validTopics);
+
+      if (savedActiveId) {
+        const savedTopic = validTopics.find(topic => topic.id === savedActiveId);
+        if (savedTopic) {
+          setActiveTopicId(savedActiveId);
+          console.log('✅ Topics loaded successfully');
+          return;
+        }
+      }
+
+      setActiveTopicId(validTopics[0].id);
+      console.log('✅ Topics loaded successfully');
     } catch (error) {
       console.error('❌ Failed to load from localStorage:', error);
       // Clear corrupted data
       localStorage.removeItem(TOPIC_CHATS_KEY);
     }
-  }, []);
+  }, [isValidTopicChat]);
 
   // Auto-save topic chats to localStorage
   useEffect(() => {

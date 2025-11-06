@@ -215,7 +215,7 @@ export const useMapUpdate = ({
       console.log('📍 Positioning new nodes intelligently...');
 
       // Helper: Find position for a new node based on its connections
-      const calculateSmartPosition = (newNode: any, newEdges: any[], existingNodes: any[]) => {
+      const calculateSmartPosition = (newNode: Node, newEdges: Edge[], existingNodes: Node[]) => {
         // Find which existing nodes this new node connects to
         const connectedNodeIds = newEdges
           .filter(e => e.source === newNode.id || e.target === newNode.id)
@@ -257,7 +257,7 @@ export const useMapUpdate = ({
       };
 
       // Position each new node
-      const positionedNewNodes = newNodesFormatted.map((newNode: any) => {
+      const positionedNewNodes = newNodesFormatted.map((newNode: Node) => {
         const position = calculateSmartPosition(newNode, newEdgesFormatted, activeTopic.nodes);
         
         return {
@@ -267,11 +267,11 @@ export const useMapUpdate = ({
       });
 
       // Check for overlaps with existing nodes and adjust if needed
-      const adjustForOverlaps = (newNodes: any[], existingNodes: any[]) => {
+      const adjustForOverlaps = (newNodes: Node[], existingNodes: Node[]) => {
         const MIN_DISTANCE = 150; // Minimum distance between nodes
         
         return newNodes.map(newNode => {
-          let adjustedPosition = { ...newNode.position };
+          const adjustedPosition = { ...newNode.position };
           let attempts = 0;
           const MAX_ATTEMPTS = 10;
           

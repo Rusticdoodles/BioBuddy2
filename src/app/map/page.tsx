@@ -31,6 +31,7 @@ import { useConceptMapGeneration } from '@/hooks/useConceptMapGeneration';
 import { useChatHandlers } from '@/hooks/useChatHandlers';
 import { useMapUpdate } from '@/hooks/useMapUpdate';
 import { useTour } from '@/hooks/useTour';
+import { FeedbackProvider } from '@/contexts/FeedbackContext';
 
 const flowKey = 'biobuddy-concept-map-flow';
 const TOPIC_CHATS_KEY = 'biobuddy-topic-chats';
@@ -162,7 +163,7 @@ export default function MapPage() {
   });
 
   // Tour hook
-  const { hasSeenTour, hasSeenPart1, hasSeenPart2, startInitialTour, startMapTour, startFullTour } = useTour();
+  const { hasSeenPart1, hasSeenPart2, startInitialTour, startMapTour } = useTour();
 
   // Refs for tracking state
   const prevActiveTopicIdRef = useRef<string | null>(null);
@@ -436,16 +437,24 @@ export default function MapPage() {
         
         console.log('📥 Loading from localStorage:', {
           topicCount: parsed.length,
-          topics: parsed.map((t: any) => ({
-            name: t.name,
-            nodes: t.nodes?.length || 0,
-            edges: t.edges?.length || 0
-          }))
+          topics: parsed.map((t: unknown) => {
+            if (typeof t === 'object' && t !== null && 'name' in t) {
+              const topic = t as { name?: unknown; nodes?: unknown[]; edges?: unknown[] };
+              return {
+                name: topic.name || 'Unknown',
+                nodes: Array.isArray(topic.nodes) ? topic.nodes.length : 0,
+                edges: Array.isArray(topic.edges) ? topic.edges.length : 0
+              };
+            }
+            return { name: 'Invalid', nodes: 0, edges: 0 };
+          })
         });
         
         // Validate data structure
-        const validTopics = parsed.filter((topic: any) => {
-          const isValid = topic.id && topic.name && Array.isArray(topic.messages);
+        const validTopics = parsed.filter((topic: unknown) => {
+          if (typeof topic !== 'object' || topic === null) return false;
+          const t = topic as { id?: unknown; name?: unknown; messages?: unknown };
+          const isValid = typeof t.id === 'string' && typeof t.name === 'string' && Array.isArray(t.messages);
           if (!isValid) {
             console.warn('⚠️ Invalid topic found, skipping:', topic);
           }
@@ -819,17 +828,28 @@ Make sure EVERY concept from the list above is included in the new map.`;
 
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
-      <Toaster 
-        position="top-center" 
-        richColors 
-        closeButton
-        toastOptions={{
-          className: 'text-sm',
-        }}
-      />
-      
-      <TopicsSidebar
+    <FeedbackProvider
+      value={{
+        activeTopic: activeTopicId || undefined,
+        topicName: activeTopic?.name || undefined,
+        nodeCount: nodes.length,
+        edgeCount: edges.length,
+        darkMode: typeof document !== 'undefined' 
+          ? document.documentElement.classList.contains('dark') 
+          : false,
+      }}
+    >
+      <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
+        <Toaster 
+          position="top-center" 
+          richColors 
+          closeButton
+          toastOptions={{
+            className: 'text-sm',
+          }}
+        />
+        
+        <TopicsSidebar
         topicChats={topicChats}
         activeTopicId={activeTopicId}
         onCreateTopic={handleCreateTopic}
@@ -974,5 +994,6 @@ Make sure EVERY concept from the list above is included in the new map.`;
         )}
       </div>
     </div>
+    </FeedbackProvider>
   );
 }

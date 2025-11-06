@@ -24,7 +24,7 @@ import {
   X,
   Upload,
   MessageSquare,
-  RotateCw,
+  // RotateCw,
   Sparkles,
   Eye
 } from 'lucide-react';
@@ -84,7 +84,9 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
   onImportJSON,
   onToggleChatMode,
   isRestoringFromStorage,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onRegenerateMindmap,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   isRegeneratingMap
 }) => {
   // DEBUG: Log what we're receiving
