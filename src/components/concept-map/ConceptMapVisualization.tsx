@@ -25,7 +25,8 @@ import {
   Upload,
   MessageSquare,
   RotateCw,
-  Sparkles
+  Sparkles,
+  Eye
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -97,6 +98,7 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
   const [showAddNodeForm, setShowAddNodeForm] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -109,6 +111,75 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showExportMenu]);
+
+  /**
+   * Calculate which nodes and edges are connected to the focused node
+   */
+  const getConnectedElements = useCallback((nodeId: string | null) => {
+    if (!nodeId) {
+      return { connectedNodeIds: new Set<string>(), connectedEdgeIds: new Set<string>() };
+    }
+    
+    const connectedNodeIds = new Set<string>();
+    const connectedEdgeIds = new Set<string>();
+    
+    // Add the focused node itself
+    connectedNodeIds.add(nodeId);
+    
+    // Find all edges connected to this node
+    edges.forEach(edge => {
+      if (edge.source === nodeId || edge.target === nodeId) {
+        connectedEdgeIds.add(edge.id);
+        // Add the other end of the edge
+        connectedNodeIds.add(edge.source);
+        connectedNodeIds.add(edge.target);
+      }
+    });
+    
+    return { connectedNodeIds, connectedEdgeIds };
+  }, [edges]);
+
+  const { connectedNodeIds, connectedEdgeIds } = getConnectedElements(focusedNodeId);
+
+  const handleNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
+    // Don't focus if clicking on editable elements (they handle their own clicks)
+    const target = event.target as HTMLElement;
+    if (target.closest('.nodrag') || target.tagName === 'INPUT' || target.tagName === 'SELECT') {
+      return;
+    }
+    
+    event.stopPropagation();
+    
+    // Toggle focus: if clicking the same node, unfocus; otherwise focus new node
+    if (focusedNodeId === node.id) {
+      setFocusedNodeId(null);
+      console.log('👁️ Unfocused node');
+    } else {
+      setFocusedNodeId(node.id);
+      console.log('👁️ Focused on node:', node.id, node.data.label);
+    }
+  }, [focusedNodeId]);
+
+  // Click on background to unfocus
+  const handlePaneClick = useCallback(() => {
+    if (focusedNodeId) {
+      setFocusedNodeId(null);
+      console.log('👁️ Unfocused (clicked background)');
+    }
+  }, [focusedNodeId]);
+
+  // Escape key to unfocus
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && focusedNodeId) {
+        setFocusedNodeId(null);
+        console.log('👁️ Unfocused (Escape key)');
+      }
+    };
+    
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [focusedNodeId]);
 
   // NOTE: This effect is disabled in the topic-based system because nodes/edges are managed 
   // by the parent component's topic state. The parent handles syncing conceptMapData to nodes/edges.
@@ -238,9 +309,66 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
     event.target.value = '';
   };
 
+  // Memoize styled nodes with focus logic
+  const styledNodes = useMemo(() => {
+    return nodes.map(node => {
+      const isConnected = connectedNodeIds.has(node.id);
+      const isFocused = node.id === focusedNodeId;
+      const shouldDim = focusedNodeId !== null && !isConnected;
+      
+      return {
+        ...node,
+        data: {
+          ...node.data,
+          isFocused,
+          isConnected,
+          shouldDim,
+        },
+        style: {
+          ...node.style,
+          opacity: shouldDim ? 0.2 : 1,
+          transition: 'opacity 0.3s ease, box-shadow 0.3s ease',
+          boxShadow: isFocused 
+            ? '0 0 0 3px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3)'
+            : isConnected && focusedNodeId
+            ? '0 0 0 2px rgba(59, 130, 246, 0.3)'
+            : undefined,
+        }
+      };
+    });
+  }, [nodes, focusedNodeId, connectedNodeIds]);
+
+  // Memoize styled edges with focus logic
+  const styledEdges = useMemo(() => {
+    return edges.map(edge => {
+      const isConnected = connectedEdgeIds.has(edge.id);
+      const shouldDim = focusedNodeId !== null && !isConnected;
+      
+      // Handle markerEnd properly - it can be a string or an object
+      const markerEndColor = isConnected && focusedNodeId ? '#3b82f6' : '#64748b';
+      const markerEnd = typeof edge.markerEnd === 'object' && edge.markerEnd !== null
+        ? { ...edge.markerEnd, color: markerEndColor }
+        : edge.markerEnd || { type: 'arrowclosed' as const, color: markerEndColor };
+      
+      return {
+        ...edge,
+        style: {
+          ...edge.style,
+          stroke: isConnected && focusedNodeId ? '#3b82f6' : (edge.style?.stroke || '#64748b'),
+          strokeWidth: isConnected && focusedNodeId ? 3 : (edge.style?.strokeWidth || 2),
+          opacity: shouldDim ? 0.1 : (edge.style?.opacity || 1),
+          transition: 'all 0.3s ease',
+        },
+        markerEnd,
+        animated: isConnected && focusedNodeId ? true : edge.animated,
+        zIndex: isConnected && focusedNodeId ? 1000 : undefined,
+      };
+    });
+  }, [edges, focusedNodeId, connectedEdgeIds]);
+
   // Memoize nodeTypes to prevent recreation on every render
   const nodeTypes = useMemo(() => ({
-    conceptNode: (props: { data: { label: string; type?: string; onUpdateNode?: (nodeId: string, label: string, type?: string) => void; onDeleteNode?: (nodeId: string) => void }; id: string; selected?: boolean; [key: string]: unknown }) => {
+    conceptNode: (props: { data: { label: string; type?: string; onUpdateNode?: (nodeId: string, label: string, type?: string) => void; onDeleteNode?: (nodeId: string) => void; isFocused?: boolean; isConnected?: boolean; shouldDim?: boolean }; id: string; selected?: boolean; [key: string]: unknown }) => {
       const nodeData = props.data || { label: '', type: 'default' };
       return (
         <ConceptNode 
@@ -250,6 +378,9 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
             type: nodeData.type || 'default',
             onUpdateNode,
             onDeleteNode,
+            isFocused: nodeData.isFocused,
+            isConnected: nodeData.isConnected,
+            shouldDim: nodeData.shouldDim,
           }}
         />
       );
@@ -511,13 +642,29 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
           
           {/* ReactFlow Visualization */}
           <div data-tour="concept-map" className="flex-1 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden relative">
+            {/* Focus Mode Indicator */}
+            {focusedNodeId && (
+              <div className="absolute top-4 left-4 z-20 bg-blue-500 text-white px-3 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-fade-in">
+                <Eye className="w-4 h-4" />
+                <span className="text-sm font-medium">Focus Mode Active</span>
+                <button
+                  onClick={() => setFocusedNodeId(null)}
+                  className="ml-2 hover:bg-blue-600 rounded p-1 transition-colors"
+                  aria-label="Exit focus mode"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            )}
             <ReactFlow
-              nodes={nodes}
-              edges={edges}
+              nodes={styledNodes}
+              edges={styledEdges}
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
               onInit={setRfInstance}
+              onNodeClick={handleNodeClick}
+              onPaneClick={handlePaneClick}
               nodeTypes={nodeTypes}
               edgeTypes={edgeTypes}
               fitView

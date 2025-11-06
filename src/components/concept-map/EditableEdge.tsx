@@ -360,6 +360,10 @@ export const EditableEdge: React.FC<EditableEdgeProps> = ({
         onMouseEnter={() => setShowDelete(true)}
         onMouseLeave={() => setShowDelete(false)}
         onClick={handleLabelClick}
+        opacity={style?.opacity ?? 1}
+        style={{
+          transition: 'opacity 0.3s ease',
+        }}
       >
         {isEditing ? (
           <foreignObject x={-75} y={-15} width={150} height={30}>

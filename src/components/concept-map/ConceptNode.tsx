@@ -12,12 +12,21 @@ interface ConceptNodeProps {
     onUpdateNode: (nodeId: string, label: string, type?: string) => void;
     onDeleteNode: (nodeId: string) => void;
     isNew?: boolean;
+    isFocused?: boolean;
+    isConnected?: boolean;
+    shouldDim?: boolean;
   };
   id: string;
 }
 
 export const ConceptNode: React.FC<ConceptNodeProps> = ({ data, id }) => {
-  const { onUpdateNode, onDeleteNode } = data;
+  const { 
+    onUpdateNode, 
+    onDeleteNode, 
+    isFocused = false,
+    isConnected = false,
+    shouldDim = false
+  } = data;
   const colors = nodeTypeColors[data.type] || nodeTypeColors.default;
   const [isEditing, setIsEditing] = useState(false);
   const [editLabel, setEditLabel] = useState(data.label);
@@ -115,11 +124,24 @@ export const ConceptNode: React.FC<ConceptNodeProps> = ({ data, id }) => {
         }}
       />
       <div 
-        className={`px-6 py-4 rounded-lg shadow-md border-2 ${colors.bg} ${colors.border} min-w-[120px] max-w-[200px] relative group ${
-          data.isNew ? 'ring-2 ring-blue-400 animate-pulse' : ''
-        }`}
+        className={`
+          px-6 py-4 rounded-lg shadow-md border-2 ${colors.bg} ${colors.border} 
+          min-w-[120px] max-w-[200px] relative group
+          transition-all duration-300 ease-in-out
+          ${shouldDim ? 'opacity-20' : 'opacity-100'}
+          ${isFocused ? 'ring-4 ring-blue-500 ring-opacity-50 scale-105' : ''}
+          ${isConnected && !isFocused ? 'ring-2 ring-blue-400 ring-opacity-30' : ''}
+          ${data.isNew ? 'ring-2 ring-blue-400 animate-pulse' : ''}
+        `}
         onMouseEnter={() => setShowDelete(true)}
         onMouseLeave={() => setShowDelete(false)}
+        role="button"
+        tabIndex={0}
+        aria-pressed={isFocused}
+        aria-label={`${data.label}. Click to focus on connections. ${isConnected ? 'Connected to focused node.' : ''}`}
+        style={{
+          cursor: 'pointer',
+        }}
       >
         {isEditing ? (
           <input
@@ -168,11 +190,21 @@ export const ConceptNode: React.FC<ConceptNodeProps> = ({ data, id }) => {
           </div>
         )}
         
+        {/* Show connection indicator when focused */}
+        {isFocused && (
+          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-blue-500 text-white text-xs px-2 py-1 rounded whitespace-nowrap shadow-lg z-50">
+            📍 Focus Mode
+          </div>
+        )}
+        
         {/* Delete button - visible on hover */}
         {showDelete && !isEditing && (
           <button
-            onClick={handleDelete}
-            className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete();
+            }}
+            className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs transition-colors z-10"
             aria-label="Delete node"
           >
             <X className="w-3 h-3" />
