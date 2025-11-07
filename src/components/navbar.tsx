@@ -23,7 +23,7 @@ export const Navbar = () => {
           </Link>
           
           <div className="flex items-center space-x-4">
-            <Link 
+            {/* <Link 
               href="/" 
               className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors"
             >
@@ -34,7 +34,7 @@ export const Navbar = () => {
               className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors"
             >
               Concept Map
-            </Link>
+            </Link> */}
             <button
               data-tour="feedback-btn"
               onClick={() => setIsFeedbackOpen(true)}
@@ -49,7 +49,7 @@ export const Navbar = () => {
             </button>
             <button
               onClick={startFullTour}
-              className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover-scale-sm transition-colors"
+              className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover-scale-sm transition-colors mr-5"
               title="Take a tour"
               aria-label="Help - Take a tour"
             >

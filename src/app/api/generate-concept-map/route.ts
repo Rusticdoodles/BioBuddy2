@@ -56,41 +56,145 @@ const validateInput = (notes: string): { isValid: boolean; error?: string } => {
 
 // OpenAI prompt for concept extraction
 const createConceptExtractionPrompt = (notes: string): string => {
-  return `You are an expert at extracting key concepts and relationships from educational text to create clear, logical concept maps.
+  return `CRITICAL FORMATTING RULE:
+You MUST respond with a single, valid JSON object containing "nodes" and "edges". Do NOT include any other text before or after the JSON.
 
-ANALYZE THIS TEXT:
+You are an educational AI assistant that creates hierarchical concept maps from student notes.
+
+STUDENT NOTES:
 ${notes}
 
-CREATE A CONCEPT MAP with these requirements:
+TASK:
+Create a concept map that follows EXACTLY the same pedagogy and structure as specified below.
 
-1. IDENTIFY KEY CONCEPTS:
-   - Extract 8-15 most important concepts
-   - Use clear, concise labels (2-4 words)
-   - Categorize each by type: process, molecule, organelle, system, structure, function, enzyme, pathway, organ, tissue, cell, protein, concept
-
-2. DETERMINE RELATIONSHIPS:
-   - Use descriptive labels: "produces", "requires", "contains", "regulates", "part of", "leads to", "inhibits", "activates", "transforms into"
-   - Focus on the STRONGEST, most important relationships
-   - Create logical flow from main concept to details
-
-3. STRUCTURE:
-   - Start with 1-2 main concepts at the top
-   - Branch to supporting concepts
-   - Connect related concepts with clear relationships
-   - Avoid creating isolated nodes
-
-OUTPUT ONLY THIS JSON (no other text):
+RESPONSE FORMAT (follow this precisely):
 {
   "nodes": [
     {"id": "1", "label": "Main Concept", "type": "process"},
-    {"id": "2", "label": "Detail", "type": "molecule"}
+    {"id": "2", "label": "Related Concept", "type": "molecule"}
   ],
   "edges": [
-    {"source": "1", "target": "2", "label": "produces"}
+    {"source": "1", "target": "2", "label": "occurs in"}
   ]
 }
 
-CRITICAL: Ensure every edge's source and target IDs exist in the nodes array.`;
+CRITICAL RULES FOR CONCEPT MAP - PEDAGOGICAL STRUCTURE:
+
+LEARNING PHILOSOPHY:
+Your concept map should TEACH, not just organize information. Students should be able to:
+- Identify the main concept immediately (at the top)
+- Follow a clear learning path from top to bottom
+- Understand how concepts relate in a hierarchy
+- See the "story" of the topic unfold
+
+HIERARCHICAL STRUCTURE (CRITICAL):
+Create exactly 3-5 LEVELS in your map, flowing TOP to BOTTOM:
+
+LEVEL 1 (Top): Main Concept
+- Exactly 1 node
+- The overarching topic being explained
+
+LEVEL 2: Context/Location
+- 1-2 nodes
+- Where does this happen? What's the setting?
+
+LEVEL 3: Major Stages/Components
+- 2-4 nodes
+- The key processes or main parts (in sequence if process-oriented)
+
+LEVEL 4: Key Mechanisms/Details
+- 4-6 nodes
+- Important supporting concepts under each major stage
+
+LEVEL 5 (Bottom): Outcomes/Products
+- 2-3 nodes
+- What results from this process? What's produced?
+
+NODE COUNT TARGET: 10-15 nodes total (not more, not less)
+
+CONNECTION RULES FOR HIERARCHY:
+- Nodes should primarily connect to adjacent levels (Level 1→2, 2→3, 3→4, 4→5)
+- Avoid skip connections across multiple levels
+- Maximum 3 edges per node
+- Create DOWNWARD flow (parent → child relationships)
+- Avoid horizontal connections between same-level nodes unless showing sequence
+
+SEQUENCE vs STRUCTURE:
+- For processes (photosynthesis, respiration, replication):
+  Show clear sequential flow with arrows indicating "then" or "next"
+- For structures (cell anatomy, organ systems):
+  Show hierarchical composition with "contains" or "part of"
+
+CLARITY OVER COMPLETENESS:
+- Include only the MOST IMPORTANT concepts (10-15 max)
+- Skip minor details that don't aid understanding
+- Group related items when possible
+- Better to be clear with fewer nodes than comprehensive but confusing
+
+NODE LABELING FOR CONTEXT:
+- Make labels self-explanatory
+- Add brief context when helpful (e.g., "ATP (Energy Carrier)")
+
+EDGE LABELS FOR NARRATIVE:
+Use descriptive relationship labels that tell the story:
+- "occurs in"
+- "begins with"
+- "produces"
+- "requires"
+- "converts to"
+- "powers"
+- "results in"
+Avoid vague labels like "related to" or "connects to"
+
+VALIDATION CHECKLIST (verify before returning):
+✓ Does the map have 3-5 clear levels?
+✓ Is there exactly 1 main concept at the top?
+✓ Do edges flow primarily downward (parent → child)?
+✓ Are there 10-15 nodes total?
+✓ Can a student follow a clear learning path?
+✓ Is each node in the right hierarchical level?
+✓ Are node labels self-explanatory with context?
+✓ Does the map tell a coherent story?
+
+TOPIC-SPECIFIC GUIDANCE:
+
+For biological processes (metabolism, respiration, photosynthesis, replication):
+Level 1: Process name
+Level 2: Where it occurs
+Level 3: Major stages (in order: Stage 1 → Stage 2 → Stage 3)
+Level 4: Key molecules/enzymes for each stage
+Level 5: Products/outcomes
+
+For biological structures (cell, organ, tissue):
+Level 1: Main structure
+Level 2: Location in organism
+Level 3: Major components/parts
+Level 4: Sub-structures within each part
+Level 5: Functions/purposes
+
+For systems (nervous, circulatory, digestive):
+Level 1: System name
+Level 2: Main organs involved
+Level 3: Key processes that occur
+Level 4: Important molecules/signals
+Level 5: Outcomes/functions
+
+REMEMBER: You're teaching a student who knows nothing about this topic. Make it crystal clear.
+
+ABSOLUTE REQUIREMENT - MAPS WILL BE REJECTED IF:
+- More than 1 node at the top level (no clear main concept)
+- Same-level nodes connect to each other (breaks hierarchy)
+- Skip connections across multiple levels (confusing flow)
+- More than 16 nodes or fewer than 9 nodes
+- No clear top-to-bottom progression
+
+TECHNICAL NOTE - LAYOUT COMPATIBILITY:
+Your hierarchical structure will be automatically laid out using the Dagre algorithm with direction TB, ranksep 120, nodesep 100. To ensure clean layouts:
+- Keep same-level nodes to 2-4 maximum
+- Avoid excessive cross-connections
+- Maintain clear parent→child relationships
+
+OUTPUT ONLY THE JSON OBJECT DESCRIBED ABOVE. End your response immediately after the closing brace.`;
 };
 
 export async function POST(request: NextRequest) {
