@@ -86,7 +86,85 @@ export const nodeTypeColors: NodeTypeColorMap = {
     border: 'border-gray-200 dark:border-gray-700',
     color: 'gray'
   },
-};
+  gene: { 
+    bg: 'bg-gray-50 dark:bg-gray-900/30', 
+    text: 'text-gray-800 dark:text-gray-200', 
+    border: 'border-gray-200 dark:border-gray-700',
+    color: 'gray'
+  },
+  stage: {
+    bg: 'bg-cyan-50 dark:bg-cyan-900/30',
+    text: 'text-cyan-800 dark:text-cyan-200',
+    border: 'border-cyan-200 dark:border-cyan-700',
+    color: 'cyan'
+  },
+  detail: {
+    bg: 'bg-lime-50 dark:bg-lime-900/30',
+    text: 'text-lime-800 dark:text-lime-200',
+    border: 'border-lime-200 dark:border-lime-700',
+    color: 'lime'
+  },
+  outcome: {
+    bg: 'bg-pink-50 dark:bg-pink-900/30',
+    text: 'text-pink-800 dark:text-pink-200',
+    border: 'border-pink-200 dark:border-pink-700',
+    color: 'pink'
+  },
+  location: {
+    bg: 'bg-purple-50 dark:bg-purple-900/30',
+    text: 'text-purple-800 dark:text-purple-200',
+    border: 'border-purple-200 dark:border-purple-700',
+    color: 'purple'
+  },
+  disease: {
+    bg: 'bg-orange-50 dark:bg-orange-900/30',
+    text: 'text-orange-800 dark:text-orange-200',
+    border: 'border-orange-200 dark:border-orange-700',
+    color: 'orange'
+  },
+  drug: {
+    bg: 'bg-red-50 dark:bg-red-900/30',
+    text: 'text-red-800 dark:text-red-200',
+    border: 'border-red-200 dark:border-red-700',
+    color: 'red'
+  },
+  symptom: {
+    bg: 'bg-green-50 dark:bg-green-900/30',
+    text: 'text-green-800 dark:text-green-200',
+    border: 'border-green-200 dark:border-green-700',
+    color: 'green'
+  },
+  treatment: {
+    bg: 'bg-blue-50 dark:bg-blue-900/30',
+    text: 'text-blue-800 dark:text-blue-200',
+    border: 'border-blue-200 dark:border-blue-700',
+    color: 'blue'
+  },
+  prevention: {
+    bg: 'bg-yellow-50 dark:bg-yellow-900/30',
+    text: 'text-yellow-800 dark:text-yellow-200',
+    border: 'border-yellow-200 dark:border-yellow-700',
+    color: 'yellow'
+  },
+  cause: {
+    bg: 'bg-purple-50 dark:bg-purple-900/30',
+    text: 'text-purple-800 dark:text-purple-200',
+    border: 'border-purple-200 dark:border-purple-700',
+    color: 'purple'
+  },
+  risk_factor: {
+    bg: 'bg-orange-50 dark:bg-orange-900/30',
+    text: 'text-orange-800 dark:text-orange-200',
+    border: 'border-orange-200 dark:border-orange-700',
+    color: 'orange'
+  },
+  diagnostic_test: {
+    bg: 'bg-red-50 dark:bg-red-900/30',
+    text: 'text-red-800 dark:text-red-200',
+    border: 'border-red-200 dark:border-red-700',
+    color: 'red'
+  },
+}
 
 // Node type options for dropdowns
 export const nodeTypeOptions = [
@@ -103,4 +181,17 @@ export const nodeTypeOptions = [
   { value: 'cell', label: 'Cell' },
   { value: 'protein', label: 'Protein' },
   { value: 'concept', label: 'Concept' },
+  { value: 'gene', label: 'Gene' },
+  { value: 'stage', label: 'Stage' },
+  { value: 'detail', label: 'Detail' },
+  { value: 'outcome', label: 'Outcome' },
+  { value: 'location', label: 'Location' },
+  { value: 'disease', label: 'Disease' },
+  { value: 'drug', label: 'Drug' },
+  { value: 'symptom', label: 'Symptom' },
+  { value: 'treatment', label: 'Treatment' },
+  { value: 'prevention', label: 'Prevention' },
+  { value: 'cause', label: 'Cause' },
+  { value: 'risk_factor', label: 'Risk Factor' },
+  { value: 'diagnostic_test', label: 'Diagnostic Test' },
 ];
