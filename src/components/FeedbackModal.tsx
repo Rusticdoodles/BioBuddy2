@@ -35,9 +35,19 @@ export const FeedbackModal = ({ isOpen, onClose, context: propContext }: Feedbac
     console.error('❌ NEXT_PUBLIC_FORMSPREE_FORM_ID is not set in .env.local')
   }
 
+  //Handle Close Function
+  const handleClose = () => {
+    if (submitStatus === 'success' || submitStatus === 'idle' || submitStatus === 'error') {
+      onClose()
+      setSubmitStatus('idle');
+    }
+
+  }
+  // Handle Submit Function
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Check if message is empty
     if (!message.trim()) {
       return;
     }
@@ -94,11 +104,6 @@ export const FeedbackModal = ({ isOpen, onClose, context: propContext }: Feedbac
         setMessage('');
         setEmail('');
 
-        // Close modal after 2 seconds
-        setTimeout(() => {
-          onClose();
-          setSubmitStatus('idle');
-        }, 2000);
       } else {
         // Log detailed error information for debugging
         const errorText = await response.text();
@@ -121,6 +126,7 @@ export const FeedbackModal = ({ isOpen, onClose, context: propContext }: Feedbac
 
   if (!isOpen) return null;
 
+  // Feedback Modal Return
   return (
     <div 
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in"
@@ -135,15 +141,17 @@ export const FeedbackModal = ({ isOpen, onClose, context: propContext }: Feedbac
           <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
             🎙️ Share Your Feedback
           </h2>
+
+          {/* Close Button */}
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
             aria-label="Close feedback modal"
             tabIndex={0}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                onClose();
+                handleClose();
               }
             }}
           >
@@ -153,19 +161,26 @@ export const FeedbackModal = ({ isOpen, onClose, context: propContext }: Feedbac
 
         {submitStatus === 'success' ? (
           // Success State
-          <div className="text-center py-8 animate-fade-in">
+          <div> 
+            <div className="text-center py-8 animate-fade-in">
             <div className="text-5xl mb-4">🎉</div>
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
+            <h3 className="text-3xl font-semibold text-slate-900 dark:text-slate-100 mb-6">
               Thank you!
             </h3>
             <p className="text-sm text-slate-600 dark:text-slate-400">
-              We&apos;ve received your feedback and will review it carefully.
+              We&apos;ve received your feedback!
             </p>
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+            We make sure to read each submission 💙
+            </p>
+          </div>
           </div>
         ) : (
           // Form
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Category Selection */}
+
+            {/*Bug Report Button*/}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 What would you like to share?
@@ -189,6 +204,8 @@ export const FeedbackModal = ({ isOpen, onClose, context: propContext }: Feedbac
                     Bug
                   </div>
                 </button>
+
+                {/*Feature Request Button*/}
                 <button
                   type="button"
                   onClick={() => setCategory('feature')}
@@ -207,6 +224,8 @@ export const FeedbackModal = ({ isOpen, onClose, context: propContext }: Feedbac
                     Feature
                   </div>
                 </button>
+
+                {/*Other Feedback Button*/}
                 <button
                   type="button"
                   onClick={() => setCategory('feedback')}

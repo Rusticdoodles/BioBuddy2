@@ -880,6 +880,7 @@ Make sure EVERY concept from the list above is included in the new map.`;
                 isLeftPanelCollapsed ? 'p-2' : 'p-6'
               }`}>
                 <button
+                  data-tour="collapse-btn"
                   onClick={() => setIsLeftPanelCollapsed(!isLeftPanelCollapsed)}
                   className="absolute top-4 right-2 z-10 p-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors"
                   aria-label={isLeftPanelCollapsed ? "Expand panel" : "Collapse panel"}

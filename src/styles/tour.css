@@ -6,6 +6,7 @@
   border-radius: 12px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   max-width: 400px;
+  backdrop-filter: none;
 }
 
 .dark .driver-popover {
@@ -101,15 +102,22 @@
 }
 
 /* Spotlight effect - overlay removed */
-.driver-overlay {
-  display: none;
+.driver-overlay path {
+  opacity: 1 !important;                 /* remove the global 0.7 tint */
+  fill: rgba(15, 23, 42, 0.90) !important;  /* keep the rest of the screen dimmed */
 }
 
+
 /* Highlighted element */
-.driver-active-element {
-  box-shadow: 0 0 0 4px #3b82f6, 0 0 20px rgba(59, 130, 246, 0.5);
+/* .driver-active-element {
+   box-shadow: none;
+  outline: 3px solid #3b82f6;
+  outline-offset: 6px 
+
+   box-shadow: 0 0 0 4px #3b82f6, 0 0 20px rgba(59, 130, 246, 0.5);
   border-radius: 8px;
-}
+  z-index: 10000; 
+} */
 
 /* Arrow styling */
 .driver-popover-arrow-side-left.driver-popover-arrow,

@@ -54,26 +54,26 @@ export const useTour = () => {
       popover: {
         title: '🔄 Two Learning Modes',
         description: '<strong>Chat Mode:</strong> Ask questions and get instant explanations<br><br><strong>Notes Mode:</strong> Paste your study notes to extract concepts',
-        side: 'left',
-        align: 'start'
+        side: 'bottom',
+        align: 'center'
+      }
+    },
+    {
+      element: '[data-tour="collapse-btn"]',
+      popover: {
+        title: '◀️ Collapsible Panel',
+        description: 'Show or hide the chat/node panel to increase map size.',
+        side:'bottom',
+        align: 'center'
       }
     },
     {
       element: '[data-tour="chat-input"]',
       popover: {
         title: '💬 Ask Biology Questions',
-        description: 'Type any biology question here. Try: "How does photosynthesis work?" or "Explain DNA replication"',
+        description: 'Type any biology related question here. Try: "How does photosynthesis work?" or "Explain DNA replication"',
         side: 'top',
         align: 'center'
-      }
-    },
-    {
-      element: '[data-tour="auto-generate-toggle"]',
-      popover: {
-        title: '🎨 Auto-Generate Maps',
-        description: 'When enabled, BioBuddy automatically creates concept maps for your first question in each topic.',
-        side: 'top',
-        align: 'start'
       }
     },
     {
@@ -97,19 +97,37 @@ export const useTour = () => {
       }
     },
     {
-      element: '[data-tour="map-controls"]',
+      element: '[data-tour="concept-map"]',
       popover: {
-        title: '🛠️ Map Tools',
-        description: '<ul class="text-sm space-y-1 text-left"><li>• <strong>Add Node:</strong> Create custom concepts</li><li>• <strong>Export:</strong> Save as JSON</li><li>• <strong>Legend:</strong> Understand node types</li></ul>',
+        title: '👁️ Focus Mode',
+        description: 'Click on a node to highlight it and all its connected nodes!',
         side: 'left',
-        align: 'end'
+        align: 'center'
       }
     },
     {
       element: '[data-tour="concept-map"]',
       popover: {
         title: '✏️ Customize Your Map',
-        description: '<strong>Double-click</strong> any node to edit its label<br><br><strong>Click dots</strong> on nodes to create connections<br><br><strong>Drag nodes</strong> to rearrange',
+        description: '<strong>Click labels</strong> to edit its content<br><br><strong>Click and hold dots</strong> on nodes to create connections<br><br><strong>Drag nodes</strong> to rearrange<br><br><strong>Delete nodes & edges</strong> by clicking X buttons',
+        side: 'left',
+        align: 'center'
+      }
+    },
+    {
+      element: '[data-tour="map-controls"]',
+      popover: {
+        title: '🛠️ Map Tools',
+        description: '<ul class="text-sm space-y-1 text-left"><li>• <strong>Auto Layout:</strong> Auto-adjust node layout</li><li>• <strong>Add Node:</strong> Create custom concepts</li><li>• <strong>Export & Import:</strong> Upload and download maps onto your screen</li></ul>',
+        side: 'left',
+        align: 'center'
+      }
+    },
+    {
+      element: '[data-tour="feedback-btn"]',
+      popover: {
+        title: '🎙️ Give Feedback',
+        description: 'If you find any bugs, want new features to be added, or have any general comments, submit them here! <br><br> We read every single one 💙',
         side: 'left',
         align: 'center'
       }
@@ -117,7 +135,7 @@ export const useTour = () => {
     {
       popover: {
         title: '🎓 You\'re Ready to Learn!',
-        description: 'You now know how to use BioBuddy! Create topics, ask questions, and build your knowledge with concept maps.<br><br>💡 Tip: Click the Help button (?) in the navbar to replay this tour anytime.',
+        description: 'You now know how to use BioBuddy! Create topics, ask questions, and build your knowledge with concept maps.<br><br>💡 Tip: Click the Help button (?) at the top right of the navbar to replay this tour anytime.',
         align: 'center'
       }
     }
@@ -125,6 +143,7 @@ export const useTour = () => {
 
   // All steps for manual replay
   const getAllSteps = (): DriveStep[] => [
+    //Step 1: Welcome
     {
       popover: {
         title: '👋 Welcome to BioBuddy!',
@@ -133,6 +152,7 @@ export const useTour = () => {
         align: 'center'
       }
     },
+    //Step 2: Topic Sidebar
     {
       element: '[data-tour="topics-sidebar"]',
       popover: {
@@ -142,6 +162,7 @@ export const useTour = () => {
         align: 'start'
       }
     },
+    //Step 3: New Topic Btn
     {
       element: '[data-tour="create-topic-btn"]',
       popover: {
@@ -151,15 +172,26 @@ export const useTour = () => {
         align: 'start'
       }
     },
+    //Step 4: Chat vs Note Input
     {
       element: '[data-tour="notes-mode-toggle"]',
       popover: {
         title: '🔄 Two Learning Modes',
         description: '<strong>Chat Mode:</strong> Ask questions and get instant explanations<br><br><strong>Notes Mode:</strong> Paste your study notes to extract concepts',
-        side: 'left',
-        align: 'start'
+        side: 'bottom',
+        align: 'center'
       }
+    },//Step 7: Collapse Panel
+    {
+      element: '[data-tour="collapse-btn"]',
+      popover: {
+        title: '◀️ Collapsible Panel',
+        description: 'Show or hide the chat/node panel to increase map size.',
+        side: 'bottom',
+        align: 'center',
+      },
     },
+    //Step 5: Chat Input
     {
       element: '[data-tour="chat-input"]',
       popover: {
@@ -169,6 +201,7 @@ export const useTour = () => {
         align: 'center'
       }
     },
+    //Step 6: Autogenerate Map Tick
     {
       element: '[data-tour="auto-generate-toggle"]',
       popover: {
@@ -178,37 +211,61 @@ export const useTour = () => {
         align: 'start'
       }
     },
+    //Step 8: Concept Map Area
     {
       element: '[data-tour="concept-map"]',
       popover: {
         title: '🗺️ Interactive Concept Map',
         description: 'Your AI-generated concept map appears here showing relationships between biological concepts.',
+        side: 'top',
+        align: 'center'
+      }
+    },
+    //Step 9: Focus Mode
+    {
+      element: '[data-tour="concept-map"]',
+      popover: {
+        title: '👁️ Focus Mode',
+        description: 'Click on a node to highlight it and all its connected nodes!',
         side: 'left',
         align: 'center'
       }
     },
-    {
-      element: '[data-tour="map-controls"]',
-      popover: {
-        title: '🛠️ Map Tools',
-        description: '<ul class="text-sm space-y-1 text-left"><li>• <strong>Add Node:</strong> Create custom concepts</li><li>• <strong>Export:</strong> Save as JSON</li><li>• <strong>Legend:</strong> Understand node types</li></ul>',
-        side: 'left',
-        align: 'end'
-      }
-    },
+    //Step 11: Editing Map
     {
       element: '[data-tour="concept-map"]',
       popover: {
         title: '✏️ Customize Your Map',
-        description: '<strong>Double-click</strong> any node to edit its label<br><br><strong>Click dots</strong> on nodes to create connections<br><br><strong>Drag nodes</strong> to rearrange',
+        description: '<strong>Click labels</strong> to edit its content<br><br><strong>Click and hold dots</strong> on nodes to create connections<br><br><strong>Drag nodes</strong> to rearrange<br><br><strong>Delete nodes & edges</strong> by clicking X buttons',
         side: 'left',
         align: 'center'
       }
     },
+    //Step 10: Map Tools
+    {
+      element: '[data-tour="map-controls"]',
+      popover: {
+        title: '🛠️ Map Tools',
+        description: '<ul class="text-sm space-y-1 text-left"><li>• <strong>Auto Layout:</strong> Auto-adjust node layout</li><li>• <strong>Add Node:</strong> Create custom concepts</li><li>• <strong>Export & Import:</strong> Upload and download maps onto your screen</li></ul>',
+        side: 'left',
+        align: 'center'
+      }
+    },
+    //Step 12: Submit Feedback
+    {
+      element: '[data-tour="feedback-btn"]',
+      popover: {
+        title: '🎙️ Give Feedback',
+        description: 'If you find any bugs, want new features to be added, or have any general comments, submit them here! <br><br> We read every single one 💙',
+        side: 'left',
+        align: 'center'
+      }
+    },
+    //Step 13: Conclusion & Help Button
     {
       popover: {
         title: '🎓 You\'re Ready to Learn!',
-        description: 'You now know how to use BioBuddy! Create topics, ask questions, and build your knowledge with concept maps.<br><br>💡 Tip: Click the Help button (?) in the navbar to replay this tour anytime.',
+        description: 'You now know how to use BioBuddy! Create topics, ask questions, and build your knowledge with concept maps.<br><br>💡 Tip: Click the Help button (?) at the top right of the navbar to replay this tour anytime.',
         align: 'center'
       }
     }

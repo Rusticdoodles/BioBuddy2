@@ -644,10 +644,10 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
       )}
 
       {loadingState === 'success' && nodes.length > 0 && (
-        <div className="w-full h-full flex flex-col">
+        <div data-tour="concept-map" className="w-full h-full flex flex-col">
           
           {/* ReactFlow Visualization */}
-          <div data-tour="concept-map" className="flex-1 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden relative">
+          <div className="flex-1 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden relative">
             {/* Focus Mode Indicator */}
             {focusedNodeId && (
               <div className="absolute top-4 left-4 z-20 bg-blue-500 text-white px-3 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-fade-in">
