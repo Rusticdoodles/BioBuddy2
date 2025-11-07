@@ -1,5 +1,9 @@
+'use client';
+
+import React, { useCallback, useState } from 'react';
 import React from 'react';
 import { TopicChat } from '@/types/concept-map-types';
+import { NewTopicModal } from '@/components/NewTopicModal';
 
 interface TopicsSidebarProps {
   topicChats: TopicChat[];
@@ -16,22 +20,53 @@ export const TopicsSidebar: React.FC<TopicsSidebarProps> = ({
   onSwitchTopic,
   onDeleteTopic,
 }) => {
+  const [isNewTopicModalOpen, setIsNewTopicModalOpen] = useState(false);
+
+  const handleOpenNewTopicModal = useCallback(() => {
+    setIsNewTopicModalOpen(true);
+  }, []);
+
+  const handleCloseNewTopicModal = useCallback(() => {
+    setIsNewTopicModalOpen(false);
+  }, []);
+
+  const handleConfirmNewTopic = useCallback(
+    (name: string) => {
+      onCreateTopic(name);
+      setIsNewTopicModalOpen(false);
+    },
+    [onCreateTopic],
+  );
+
+  const handleTopicKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>, topicId: string) => {
+      if (event.key !== 'Enter' && event.key !== ' ') {
+        return;
+      }
+
+      event.preventDefault();
+      onSwitchTopic(topicId);
+    },
+    [onSwitchTopic],
+  );
+
   return (
-    <div data-tour="topics-sidebar" className="w-64 border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex flex-col">
+    <>
+      <div data-tour="topics-sidebar" className="flex w-64 flex-col border-r border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
       {/* Sidebar Header */}
-      <div className="p-4 border-b border-slate-200 dark:border-slate-700">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-3">
+      <div className="border-b border-slate-200 p-4 dark:border-slate-700">
+        <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-white">
           My Topics
         </h2>
         <button
           data-tour="create-topic-btn"
-          onClick={() => {
-            const name = prompt('Topic name:');
-            if (name) onCreateTopic(name);
-          }}
-          className="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg hover-lift flex items-center justify-center gap-2 text-sm font-medium"
+          onClick={handleOpenNewTopicModal}
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 hover-lift"
+          type="button"
+          aria-haspopup="dialog"
+          aria-expanded={isNewTopicModalOpen}
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
           New Topic
@@ -41,7 +76,7 @@ export const TopicsSidebar: React.FC<TopicsSidebarProps> = ({
       {/* Topics List */}
       <div className="flex-1 overflow-y-auto p-2">
         {topicChats.length === 0 ? (
-          <div className="text-center py-8 px-4">
+          <div className="py-8 px-4 text-center">
             <p className="text-sm text-slate-500 dark:text-slate-400">
               No topics yet. Create your first topic to get started!
             </p>
@@ -51,7 +86,7 @@ export const TopicsSidebar: React.FC<TopicsSidebarProps> = ({
             {topicChats.map((topic, index) => (
               <div
                 key={topic.id}
-                className={`group relative p-3 rounded-lg cursor-pointer hover-scale ${
+                className={`group relative cursor-pointer rounded-lg p-3 hover-scale ${
                   topic.id === activeTopicId
                     ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
                     : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'
@@ -60,6 +95,11 @@ export const TopicsSidebar: React.FC<TopicsSidebarProps> = ({
                   animationDelay: `${index * 0.05}s`,
                 }}
                 onClick={() => onSwitchTopic(topic.id)}
+                onKeyDown={(event) => handleTopicKeyDown(event, topic.id)}
+                role="button"
+                tabIndex={0}
+                aria-pressed={topic.id === activeTopicId}
+                aria-label={`Open topic ${topic.name}`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
@@ -98,7 +138,14 @@ export const TopicsSidebar: React.FC<TopicsSidebarProps> = ({
           </div>
         )}
       </div>
-    </div>
+      </div>
+
+      <NewTopicModal
+        isOpen={isNewTopicModalOpen}
+        onClose={handleCloseNewTopicModal}
+        onConfirm={handleConfirmNewTopic}
+      />
+    </>
   );
 };
 

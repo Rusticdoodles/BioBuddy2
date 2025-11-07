@@ -38,10 +38,10 @@ export const Navbar = () => {
             <button
               data-tour="feedback-btn"
               onClick={() => setIsFeedbackOpen(true)}
-              className="flex items-center gap-2 px-3 py-2 text-sm text-slate-600 dark:text-slate-300 
-                       hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors hover-scale-sm"
-              title="Give feedback"
-              aria-label="Give feedback"
+              className="flex items-center gap-2 px-3 py-2 text-sm text-green-600 dark:text-green-300 
+                       hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-green-600 dark:hover:text-green-300 rounded-lg transition-colors hover-scale-sm"
+              title="Give Feedback"
+              aria-label="Give Feedback"
               tabIndex={0}
             >
               <MessageSquare className="w-4 h-4" />
@@ -50,10 +50,10 @@ export const Navbar = () => {
             <button
               onClick={startFullTour}
               className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover-scale-sm transition-colors mr-5"
-              title="Take a tour"
-              aria-label="Help - Take a tour"
+              title="Tutorial"
+              aria-label="Help - Tutorial"
             >
-              <HelpCircle className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+              <HelpCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-400" />
             </button>
           </div>
         </div>
