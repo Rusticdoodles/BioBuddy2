@@ -118,7 +118,7 @@ export const useTour = () => {
       element: '[data-tour="map-controls"]',
       popover: {
         title: '🛠️ Map Tools',
-        description: '<ul class="text-sm space-y-1 text-left"><li>• <strong>Auto Layout:</strong> Auto-adjust node layout</li><li>• <strong>Add Node:</strong> Create custom concepts</li><li>• <strong>Export & Import:</strong> Upload and download maps onto your screen</li></ul>',
+        description: '<ul class="text-sm space-y-1 text-left"><li>• <strong>Auto Layout:</strong> Auto-adjust node layout</li><li>• <strong>Add Node:</strong> Create custom concepts</li><li>• <strong>Export & Import:</strong> Upload and download maps onto your map display</li></ul>',
         side: 'left',
         align: 'center'
       }
@@ -236,7 +236,7 @@ export const useTour = () => {
       element: '[data-tour="concept-map"]',
       popover: {
         title: '✏️ Customize Your Map',
-        description: '<strong>Click labels</strong> to edit its content<br><br><strong>Click and hold dots</strong> on nodes to create connections<br><br><strong>Drag nodes</strong> to rearrange<br><br><strong>Delete nodes & edges</strong> by clicking X buttons',
+        description: '<strong>Click labels</strong> to edit its content<br><br><strong>Click and hold dots</strong> on nodes to create connections<br><br><strong>Drag nodes</strong> to rearrange<br><br><strong>Delete nodes & edges</strong> by clicking X buttons<br><br><strong>Undo & redo changes</strong> with Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z',
         side: 'left',
         align: 'center'
       }
@@ -246,7 +246,7 @@ export const useTour = () => {
       element: '[data-tour="map-controls"]',
       popover: {
         title: '🛠️ Map Tools',
-        description: '<ul class="text-sm space-y-1 text-left"><li>• <strong>Auto Layout:</strong> Auto-adjust node layout</li><li>• <strong>Add Node:</strong> Create custom concepts</li><li>• <strong>Export & Import:</strong> Upload and download maps onto your screen</li></ul>',
+        description: '<ul class="text-sm space-y-1 text-left"><li>• <strong>Auto Layout:</strong> Auto-adjust node layout</li><li>• <strong>Add Node:</strong> Create custom concepts</li><li>• <strong>Export & Import:</strong> Upload and download maps onto your map display</li></ul>',
         side: 'left',
         align: 'center'
       }
