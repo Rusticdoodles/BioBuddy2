@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useCallback, useState } from 'react';
-import React from 'react';
 import { TopicChat } from '@/types/concept-map-types';
 import { NewTopicModal } from '@/components/NewTopicModal';
 
