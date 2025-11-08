@@ -3,9 +3,6 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
-
-@theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
@@ -284,5 +281,65 @@ select:disabled {
 @keyframes dashFlow {
   to {
     stroke-dashoffset: -10;
+  }
+}
+
+/* ============================================
+   LANDING PAGE - PODIA-INSPIRED ANIMATIONS
+   ============================================ */
+
+/* Gentle floating animation for decorative elements */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-15px) rotate(3deg);
+  }
+  66% {
+    transform: translateY(-5px) rotate(-2deg);
+  }
+}
+
+@keyframes float-slow {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  33% {
+    transform: translateY(-25px) translateX(8px);
+  }
+  66% {
+    transform: translateY(-10px) translateX(-5px);
+  }
+}
+
+@keyframes float-slower {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-12px) translateX(-8px) scale(1.03);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: float-slow 9s ease-in-out infinite;
+}
+
+.animate-float-slower {
+  animation: float-slower 12s ease-in-out infinite;
+}
+
+/* Gradient text animation */
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
   }
 }
