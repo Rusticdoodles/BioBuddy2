@@ -46,7 +46,7 @@ const Home = () => {
         <div className="text-center max-w-4xl mx-auto mb-24 md:mb-32">
           {/* Main Headline */}
           <h1 className="text-5xl md:text-5xl font-bold text-slate-900 dark:text-white mb-6 leading-tight">
-            Master Biology with
+            Master Biology 
             <br />
             <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">AI-Powered Concept Maps</span>
           </h1>
