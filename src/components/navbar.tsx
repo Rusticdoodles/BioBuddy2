@@ -12,7 +12,7 @@ export const Navbar = () => {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   return (
-    <nav className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
+    <nav className="bg-neutral-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link 
