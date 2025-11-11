@@ -4,6 +4,8 @@ import "./globals.css";
 import "@/styles/tour.css";
 import "@/styles/selection.css";
 
+import { AuthProvider } from "@/components/AuthProvider";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -16,7 +18,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "BioBuddy Concept Map Generator",
-  description: "Transform your lecture notes into visual concept maps. Paste your biology or medical notes and see connections between concepts automatically.",
+  description:
+    "Transform your lecture notes into visual concept maps. Paste your biology or medical notes and see connections between concepts automatically.",
 };
 
 export default function RootLayout({
@@ -30,7 +33,7 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
