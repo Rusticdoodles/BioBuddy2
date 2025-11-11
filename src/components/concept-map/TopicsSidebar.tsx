@@ -4,6 +4,9 @@ import React, { useCallback, useState } from 'react';
 import { TopicChat } from '@/types/concept-map-types';
 import { NewTopicModal } from '@/components/NewTopicModal';
 
+const TOPIC_CHATS_STORAGE_KEY = 'biobuddy-topic-chats';
+const ACTIVE_TOPIC_STORAGE_KEY = 'biobuddy-active-topic';
+
 interface TopicsSidebarProps {
   topicChats: TopicChat[];
   activeTopicId: string | null;
@@ -20,6 +23,61 @@ export const TopicsSidebar: React.FC<TopicsSidebarProps> = ({
   onDeleteTopic,
 }) => {
   const [isNewTopicModalOpen, setIsNewTopicModalOpen] = useState(false);
+
+  
+const handleDeleteTopic = useCallback(
+  (
+    event: React.MouseEvent<HTMLButtonElement>,
+    topicId: string,
+    topicName: string,
+  ) => {
+    event.stopPropagation();
+
+    const isConfirmed = window.confirm(`Delete "${topicName}"?`);
+    if (!isConfirmed) {
+      return;
+    }
+
+    try {
+      const storedTopicsValue = localStorage.getItem(TOPIC_CHATS_STORAGE_KEY);
+
+      if (storedTopicsValue) {
+        const parsedTopics = JSON.parse(storedTopicsValue) as unknown;
+
+        if (Array.isArray(parsedTopics)) {
+          const prunedTopics = (parsedTopics as TopicChat[]).filter(
+            (storedTopic) => storedTopic.id !== topicId,
+          );
+
+          localStorage.setItem(
+            TOPIC_CHATS_STORAGE_KEY,
+            JSON.stringify(prunedTopics),
+          );
+
+          if (activeTopicId === topicId) {
+            if (prunedTopics.length > 0) {
+              localStorage.setItem(
+                ACTIVE_TOPIC_STORAGE_KEY,
+                prunedTopics[0].id,
+              );
+            } else {
+              localStorage.removeItem(ACTIVE_TOPIC_STORAGE_KEY);
+            }
+          }
+        } else {
+          localStorage.removeItem(TOPIC_CHATS_STORAGE_KEY);
+        }
+      } else if (activeTopicId === topicId) {
+        localStorage.removeItem(ACTIVE_TOPIC_STORAGE_KEY);
+      }
+    } catch (error) {
+      console.error('Failed to remove topic from localStorage:', error);
+    }
+
+    onDeleteTopic(topicId);
+  },
+  [activeTopicId, onDeleteTopic],
+);
 
   const handleOpenNewTopicModal = useCallback(() => {
     setIsNewTopicModalOpen(true);
@@ -117,12 +175,9 @@ export const TopicsSidebar: React.FC<TopicsSidebarProps> = ({
                   
                   {/* Delete button */}
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (window.confirm(`Delete "${topic.name}"?`)) {
-                        onDeleteTopic(topic.id);
-                      }
-                    }}
+                    onClick={(event) =>
+                      handleDeleteTopic(event, topic.id, topic.name)
+                    }
                     className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded hover-scale-sm transition-opacity"
                     title="Delete topic"
                     aria-label="Delete topic"

@@ -198,10 +198,10 @@ const Home = () => {
             <div className="relative flex justify-center">
               <div className="relative w-full max-w-lg rounded-[48px] bg-amber-200/70 p-12 shadow-xl dark:bg-amber-900/30">
                 {/* Floating Shapes */}
-                <div aria-hidden="true" className="pointer-events-none absolute -top-8 -right-6 h-12 w-12 rounded-full bg-slate-900/90 dark:bg-white/90" />
-                <div aria-hidden="true" className="pointer-events-none absolute -bottom-9 left-12 h-14 w-14 rotate-12 rounded-2xl bg-slate-900/90 dark:bg-white/80" />
-                <div aria-hidden="true" className="pointer-events-none absolute -top-10 left-10 h-10 w-10 rounded-xl bg-amber-400/80 dark:bg-amber-400/90" />
-                <div aria-hidden="true" className="pointer-events-none absolute -bottom-10 right-8 h-20 w-20 rounded-full bg-amber-500/60 blur-xl dark:bg-amber-400/60" />
+                <Syringe className="pointer-events-none absolute -bottom-10 right-8 h-16 w-16"/>
+                <div aria-hidden="true" className="pointer-events-none absolute -bottom-6 left-0 h-14 w-14 rotate-12 rounded-2xl bg-purple-900/90 dark:bg-white/80" />
+                <Bone className="pointer-events-none absolute -top-10 left-10 h-16 w-16"/>
+                <div aria-hidden="true" className="pointer-events-none absolute -top-8 -right-6 h-20 w-20 rounded-full bg-purple-500/60 blur-xl dark:bg-amber-400/60" />
 
                 {/* Main Card */}
                 <div className="relative rounded-3xl bg-white p-8 shadow-2xl dark:bg-slate-950">
@@ -227,10 +227,10 @@ const Home = () => {
             <div className="relative flex justify-center">
               <div className="relative w-full max-w-lg rounded-[48px] bg-amber-200/70 p-12 shadow-xl dark:bg-amber-900/30">
                 {/* Floating Shapes */}
-                <div aria-hidden="true" className="pointer-events-none absolute -top-8 -right-6 h-12 w-12 rounded-full bg-slate-900/90 dark:bg-white/90" />
-                <div aria-hidden="true" className="pointer-events-none absolute -bottom-9 left-12 h-14 w-14 rotate-12 rounded-2xl bg-slate-900/90 dark:bg-white/80" />
-                <div aria-hidden="true" className="pointer-events-none absolute -top-10 left-10 h-10 w-10 rounded-xl bg-amber-400/80 dark:bg-amber-400/90" />
-                <div aria-hidden="true" className="pointer-events-none absolute -bottom-10 right-8 h-20 w-20 rounded-full bg-amber-500/60 blur-xl dark:bg-amber-400/60" />
+                <Microscope className="pointer-events-none absolute -top-8 -right-6 h-16 w-16 rotate-340"/>
+                <Beaker className="pointer-events-none absolute -bottom-9 left-8 h-20 w-16 rotate-30"/>
+                <div aria-hidden="true" className="pointer-events-none absolute -top-8 left-10 h-14 w-14 rotate-30 rounded-xl bg-green-200/80 dark:bg-amber-400/90" />
+                <div aria-hidden="true" className="pointer-events-none absolute -bottom-10 right-8 h-20 w-20 rounded-full bg-green-300/60 blur-xl dark:bg-amber-400/60" />
 
                 {/* Main Card */}
                 <div className="relative rounded-3xl bg-white p-8 shadow-2xl dark:bg-slate-950">
@@ -268,11 +268,11 @@ const Home = () => {
             
             {/* Floating accents */}
             <div aria-hidden="true" className="pointer-events-none">
-              <div className="absolute left-12 top-16 h-16 w-16 -rotate-12 rounded-2xl bg-white/70 shadow-lg dark:bg-white/10" />
-              <div className="absolute right-20 top-12 h-20 w-20 rotate-6 rounded-full bg-slate-900/70 shadow-lg dark:bg-white/20" />
-              <div className="absolute right-12 top-64 h-14 w-14 rotate-12 rounded-xl bg-white/80 shadow-md dark:bg-white/10" />
-              <div className="absolute left-24 top-64 h-12 w-12 rotate-12 rounded-full bg-slate-900/70 shadow-md dark:bg-white/20" />
-              <div className="absolute left-1/2 top-80 h-16 w-16 -translate-x-1/2 rotate-12 rounded-2xl bg-white/70 shadow-md dark:bg-white/10" />
+              <div className="z-999 absolute left-9 top-10 h-16 w-16 -rotate-12 rounded-2xl bg-white/70 shadow-lg dark:bg-white/10" />
+              <div className="z-999 absolute right-6 top-12 h-20 w-20 rotate-6 rounded-full bg-slate-900/70 shadow-lg dark:bg-white/20" />
+              <div className="z-999 absolute right-13 top-100 h-14 w-14 rotate-12 rounded-xl bg-white/80 shadow-md dark:bg-white/10" />
+              <div className="z-999 absolute left-24 top-80 h-12 w-12 rotate-12 rounded-full bg-slate-900/70 shadow-md dark:bg-white/20" />
+              <div className="z-999 absolute left-1/2 top-105 h-16 w-16 -translate-x-1/2 rotate-12 rounded-2xl bg-white/70 shadow-md dark:bg-white/10" />
             </div>
 
             {/* CTA Card */}
@@ -283,13 +283,15 @@ const Home = () => {
               <p className="mt-6 text-lg text-slate-600 dark:text-slate-300">
                 Rather than getting stuck studying the same topic over and over again, get through them in just a couple of minutes, so that you can win back more time in your day.
               </p>
-              <button
-                type="button"
-                className="mt-10 inline-flex items-center justify-center rounded-full bg-slate-900 px-10 py-3 text-base font-semibold text-white transition hover:-translate-y-1 hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 dark:focus-visible:outline-white"
-                aria-label="Get started with BioBuddy"
-              >
-                Get started
-              </button>
+              <a href="/map">
+                <button
+                  type="button"
+                  className="mt-10 inline-flex items-center justify-center rounded-full bg-slate-900 px-10 py-3 text-base font-semibold text-white transition hover:-translate-y-1 hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 dark:focus-visible:outline-white"
+                  aria-label="Get started with BioBuddy"
+                >
+                  Get started
+                </button>
+              </a>
             </div>
 
             {/* Footer Links */}
@@ -304,23 +306,15 @@ const Home = () => {
               {[
                 {
                   title: "Platform",
-                  links: ["Website builder", "Online store", "Email marketing", "Pricing"],
-                },
-                {
-                  title: "Features",
-                  links: ["Concept maps", "Smart flashcards", "Study planner", "Community"],
-                },
-                {
-                  title: "Resources",
-                  links: ["Changelog", "Guides", "Demo", "Blog"],
+                  links: ["Pricing"],
                 },
                 {
                   title: "BioBuddy",
-                  links: ["About", "Become an affiliate", "Reviews"],
+                  links: ["About"],
                 },
                 {
                   title: "Support",
-                  links: ["Contact", "Help center", "Getting started", "Careers"],
+                  links: ["Contact"],
                 },
               ].map(({ title, links }) => (
                 <div key={title} className="space-y-3">
