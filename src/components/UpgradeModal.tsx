@@ -1,6 +1,7 @@
 'use client';
 
 import { X } from 'lucide-react';
+import { useUser } from '@/components/AuthProvider';
 
 interface UpgradeModalProps {
   isOpen: boolean;
@@ -8,19 +9,20 @@ interface UpgradeModalProps {
 }
 
 export const UpgradeModal = ({ isOpen, onClose }: UpgradeModalProps) => {
+  const { user } = useUser();
+  
   if (!isOpen) {
     return null;
   }
 
-  const handleLifetimeClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
-    alert('Payment coming soon!');
-  };
+  // Create checkout URLs with user email pre-filled
+  const lifetimeUrl = user?.email 
+    ? `${process.env.NEXT_PUBLIC_LEMONSQUEEZY_LIFETIME_CHECKOUT_URL}?checkout[email]=${encodeURIComponent(user.email)}`
+    : process.env.NEXT_PUBLIC_LEMONSQUEEZY_LIFETIME_CHECKOUT_URL;
 
-  const handleMonthlyClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
-    alert('Payment coming soon!');
-  };
+  const monthlyUrl = user?.email
+    ? `${process.env.NEXT_PUBLIC_LEMONSQUEEZY_MONTHLY_CHECKOUT_URL}?checkout[email]=${encodeURIComponent(user.email)}`
+    : process.env.NEXT_PUBLIC_LEMONSQUEEZY_MONTHLY_CHECKOUT_URL;
 
   return (
     <div
@@ -94,8 +96,9 @@ export const UpgradeModal = ({ isOpen, onClose }: UpgradeModalProps) => {
               </ul>
 
               <a
-                href="#"
-                onClick={handleLifetimeClick}
+                href={lifetimeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="block w-full rounded-lg bg-blue-600 px-6 py-3 text-center text-base font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               >
                 Get Lifetime Access
@@ -127,8 +130,9 @@ export const UpgradeModal = ({ isOpen, onClose }: UpgradeModalProps) => {
               </ul>
 
               <a
-                href="#"
-                onClick={handleMonthlyClick}
+                href={monthlyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="block w-full rounded-lg bg-slate-700 px-6 py-3 text-center text-base font-semibold text-white shadow-sm transition hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 dark:bg-slate-600 dark:hover:bg-slate-700"
               >
                 Start Monthly
@@ -136,6 +140,11 @@ export const UpgradeModal = ({ isOpen, onClose }: UpgradeModalProps) => {
             </div>
           </div>
         </div>
+
+        {/* Secure checkout note */}
+        <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
+          🔒 Secure checkout powered by Lemon Squeezy
+        </p>
       </div>
     </div>
   );
