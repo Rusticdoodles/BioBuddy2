@@ -49,7 +49,7 @@
 #### Product 2: BioBuddy Monthly
 - **Type:** Recurring subscription
 - **Price:** $4.99/month
-- **Description:** "Monthly subscription with unlimited topics and 150 maps per month"
+- **Description:** "Monthly subscription with unlimited topics and 100 maps per month"
 
 4. After creating products, note down:
    - Store ID

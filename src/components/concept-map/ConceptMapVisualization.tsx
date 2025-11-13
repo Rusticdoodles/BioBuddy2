@@ -26,7 +26,9 @@ import {
   MessageSquare,
   // RotateCw,
   Sparkles,
-  Eye
+  Eye,
+  Undo2,
+  Redo2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -61,6 +63,8 @@ interface ConceptMapVisualizationProps {
   isRestoringFromStorage: boolean;
   onRegenerateMindmap: () => void;
   isRegeneratingMap: boolean;
+  onUndo: () => void;
+  onRedo: () => void;
 }
 
 export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = ({
@@ -87,7 +91,9 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onRegenerateMindmap,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  isRegeneratingMap
+  isRegeneratingMap,
+  onUndo,
+  onRedo,
 }) => {
   // DEBUG: Log what we're receiving
   console.log('🎨 ConceptMapVisualization render:', {
@@ -810,7 +816,7 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
             </ReactFlow>
             
             {/* Floating Action Buttons */}
-            <div data-tour="map-controls" className="absolute bottom-56 right-4 flex flex-col gap-2">
+            <div data-tour="map-controls" className="absolute bottom-52 right-4 flex flex-col gap-2">
               {/* Regenerate button */}
               {/* {loadingState === 'success' && nodes.length > 0 && (
                 <button
@@ -836,6 +842,28 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
                 aria-label="Perfect layout"
               >
                 <Sparkles className="w-5 h-5" />
+              </button>
+              
+              {/*Undo Button*/}
+              <button
+                onClick={onUndo}
+                disabled={nodes.length === 0}
+                className="w-12 h-12 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg hover:shadow-xl hover-scale-sm hover-glow transition-all duration-200 flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Undo"
+                aria-label="Undo"
+              >
+                <Undo2 className="w-5 h-5" />
+              </button>
+
+              {/*Redo Button*/}
+              <button
+                onClick={onRedo}
+                disabled={nodes.length === 0}
+                className="w-12 h-12 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg hover:shadow-xl hover-scale-sm hover-glow transition-all duration-200 flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Redo"
+                aria-label="Redo"
+              >
+                <Redo2 className="w-5 h-5" />
               </button>
 
               {/* Add Node button */}

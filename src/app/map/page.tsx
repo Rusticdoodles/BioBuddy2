@@ -1072,6 +1072,8 @@ Make sure EVERY concept from the list above is included in the new map.`;
                   isRestoringFromStorage={isRestoringFromStorage}
                   onRegenerateMindmap={handleRegenerateMindmap}
                   isRegeneratingMap={isRegeneratingMap}
+                  onUndo={handleUndo}
+                  onRedo={handleRedo}
                 />
               </div>
             </div>

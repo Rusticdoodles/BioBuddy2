@@ -278,6 +278,13 @@ export const useTour = () => {
       showButtons: ['next', 'previous', 'close'],
       progressText: 'Step {{current}} of {{total}}',
       popoverClass: 'biobuddy-tour-popover',
+      smoothScroll: true,
+      
+      onHighlightStarted: (element) => {
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+        }
+      },
       
       onDestroyStarted: () => {
         localStorage.setItem(TOUR_PART1_COMPLETED_KEY, 'true');
@@ -300,6 +307,13 @@ export const useTour = () => {
       showButtons: ['next', 'previous', 'close'],
       progressText: 'Step {{current}} of {{total}}',
       popoverClass: 'biobuddy-tour-popover',
+      smoothScroll: true,
+      
+      onHighlightStarted: (element) => {
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+        }
+      },
       
       onDestroyStarted: () => {
         localStorage.setItem(TOUR_PART2_COMPLETED_KEY, 'true');
@@ -324,6 +338,13 @@ export const useTour = () => {
       showButtons: ['next', 'previous', 'close'],
       progressText: 'Step {{current}} of {{total}}',
       popoverClass: 'biobuddy-tour-popover',
+      smoothScroll: true,
+      
+      onHighlightStarted: (element) => {
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+        }
+      },
       
       onDestroyStarted: () => {
         driverObj.destroy();
