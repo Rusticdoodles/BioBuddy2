@@ -5,20 +5,36 @@ import { TopicChat } from '@/types/concept-map-types';
 
 interface UseConceptMapGenerationProps {
   activeTopicId: string | null;
+  activeTopic: TopicChat | undefined;
   setTopicChats: React.Dispatch<React.SetStateAction<TopicChat[]>>;
   inputText: string;
+  onBeforeGenerate?: (topicName: string) => Promise<boolean>;
+  onAfterGenerate?: (topicName: string, isRegeneration: boolean) => Promise<void>;
 }
 
 export const useConceptMapGeneration = ({
   activeTopicId,
+  activeTopic,
   setTopicChats,
   inputText,
+  onBeforeGenerate,
+  onAfterGenerate,
 }: UseConceptMapGenerationProps) => {
   const generateConceptMapFromText = useCallback(async (text: string) => {
     console.log("🚀 Generating concept map from text");
     console.log("📝 Text length:", text.length);
 
-    if (!activeTopicId) return;
+    if (!activeTopicId || !activeTopic) return;
+
+    const topicName = activeTopic.name;
+
+    // Check usage before generating (if callback provided)
+    if (onBeforeGenerate) {
+      const canGenerate = await onBeforeGenerate(topicName);
+      if (!canGenerate) {
+        return; // Usage check failed, modal should be shown by callback
+      }
+    }
     
     setTopicChats(prev => prev.map(topic =>
       topic.id === activeTopicId
@@ -67,12 +83,19 @@ export const useConceptMapGeneration = ({
       console.log("✅ Concept map generated successfully!");
       console.log(`📊 Generated ${data.nodes.length} nodes and ${data.edges.length} edges`);
       
-      if (activeTopicId) {
+      if (activeTopicId && activeTopic) {
+        const isRegeneration = activeTopic.conceptMapData !== null;
+
         setTopicChats(prev => prev.map(topic =>
           topic.id === activeTopicId
             ? { ...topic, conceptMapData: data, loadingState: 'success' as LoadingState, updatedAt: new Date().toISOString() }
             : topic
         ));
+
+        // Track usage after successful generation (if callback provided)
+        if (onAfterGenerate) {
+          await onAfterGenerate(topicName, isRegeneration);
+        }
       }
 
     } catch (error) {
@@ -99,7 +122,7 @@ export const useConceptMapGeneration = ({
         duration: 5000,
       });
     }
-  }, [inputText, activeTopicId, setTopicChats]);
+  }, [inputText, activeTopicId, activeTopic, setTopicChats, onBeforeGenerate, onAfterGenerate]);
 
   const handleGenerateMap = useCallback(async (inputText: string) => {
     console.log("🚀 Generate concept map clicked");
