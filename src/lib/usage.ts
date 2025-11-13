@@ -1,7 +1,7 @@
 import { supabase } from './supabase';
 
 const FREE_TOPIC_LIMIT = 4;
-const MONTHLY_MAP_LIMIT = 150;
+const MONTHLY_MAP_LIMIT = 100;
 
 export interface Subscription {
   id: string;

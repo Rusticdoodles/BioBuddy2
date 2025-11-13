@@ -34,7 +34,6 @@ import { useTour } from '@/hooks/useTour';
 import { FeedbackProvider } from '@/contexts/FeedbackContext';
 import { useUser } from '@/components/AuthProvider';
 import { canGenerateMap, trackMapGeneration, getMapsThisMonth, getTopicsUsed, getUserSubscription } from '@/lib/usage';
-import { AuthModal } from '@/components/AuthModal';
 import { UpgradeModal } from '@/components/UpgradeModal';
 import { SoftLimitModal } from '@/components/SoftLimitModal';
 
@@ -70,7 +69,6 @@ export default function MapPage() {
   const [autoGenerateMap, setAutoGenerateMap] = useState(true);
 
   // Usage tracking modals
-  const [showAuthModal, setShowAuthModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showSoftLimitModal, setShowSoftLimitModal] = useState(false);
   const [mapsThisMonth, setMapsThisMonth] = useState(0);
@@ -131,10 +129,9 @@ export default function MapPage() {
   const handleBeforeGenerate = useCallback(async (topicName: string): Promise<boolean> => {
     console.log('🔍 Checking usage limits for topic:', topicName);
     
-    // 1. Check if user is authenticated
+    // 1. Check if user is authenticated (should always be true with requireAuth)
     if (!user) {
-      console.log('❌ User not authenticated - showing auth modal');
-      setShowAuthModal(true);
+      console.log('❌ User not authenticated - this should not happen with requireAuth enabled');
       return false;
     }
     
@@ -155,7 +152,7 @@ export default function MapPage() {
       }
       
       if (reason === 'monthly_limit_reached') {
-        console.log('🚫 Monthly map limit reached (150/month) - showing soft limit modal');
+        console.log('🚫 Monthly map limit reached (100/month) - showing soft limit modal');
         const count = await getMapsThisMonth(user.id);
         setMapsThisMonth(count);
         setShowSoftLimitModal(true);
@@ -1076,12 +1073,6 @@ Make sure EVERY concept from the list above is included in the new map.`;
           </main>
         )}
       </div>
-
-      {/* Auth Modal */}
-      <AuthModal 
-        isOpen={showAuthModal} 
-        onClose={() => setShowAuthModal(false)} 
-      />
 
       {/* Upgrade Modal */}
       <UpgradeModal

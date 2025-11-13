@@ -61,7 +61,7 @@ export const SoftLimitModal = ({ isOpen, onClose, mapsGenerated }: SoftLimitModa
           </p>
           
           <p className="text-slate-600 dark:text-slate-400 text-sm text-center">
-            Our fair use policy allows up to 150 maps per month. You can still access and regenerate your existing topics. For truly unlimited usage, please contact us.
+            Our fair use policy allows up to 100 maps per month. You can still access and regenerate your existing topics. For truly unlimited usage, please contact us.
           </p>
 
           <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mt-4">
@@ -74,9 +74,9 @@ export const SoftLimitModal = ({ isOpen, onClose, mapsGenerated }: SoftLimitModa
 
         <div className="flex flex-col sm:flex-row gap-3">
           <a
-            href="mailto:support@biobuddy.com?subject=Unlimited Usage Request"
+            href="mailto:faliqwicaksono21@gmail.com?subject=Unlimited Usage Request"
             onClick={handleContactSupport}
-            className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="flex-1 flex items-center justify-center text-nowrap gap-2 rounded-lg bg-blue-600 px-6 py-1 text-base font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             <Mail className="w-4 h-4" />
             Contact Support
