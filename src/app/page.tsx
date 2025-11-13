@@ -161,7 +161,7 @@ const Home = () => {
                 {/* Main Card */}
                 <div className="relative rounded-3xl bg-white p-8 shadow-2xl dark:bg-slate-950">
                   <Image
-                    src="/assets/AI-BioBrain.png"
+                    src="/Assets/AI-BioBrain.png"
                     alt="AI-powered biology illustration"
                     width={512}
                     height={512}
@@ -206,7 +206,7 @@ const Home = () => {
                 {/* Main Card */}
                 <div className="relative rounded-3xl bg-white p-8 shadow-2xl dark:bg-slate-950">
                 <Image
-                    src="/assets/Mindmap2.png"
+                    src="/Assets/Mindmap2.png"
                     alt="AI-powered biology illustration"
                     width={512}
                     height={512}
@@ -235,7 +235,7 @@ const Home = () => {
                 {/* Main Card */}
                 <div className="relative rounded-3xl bg-white p-8 shadow-2xl dark:bg-slate-950">
                   <Image
-                      src="/assets/Flashcards2.png"
+                      src="/Assets/Flashcards2.png"
                       alt="AI-powered biology illustration"
                       width={512}
                       height={512}
