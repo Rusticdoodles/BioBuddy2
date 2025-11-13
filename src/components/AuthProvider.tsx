@@ -4,7 +4,6 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 
 import { supabase } from '@/lib/supabase';
-import { AuthModal } from '@/components/AuthModal';
 
 interface AuthContextValue {
   user: User | null;
@@ -13,15 +12,9 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-interface AuthProviderProps {
-  children: React.ReactNode;
-  requireAuth?: boolean;
-}
-
-export const AuthProvider = ({ children, requireAuth = false }: AuthProviderProps) => {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showAuthModal, setShowAuthModal] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -56,54 +49,6 @@ export const AuthProvider = ({ children, requireAuth = false }: AuthProviderProp
       subscription.unsubscribe();
     };
   }, []);
-
-  // Show auth modal if auth is required and user is not logged in
-  useEffect(() => {
-    if (requireAuth && !loading && !user) {
-      setShowAuthModal(true);
-    } else if (user) {
-      setShowAuthModal(false);
-    }
-  }, [requireAuth, loading, user]);
-
-  // Show loading screen
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-900">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-slate-600 dark:text-slate-400">Loading BioBuddy...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Block app if auth is required but user is not logged in
-  if (requireAuth && !user) {
-    return (
-      <>
-        <div className="flex h-screen flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 p-4">
-          <div className="text-center mb-8 max-w-md">
-            <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-4">
-              Welcome to BioBuddy
-            </h1>
-            <p className="text-lg text-slate-600 dark:text-slate-400">
-              Please sign in to start creating concept maps and track your learning progress
-            </p>
-          </div>
-        </div>
-        <AuthModal 
-          isOpen={showAuthModal} 
-          onClose={() => {
-            // Don't allow closing when auth is mandatory
-            if (!requireAuth) {
-              setShowAuthModal(false);
-            }
-          }}
-        />
-      </>
-    );
-  }
 
   return (
     <AuthContext.Provider value={{ user, loading }}>

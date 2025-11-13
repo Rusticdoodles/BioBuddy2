@@ -3,6 +3,7 @@
 // BioBuddy Navigation Component
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { HelpCircle, MessageSquare } from "lucide-react";
 import { useTour } from "@/hooks/useTour";
 import { FeedbackModal } from "@/components/FeedbackModal";
@@ -13,6 +14,7 @@ import { supabase } from "@/lib/supabase";
 export const Navbar = () => {
   const { startFullTour } = useTour();
   const { user } = useUser();
+  const pathname = usePathname();
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -59,14 +61,6 @@ export const Navbar = () => {
               <MessageSquare className="h-4 w-4" />
               <span className="hidden sm:inline">Give Feedback</span>
             </button>
-            <button
-              onClick={startFullTour}
-              className="hover-scale-sm mr-5 rounded-lg p-2 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
-              title="Tutorial"
-              aria-label="Help - Tutorial"
-            >
-              <HelpCircle className="h-5 w-5 text-blue-600 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300" />
-            </button>
             <div className="flex items-center gap-3">
               {user ? (
                 <div className="flex items-center gap-3 rounded-full bg-blue-50 px-3 py-1.5 text-sm text-blue-700 dark:bg-blue-500/10 dark:text-blue-200">
@@ -95,6 +89,16 @@ export const Navbar = () => {
                 </button>
               )}
             </div>
+            {pathname === "/map" && (
+              <button
+                onClick={startFullTour}
+                className="hover-scale-sm mr-5 rounded-lg p-2 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+                title="Tutorial"
+                aria-label="Help - Tutorial"
+              >
+                <HelpCircle className="h-5 w-5 text-blue-600 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300" />
+              </button>
+            )}
           </div>
         </div>
       </div>

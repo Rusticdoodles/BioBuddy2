@@ -34,6 +34,7 @@ import { useTour } from '@/hooks/useTour';
 import { FeedbackProvider } from '@/contexts/FeedbackContext';
 import { useUser } from '@/components/AuthProvider';
 import { canGenerateMap, trackMapGeneration, getMapsThisMonth, getTopicsUsed, getUserSubscription } from '@/lib/usage';
+import { AuthModal } from '@/components/AuthModal';
 import { UpgradeModal } from '@/components/UpgradeModal';
 import { SoftLimitModal } from '@/components/SoftLimitModal';
 
@@ -69,12 +70,13 @@ export default function MapPage() {
   const [autoGenerateMap, setAutoGenerateMap] = useState(true);
 
   // Usage tracking modals
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showSoftLimitModal, setShowSoftLimitModal] = useState(false);
   const [mapsThisMonth, setMapsThisMonth] = useState(0);
 
   // Auth
-  const { user } = useUser();
+  const { user, loading } = useUser();
 
   // Topic management
   const {
@@ -129,9 +131,10 @@ export default function MapPage() {
   const handleBeforeGenerate = useCallback(async (topicName: string): Promise<boolean> => {
     console.log('🔍 Checking usage limits for topic:', topicName);
     
-    // 1. Check if user is authenticated (should always be true with requireAuth)
+    // 1. Check if user is authenticated
     if (!user) {
-      console.log('❌ User not authenticated - this should not happen with requireAuth enabled');
+      console.log('❌ User not authenticated - showing auth modal');
+      setShowAuthModal(true);
       return false;
     }
     
@@ -906,6 +909,18 @@ Make sure EVERY concept from the list above is included in the new map.`;
   }, [onRestore]);
 
 
+  // Show loading spinner during initial auth check
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-600 dark:text-slate-400">Loading BioBuddy...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <FeedbackProvider
       value={{
@@ -1073,6 +1088,18 @@ Make sure EVERY concept from the list above is included in the new map.`;
           </main>
         )}
       </div>
+
+      {/* Auth Modal - Mandatory for unauthenticated users */}
+      <AuthModal 
+        isOpen={!user || showAuthModal} 
+        onClose={() => {
+          // Only allow closing if user is authenticated
+          if (user) {
+            setShowAuthModal(false);
+          }
+          // If not authenticated, do nothing (modal stays open)
+        }} 
+      />
 
       {/* Upgrade Modal */}
       <UpgradeModal
