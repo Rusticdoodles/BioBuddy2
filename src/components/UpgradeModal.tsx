@@ -11,9 +11,9 @@ interface UpgradeModalProps {
 export const UpgradeModal = ({ isOpen, onClose }: UpgradeModalProps) => {
   const { user } = useUser();
   
-  if (!isOpen) {
-    return null;
-  }
+  // if (!isOpen) {
+  //   return null;
+  // }
 
   // Create checkout URLs with user email pre-filled
   const lifetimeUrl = user?.email 
@@ -40,7 +40,7 @@ export const UpgradeModal = ({ isOpen, onClose }: UpgradeModalProps) => {
       aria-label="Upgrade to unlock unlimited topics"
     >
       <div
-        className="relative w-full max-w-4xl mx-4 rounded-2xl border border-slate-200 bg-white p-8 shadow-xl transition-all dark:border-slate-700 dark:bg-slate-900"
+        className="relative w-full max-w-4xl mx-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xl transition-all dark:border-slate-700 dark:bg-slate-900"
         onClick={(event) => event.stopPropagation()}
       >
         <button
@@ -70,20 +70,31 @@ export const UpgradeModal = ({ isOpen, onClose }: UpgradeModalProps) => {
               </span>
             </div>
             
-            <div className="mt-4 text-center">
-              <div className="mb-4">
-                <span className="text-5xl font-bold text-slate-900 dark:text-white">$39</span>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">one-time payment</p>
+            <div className="text-center relative flex flex-col flex-1">
+              <div>
+                <h2 className="text-center text-xl font-bold pb-2">Lifetime Plan</h2>
+                <p className="text-center text-sm">Access to everything in BioFlow. Forever.</p>
               </div>
-
-              <ul className="text-left space-y-3 mb-6 text-slate-700 dark:text-slate-300">
+              <div className="py-4">
+                <span className="text-5xl font-bold text-slate-900 dark:text-white">$39</span>
+                <p className="text- text-slate-600 dark:text-slate-400 mt-1">one-time payment</p>
+              </div>
+              <a
+                href={lifetimeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full rounded-lg bg-blue-600 px-6 py-3 text-center text-base font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              >
+                Get Lifetime Access
+              </a>
+              <ul className="mx-auto pt-4 pb-2 text-left space-y-3 mb-6 text-slate-700 dark:text-slate-300">
                 <li className="flex items-start">
                   <span className="text-green-500 mr-2">✓</span>
                   <span>Unlimited topics</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-green-500 mr-2">✓</span>
-                  <span>150 maps/month</span>
+                  <span>100 maps/month</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-green-500 mr-2">✓</span>
@@ -94,40 +105,20 @@ export const UpgradeModal = ({ isOpen, onClose }: UpgradeModalProps) => {
                   <span>Pay once, own forever</span>
                 </li>
               </ul>
-
-              <a
-                href={lifetimeUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block w-full rounded-lg bg-blue-600 px-6 py-3 text-center text-base font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-              >
-                Get Lifetime Access
-              </a>
             </div>
           </div>
 
           {/* Monthly Card */}
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-lg dark:border-slate-700 dark:bg-slate-800">
-            <div className="text-center">
-              <div className="mb-4">
-                <span className="text-5xl font-bold text-slate-900 dark:text-white">$4.99</span>
-                <span className="text-lg text-slate-600 dark:text-slate-400">/month</span>
+          <div className=" relative rounded-xl border border-slate-200 bg-white p-6 shadow-lg dark:border-slate-700 dark:bg-slate-800">
+            <div>
+                <h2 className="text-center text-2xl font-bold pb-2">Monthly Plan</h2>
+                <p className="text-center text-sm">Monthly access to unlimited topics in BioFlow.</p>
               </div>
-
-              <ul className="text-left space-y-3 mb-6 text-slate-700 dark:text-slate-300">
-                <li className="flex items-start">
-                  <span className="text-green-500 mr-2">✓</span>
-                  <span>Unlimited topics</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-green-500 mr-2">✓</span>
-                  <span>150 maps/month</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-green-500 mr-2">✓</span>
-                  <span>Cancel anytime</span>
-                </li>
-              </ul>
+            <div className="text-center flex flex-col flex-1">
+              <div className="py-4">
+                <span className="text-5xl font-bold text-slate-900 dark:text-white">$4.99</span>
+                <p className="text-md text-slate-600 dark:text-slate-400">/month</p>
+              </div>
 
               <a
                 href={monthlyUrl}
@@ -137,6 +128,22 @@ export const UpgradeModal = ({ isOpen, onClose }: UpgradeModalProps) => {
               >
                 Start Monthly
               </a>
+
+              <ul className="mx-auto pt-4 text-left space-y-3 mb-6 text-slate-700 dark:text-slate-300">
+                <li className="flex items-start">
+                  <span className="text-green-500 mr-2">✓</span>
+                  <span>Unlimited topics</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-green-500 mr-2">✓</span>
+                  <span>100 maps/month</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-green-500 mr-2">✓</span>
+                  <span>Cancel anytime</span>
+                </li>
+              </ul>
+
             </div>
           </div>
         </div>

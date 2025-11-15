@@ -26,26 +26,38 @@ const PricingPage = () => {
               🎉 Choose Your Plan
             </h1>
             <p className="text-xl text-slate-600 dark:text-slate-300">
-              Unlock unlimited access to BioBuddy and master biology with ease
+              Unlock unlimited access to BioBuddy and master the life sciences with ease.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Lifetime Card - Featured */}
-            <div className="relative rounded-xl border-2 border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 shadow-lg dark:from-blue-900/20 dark:to-indigo-900/20 dark:border-blue-400">
+          {/*Lifetime Card div*/}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/*Best value div*/}
+            <div className="relative rounded-xl border-2 border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 shadow-lg dark:from-blue-900/20 dark:to-indigo-900/20 dark:border-blue-400 flex flex-col">
               <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                 <span className="bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
                   ⭐ Best Value
                 </span>
               </div>
+              <div>
+                <h2 className="text-center text-2xl font-bold pb-2">Lifetime Plan</h2>
+                <p className="text-center">Access to everything in BioFlow. Forever.</p>
+              </div>
               
-              <div className="mt-4 text-center">
-                <div className="mb-4">
-                  <span className="text-5xl font-bold text-slate-900 dark:text-white">$39</span>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">one-time payment</p>
+              <div className="text-center flex flex-col flex-1">
+                <div className="py-8">
+                  <span className="text-6xl font-bold text-slate-900 dark:text-white">$39</span>
+                  <p className="text-md text-slate-600 dark:text-slate-400 mt-1">one-time payment</p>
                 </div>
-
-                <ul className="text-left space-y-3 mb-6 text-slate-700 dark:text-slate-300">
+                <a
+                  href={lifetimeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full rounded-lg bg-blue-600 px-6 py-3 text-center text-base font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                >
+                  Get Lifetime Access
+                </a>
+                <ul className="mx-auto pt-8 pb-4 text-left space-y-3 mb-6 text-slate-700 dark:text-slate-300">
                   <li className="flex items-start">
                     <span className="text-green-500 mr-2">✓</span>
                     <span>Unlimited topics</span>
@@ -63,27 +75,33 @@ const PricingPage = () => {
                     <span>Pay once, own forever</span>
                   </li>
                 </ul>
-
-                <a
-                  href={lifetimeUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full rounded-lg bg-blue-600 px-6 py-3 text-center text-base font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                >
-                  Get Lifetime Access
-                </a>
               </div>
             </div>
 
             {/* Monthly Card */}
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-lg dark:border-slate-700 dark:bg-slate-800">
-              <div className="text-center">
-                <div className="mb-4">
-                  <span className="text-5xl font-bold text-slate-900 dark:text-white">$4.99</span>
-                  <span className="text-lg text-slate-600 dark:text-slate-400">/month</span>
-                </div>
+            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-lg dark:border-slate-700 dark:bg-slate-800 flex flex-col">
+              
+              <div>
+                <h2 className="text-center text-2xl font-bold pb-2">Monthly Plan</h2>
+                <p className="text-center">Monthly access to unlimited topics in Bioflow.</p>
+              </div>
 
-                <ul className="text-left space-y-3 mb-6 text-slate-700 dark:text-slate-300">
+              <div className="text-center flex flex-col flex-1">
+                <div className="py-8">
+                  <span className="text-6xl font-bold text-slate-900 dark:text-white">$4.99</span>
+                  <p className="text-lg text-slate-600 dark:text-slate-400">/month</p>
+                  
+                </div>
+                <a
+                  href={monthlyUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full rounded-lg bg-slate-700 px-6 py-3 text-center text-base font-semibold text-white shadow-sm transition hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 dark:bg-slate-600 dark:hover:bg-slate-700"
+                >
+                  Start Monthly
+                </a>
+
+                <ul className="mx-auto pt-8 text-left space-y-3 mb-6 text-slate-700 dark:text-slate-300">
                   <li className="flex items-start">
                     <span className="text-green-500 mr-2">✓</span>
                     <span>Unlimited topics</span>
@@ -97,15 +115,6 @@ const PricingPage = () => {
                     <span>Cancel anytime</span>
                   </li>
                 </ul>
-
-                <a
-                  href={monthlyUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full rounded-lg bg-slate-700 px-6 py-3 text-center text-base font-semibold text-white shadow-sm transition hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 dark:bg-slate-600 dark:hover:bg-slate-700"
-                >
-                  Start Monthly
-                </a>
               </div>
             </div>
           </div>

@@ -118,7 +118,7 @@ export const useTour = () => {
       element: '[data-tour="map-controls"]',
       popover: {
         title: '🛠️ Map Tools',
-        description: '<ul class="text-sm space-y-1 text-left"><li>• <strong>Auto Layout:</strong> Auto-adjust node layout</li><li>• <strong>Add Node:</strong> Create custom concepts</li><li>• <strong>Export & Import:</strong> Upload and download maps onto your map display</li></ul>',
+        description: '<ul class="text-sm space-y-1 text-left"><li>• <strong>Auto Layout:</strong> Auto-adjust node layout</li><li>• <strong>Undo & Redo:</strong> Undo and redo changes to your map</li><li>• <strong>Add Node:</strong> Create custom concepts</li><li>• <strong>Export & Import:</strong> Upload and download maps onto your map display</li></ul>',
         side: 'left',
         align: 'center'
       }
@@ -132,6 +132,16 @@ export const useTour = () => {
         align: 'center'
       }
     },
+    //Step 13: Checkout your plan
+     {
+      element: '[data-tour="dashboard-btn"]',
+      popover: {
+        title: '📈 Check your Plan',
+        description: 'Check out what plan you are on and what features you have access to! <br><br> You are currently on the free plan.',
+        side: 'bottom',
+        align: 'center'
+        }
+      },
     {
       popover: {
         title: '🎓 You\'re Ready to Learn!',
@@ -246,7 +256,7 @@ export const useTour = () => {
       element: '[data-tour="map-controls"]',
       popover: {
         title: '🛠️ Map Tools',
-        description: '<ul class="text-sm space-y-1 text-left"><li>• <strong>Auto Layout:</strong> Auto-adjust node layout</li><li>• <strong>Add Node:</strong> Create custom concepts</li><li>• <strong>Export & Import:</strong> Upload and download maps onto your map display</li></ul>',
+        description: '<ul class="text-sm space-y-1 text-left"><li>• <strong>Auto Layout:</strong> Auto-adjust node layout</li><li>• <strong>Undo & Redo:</strong> Undo and redo changes to your map</li><li>• <strong>Add Node:</strong> Create custom concepts</li><li>• <strong>Export & Import:</strong> Upload and download maps onto your map display</li></ul>',
         side: 'left',
         align: 'center'
       }
@@ -257,11 +267,21 @@ export const useTour = () => {
       popover: {
         title: '🎙️ Give Feedback',
         description: 'If you find any bugs, want new features to be added, or have any general comments, submit them here! <br><br> We read every single one 💙',
-        side: 'left',
+        side: 'bottom',
         align: 'center'
       }
     },
-    //Step 13: Conclusion & Help Button
+        //Step 13: Checkout your plan
+        {
+          element: '[data-tour="dashboard-btn"]',
+          popover: {
+            title: '📈 Check your Plan',
+            description: 'Check out what plan you are on and what features you have access to!',
+            side: 'bottom',
+            align: 'center'
+          }
+        },
+    //Step 14: Conclusion & Help Button
     {
       popover: {
         title: '🎓 You\'re Ready to Learn!',
