@@ -11,9 +11,9 @@ interface UpgradeModalProps {
 export const UpgradeModal = ({ isOpen, onClose }: UpgradeModalProps) => {
   const { user } = useUser();
   
-  // if (!isOpen) {
-  //   return null;
-  // }
+  if (!isOpen) {
+    return null;
+  }
 
   // Create checkout URLs with user email pre-filled
   const lifetimeUrl = user?.email 
