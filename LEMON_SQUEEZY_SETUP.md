@@ -101,6 +101,7 @@ LEMONSQUEEZY_MONTHLY_VARIANT_ID=123457
 4. Configure:
    - **URL:** `https://your-domain.com/api/webhooks/lemonsqueezy`
    - **Events to subscribe to:**
+     - ✅ `subscription_created` (NEW - captures subscription ID correctly)
      - ✅ `order_created`
      - ✅ `subscription_payment_success`
      - ✅ `subscription_cancelled`
@@ -115,7 +116,11 @@ LEMONSQUEEZY_MONTHLY_VARIANT_ID=123457
 4. Copy the ngrok URL (e.g., `https://abc123.ngrok.io`)
 5. Go to Lemon Squeezy Dashboard → Settings → Webhooks
 6. Add webhook with URL: `https://abc123.ngrok.io/api/webhooks/lemonsqueezy`
-7. Subscribe to the same events as above
+7. Subscribe to the same events as above:
+   - ✅ `subscription_created`
+   - ✅ `order_created`
+   - ✅ `subscription_payment_success`
+   - ✅ `subscription_cancelled`
 8. Copy the signing secret to `.env.local`
 9. Restart your dev server
 

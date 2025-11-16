@@ -8,6 +8,8 @@ export interface Subscription {
   user_id: string;
   plan_type: 'free' | 'monthly' | 'lifetime';
   status: 'active' | 'inactive' | 'cancelled';
+  lemon_squeezy_subscription_id?: string;
+  expires_at?: string; // When the subscription period expires
   created_at: string;
   updated_at: string;
 }

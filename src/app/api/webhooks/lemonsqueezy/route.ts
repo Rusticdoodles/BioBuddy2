@@ -76,6 +76,11 @@ export async function POST(request: Request) {
     console.log('✅ Step 15: Event received:', eventName);
     console.log('🔵 Full webhook body:', JSON.stringify(body, null, 2));
 
+    // Handle subscription created (new subscriptions)
+    if (eventName === 'subscription_created') {
+      await handleSubscriptionCreated(body);
+    }
+    
     // Handle order created (one-time purchases and subscription starts)
     if (eventName === 'order_created') {
       await handleOrderCreated(body);
@@ -98,15 +103,64 @@ export async function POST(request: Request) {
   }
 }
 
+async function handleSubscriptionCreated(body: any) {
+  const customerEmail = body.data.attributes.user_email;
+  const subscriptionId = body.data.id?.toString(); // This is the actual subscription ID
+  const variantId = body.data.attributes.variant_id?.toString();
+  const status = body.data.attributes.status;
+  
+  console.log('🆕 Subscription created event:');
+  console.log('   - Email:', customerEmail);
+  console.log('   - Subscription ID:', subscriptionId);
+  console.log('   - Variant ID:', variantId);
+  console.log('   - Status:', status);
+  
+  if (status !== 'active') {
+    console.log('⚠️ Subscription not active yet, skipping');
+    return;
+  }
+  
+  // Get user ID from Supabase Auth using admin client
+  const { data: authData, error: authError } = await supabaseAdmin.auth.admin.listUsers();
+  
+  if (authError) {
+    console.error('❌ Error listing users:', authError);
+    return;
+  }
+  
+  // Find user by email
+  const user = authData.users.find(u => u.email === customerEmail);
+  
+  if (!user) {
+    console.error('❌ User not found:', customerEmail);
+    return;
+  }
+  
+  const userId = user.id;
+  console.log('✅ Found user:', userId);
+  
+  await createOrUpdateSubscription(userId, variantId, subscriptionId);
+}
+
 async function handleOrderCreated(body: any) {
   const customerEmail = body.data.attributes.user_email;
   const variantId = body.data.attributes.first_order_item?.variant_id?.toString();
   const orderStatus = body.data.attributes.status;
   
+  // Try multiple possible locations for subscription ID in Lemon Squeezy webhook
+  let subscriptionId = null;
+  if (body.data.relationships?.subscription?.data?.id) {
+    subscriptionId = body.data.relationships.subscription.data.id.toString();
+  } else if (body.data.attributes?.first_order_item?.subscription_id) {
+    subscriptionId = body.data.attributes.first_order_item.subscription_id.toString();
+  }
+  
   console.log('Order created:');
   console.log('Email:', customerEmail);
   console.log('Variant ID:', variantId);
   console.log('Status:', orderStatus);
+  console.log('Subscription ID:', subscriptionId);
+  console.log('Full order data for debugging:', JSON.stringify(body.data, null, 2));
   
   // Only process paid orders
   if (orderStatus !== 'paid') {
@@ -133,10 +187,10 @@ async function handleOrderCreated(body: any) {
   const userId = user.id;
   console.log('Found user:', userId);
   
-  await createOrUpdateSubscription(userId, variantId);
+  await createOrUpdateSubscription(userId, variantId, subscriptionId);
 }
 
-async function createOrUpdateSubscription(userId: string, variantId: string) {
+async function createOrUpdateSubscription(userId: string, variantId: string, subscriptionId?: string) {
   // Determine plan type based on variant ID
   const lifetimeVariantId = process.env.LEMONSQUEEZY_LIFETIME_VARIANT_ID;
   const monthlyVariantId = process.env.LEMONSQUEEZY_MONTHLY_VARIANT_ID;
@@ -158,7 +212,7 @@ async function createOrUpdateSubscription(userId: string, variantId: string) {
     return;
   }
   
-  console.log('Creating subscription:', planType, expiresAt);
+  console.log('Creating subscription:', planType, expiresAt, subscriptionId);
   
   // Check if subscription already exists
   const { data: existing } = await supabaseAdmin
@@ -176,6 +230,7 @@ async function createOrUpdateSubscription(userId: string, variantId: string) {
       .update({
         plan_type: planType,
         expires_at: expiresAt,
+        lemon_squeezy_subscription_id: subscriptionId,
       })
       .eq('id', existing.id);
     
@@ -193,6 +248,7 @@ async function createOrUpdateSubscription(userId: string, variantId: string) {
         plan_type: planType,
         status: 'active',
         expires_at: expiresAt,
+        lemon_squeezy_subscription_id: subscriptionId,
       })
       .select()
       .single();
@@ -207,8 +263,11 @@ async function createOrUpdateSubscription(userId: string, variantId: string) {
 
 async function handleSubscriptionPayment(body: any) {
   const customerEmail = body.data.attributes.user_email;
+  const subscriptionId = body.data.id?.toString(); // This IS the subscription ID for subscription events
   
-  console.log('Subscription payment for:', customerEmail);
+  console.log('💳 Subscription payment event:');
+  console.log('   - Email:', customerEmail);
+  console.log('   - Subscription ID:', subscriptionId);
   
   // Get user ID from Supabase Auth
   const { data: authData, error: authError } = await supabaseAdmin.auth.admin.listUsers();
@@ -236,14 +295,16 @@ async function handleSubscriptionPayment(body: any) {
     .update({
       expires_at: newExpiry.toISOString(),
       status: 'active',
+      lemon_squeezy_subscription_id: subscriptionId,
     })
     .eq('user_id', userId)
     .eq('plan_type', 'monthly');
   
   if (error) {
-    console.error('Error updating subscription:', error);
+    console.error('❌ Error updating subscription:', error);
   } else {
-    console.log('Subscription renewed until:', newExpiry);
+    console.log('✅ Subscription renewed until:', newExpiry);
+    console.log('✅ Subscription ID stored:', subscriptionId);
   }
 }
 

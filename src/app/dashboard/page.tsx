@@ -14,8 +14,11 @@ export default function DashboardPage() {
     topicsCount: 0,
     mapsThisMonth: 0,
     topics: [] as string[],
+    subscriptionStatus: 'active' as 'active' | 'cancelled' | 'inactive',
+    endsAt: null as string | null,
   });
   const [loadingStats, setLoadingStats] = useState(true);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -45,12 +48,61 @@ export default function DashboardPage() {
         topicsCount: topics.length,
         mapsThisMonth: maps,
         topics,
+        subscriptionStatus: subscription?.status || 'inactive',
+        endsAt: subscription?.expires_at || null,
       });
     } catch (error) {
       console.error('Error loading stats:', error);
     } finally {
       setLoadingStats(false);
     }
+  };
+
+  const handleCancelSubscription = async () => {
+    if (!user) return;
+
+    const confirmed = window.confirm(
+      'Are you sure you want to cancel your monthly subscription? You will retain access until the end of your billing period.'
+    );
+
+    if (!confirmed) return;
+
+    setIsCancelling(true);
+
+    try {
+      const response = await fetch('/api/subscription/cancel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: user.id }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        const endsAtDate = data.endsAt ? new Date(data.endsAt).toLocaleDateString() : 'the end of your billing period';
+        alert(`Subscription cancelled successfully. You will retain access until ${endsAtDate}.`);
+        // Reload stats to update UI
+        await loadStats();
+      } else {
+        alert(`Failed to cancel subscription: ${data.error}`);
+      }
+    } catch (error) {
+      console.error('Error cancelling subscription:', error);
+      alert('An error occurred while cancelling your subscription. Please try again.');
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  const getRemainingDays = (): number | null => {
+    if (!stats.endsAt) return null;
+    const endsAt = new Date(stats.endsAt);
+    const now = new Date();
+    const diffTime = endsAt.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
   };
 
   if (loading || loadingStats) {
@@ -89,6 +141,7 @@ export default function DashboardPage() {
               </h2>
               <span className={`rounded-full px-4 py-1 text-sm font-semibold ${planBadgeColor[stats.plan]}`}>
                 {planName[stats.plan]}
+                {stats.subscriptionStatus === 'cancelled' && stats.plan === 'monthly' && ' (Ending Soon)'}
               </span>
             </div>
             
@@ -99,9 +152,45 @@ export default function DashboardPage() {
             )}
             
             {stats.plan === 'monthly' && (
-              <p className="text-slate-600 dark:text-slate-300">
-                You have unlimited topics with 100 maps per month.
-              </p>
+              <>
+                {stats.subscriptionStatus === 'cancelled' ? (
+                  <>
+                    <div className="mb-4 rounded-lg border-2 border-orange-200 bg-orange-50 p-4 dark:border-orange-800 dark:bg-orange-900/20">
+                      <p className="mb-2 font-semibold text-orange-800 dark:text-orange-300">
+                        ⚠️ Subscription Cancelled
+                      </p>
+                      <p className="text-sm text-orange-700 dark:text-orange-400">
+                        {getRemainingDays() !== null ? (
+                          <>
+                            You still have access to premium features for <strong>{getRemainingDays()} {getRemainingDays() === 1 ? 'day' : 'days'}</strong>.
+                            {stats.endsAt && (
+                              <> Your subscription will end on <strong>{new Date(stats.endsAt).toLocaleDateString()}</strong>.</>
+                            )}
+                          </>
+                        ) : (
+                          'Your subscription has ended. You are now on the free plan.'
+                        )}
+                      </p>
+                    </div>
+                    <p className="mb-4 text-slate-600 dark:text-slate-300">
+                      You currently have unlimited topics with 100 maps per month until your subscription ends.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="mb-4 text-slate-600 dark:text-slate-300">
+                      You have unlimited topics with 100 maps per month.
+                    </p>
+                    <button
+                      onClick={handleCancelSubscription}
+                      disabled={isCancelling}
+                      className="rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-800 dark:bg-slate-800 dark:text-red-400 dark:hover:bg-red-950/20"
+                    >
+                      {isCancelling ? 'Cancelling...' : 'Cancel Subscription'}
+                    </button>
+                  </>
+                )}
+              </>
             )}
             
             {stats.plan === 'lifetime' && (
