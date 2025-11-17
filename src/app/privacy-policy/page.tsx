@@ -22,7 +22,7 @@ export default function PrivacyPolicy() {
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-slate-900 dark:text-white mb-4">1. Introduction</h2>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
-              Welcome to BioBuddy! We're committed to protecting your privacy and being transparent about how we collect and use your data. This Privacy Policy explains what information we collect, how we use it, and your rights regarding your personal data.
+              Welcome to BioBuddy! We&apos;re committed to protecting your privacy and being transparent about how we collect and use your data. This Privacy Policy explains what information we collect, how we use it, and your rights regarding your personal data.
             </p>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
               BioBuddy is operated by Arya Wicaksono, based in the United Kingdom. By using BioBuddy, you agree to the collection and use of information in accordance with this policy.
@@ -102,7 +102,7 @@ export default function PrivacyPolicy() {
 
             <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3 mt-6">4.2 Anthropic API (AI Processing)</h3>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
-              When you generate a concept map, your topic query is sent to Anthropic's Claude API to create the AI-powered content. Anthropic does not use this data to train their models. Learn more at <a href="https://www.anthropic.com/privacy" className="text-blue-600 dark:text-blue-400 hover:underline" target="_blank" rel="noopener noreferrer">anthropic.com/privacy</a>.
+              When you generate a concept map, your topic query is sent to Anthropic&apos;s Claude API to create the AI-powered content. Anthropic does not use this data to train their models. Learn more at <a href="https://www.anthropic.com/privacy" className="text-blue-600 dark:text-blue-400 hover:underline" target="_blank" rel="noopener noreferrer">anthropic.com/privacy</a>.
             </p>
 
             <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3 mt-6">4.3 Lemon Squeezy (Payment Processing)</h3>
@@ -150,12 +150,12 @@ export default function PrivacyPolicy() {
 
             <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3 mt-6">6.2 Delete Your Account</h3>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
-              You can request account deletion at any time by emailing faliqwicaksono21@gmail.com. We will permanently delete your account and associated data within 30 days, except where we're required to retain certain information for legal compliance (such as transaction records).
+              You can request account deletion at any time by emailing faliqwicaksono21@gmail.com. We will permanently delete your account and associated data within 30 days, except where we&apos;re required to retain certain information for legal compliance (such as transaction records).
             </p>
 
             <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3 mt-6">6.3 Export Your Data</h3>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
-              You can request a copy of your data in a portable format by emailing faliqwicaksono21@gmail.com. We'll provide your data within 30 days.
+              You can request a copy of your data in a portable format by emailing faliqwicaksono21@gmail.com. We&apos;ll provide your data within 30 days.
             </p>
 
             <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3 mt-6">6.4 Correct Inaccurate Data</h3>
@@ -165,12 +165,12 @@ export default function PrivacyPolicy() {
 
             <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3 mt-6">6.5 Opt-Out of Communications</h3>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
-              You can unsubscribe from promotional emails using the link in any email we send. Note that you'll still receive essential service-related emails (like password resets and billing notifications).
+              You can unsubscribe from promotional emails using the link in any email we send. Note that you&apos;ll still receive essential service-related emails (like password resets and billing notifications).
             </p>
 
             <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3 mt-6">6.6 Rights for EU/UK Users (GDPR)</h3>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
-              If you're located in the European Union or United Kingdom, you have additional rights under GDPR:
+              If you&apos;re located in the European Union or United Kingdom, you have additional rights under GDPR:
             </p>
             <ul className="list-disc pl-6 mb-4 text-slate-700 dark:text-slate-300 space-y-2">
               <li>Right to object to data processing</li>
@@ -182,7 +182,7 @@ export default function PrivacyPolicy() {
 
             <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3 mt-6">6.7 Rights for California Users (CCPA)</h3>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
-              If you're a California resident, you have the right to:
+              If you&apos;re a California resident, you have the right to:
             </p>
             <ul className="list-disc pl-6 mb-4 text-slate-700 dark:text-slate-300 space-y-2">
               <li>Know what personal information we collect and how we use it</li>
@@ -222,11 +222,11 @@ export default function PrivacyPolicy() {
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-slate-900 dark:text-white mb-4">8. Data Retention</h2>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
-              We retain your personal data for as long as necessary to provide BioBuddy's services and fulfill the purposes outlined in this Privacy Policy:
+              We retain your personal data for as long as necessary to provide BioBuddy&apos;s services and fulfill the purposes outlined in this Privacy Policy:
             </p>
             <ul className="list-disc pl-6 mb-4 text-slate-700 dark:text-slate-300 space-y-2">
               <li><strong>Active Accounts:</strong> We retain your data while your account is active</li>
-              <li><strong>Inactive Accounts:</strong> If you stop using BioBuddy but don't delete your account, we may retain your data for up to 2 years</li>
+              <li><strong>Inactive Accounts:</strong> If you stop using BioBuddy but don&apos;t delete your account, we may retain your data for up to 2 years</li>
               <li><strong>Deleted Accounts:</strong> After account deletion, we permanently remove your personal data within 30 days</li>
               <li><strong>Legal Requirements:</strong> We may retain certain data longer if required by law (e.g., transaction records for tax purposes)</li>
               <li><strong>Backups:</strong> Deleted data may persist in backup systems for up to 90 days</li>
@@ -234,7 +234,7 @@ export default function PrivacyPolicy() {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold text-slate-900 dark:text-white mb-4">9. Children's Privacy</h2>
+            <h2 className="text-2xl font-semibold text-slate-900 dark:text-white mb-4">9. Children&apos;s Privacy</h2>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
               BioBuddy is designed for university students and is not intended for children under the age of 13. We do not knowingly collect personal information from children under 13.
             </p>
@@ -259,8 +259,8 @@ export default function PrivacyPolicy() {
               We may update this Privacy Policy from time to time to reflect changes in our practices or for legal, operational, or regulatory reasons. When we make changes:
             </p>
             <ul className="list-disc pl-6 mb-4 text-slate-700 dark:text-slate-300 space-y-2">
-              <li>We'll update the "Last updated" date at the top of this page</li>
-              <li>For significant changes, we'll notify you via email or through a prominent notice on BioBuddy</li>
+              <li>We&apos;ll update the &quot;Last updated&quot; date at the top of this page</li>
+              <li>For significant changes, we&apos;ll notify you via email or through a prominent notice on BioBuddy</li>
               <li>Your continued use of BioBuddy after changes take effect constitutes acceptance of the updated Privacy Policy</li>
             </ul>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
@@ -288,7 +288,7 @@ export default function PrivacyPolicy() {
               </p>
             </div>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
-              We aim to respond to all privacy-related inquiries within 7 business days. For data access, deletion, or export requests, we'll respond within 30 days as required by law.
+              We aim to respond to all privacy-related inquiries within 7 business days. For data access, deletion, or export requests, we&apos;ll respond within 30 days as required by law.
             </p>
           </section>
 

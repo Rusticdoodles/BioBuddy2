@@ -15,7 +15,7 @@ export default function Contact() {
           Contact Us
         </h1>
         <p className="text-xl text-slate-600 dark:text-slate-300 mb-12">
-          Have questions? We're here to help!
+          Have questions? We&apos;re here to help!
         </p>
 
         <div className="grid md:grid-cols-2 gap-8 mb-12">
@@ -77,7 +77,7 @@ export default function Contact() {
                 How do I cancel my subscription?
               </h3>
               <p className="text-slate-600 dark:text-slate-300">
-                Go to your Dashboard and click "Manage Subscription" to cancel anytime. Your access continues until the end of your billing period.
+                Go to your Dashboard and click &quot;Manage Subscription&quot; to cancel anytime. Your access continues until the end of your billing period.
               </p>
             </div>
 
@@ -86,7 +86,7 @@ export default function Contact() {
                 Can I upgrade from monthly to lifetime?
               </h3>
               <p className="text-slate-600 dark:text-slate-300">
-                Yes! Email us and we'll help you upgrade and credit your monthly payment toward the lifetime price.
+                Yes! Email us and we&apos;ll help you upgrade and credit your monthly payment toward the lifetime price.
               </p>
             </div>
 
@@ -104,13 +104,13 @@ export default function Contact() {
                 Do you offer student discounts?
               </h3>
               <p className="text-slate-600 dark:text-slate-300">
-                BioBuddy is already priced affordably for students! Email us if you have special circumstances and we'll see what we can do.
+                BioBuddy is already priced affordably for students! Email us if you have special circumstances and we&apos;ll see what we can do.
               </p>
             </div>
 
             <div>
               <h3 className="font-semibold text-slate-900 dark:text-white mb-2">
-                What's your refund policy?
+                What&apos;s your refund policy?
               </h3>
               <p className="text-slate-600 dark:text-slate-300">
                 Lifetime licenses have a 14-day money-back guarantee. Monthly subscriptions can be cancelled anytime (no partial refunds). See our <a href="/refund-policy" className="text-blue-600 dark:text-blue-400 hover:underline">Refund Policy</a> for full details.
@@ -122,7 +122,7 @@ export default function Contact() {
                 I found a bug or have a feature request
               </h3>
               <p className="text-slate-600 dark:text-slate-300">
-                We'd love to hear from you! Email us with details about the bug or your feature idea. We actively consider user feedback for future updates.
+                We&apos;d love to hear from you! Email us with details about the bug or your feature idea. We actively consider user feedback for future updates.
               </p>
             </div>
           </div>

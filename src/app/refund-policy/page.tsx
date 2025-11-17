@@ -21,14 +21,14 @@ export default function RefundPolicy() {
         <div className="prose prose-slate dark:prose-invert max-w-none">
           <section className="mb-8">
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed mb-6">
-              At BioBuddy, we want you to be completely satisfied with your purchase. We believe in our product and stand behind it with fair, transparent refund policies. Here's everything you need to know about refunds and cancellations.
+              At BioBuddy, we want you to be completely satisfied with your purchase. We believe in our product and stand behind it with fair, transparent refund policies. Here&apos;s everything you need to know about refunds and cancellations.
             </p>
           </section>
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-slate-900 dark:text-white mb-4">1. Lifetime License - 14 Day Money-Back Guarantee</h2>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
-              We offer a full refund within 14 days of your lifetime license purchase, no questions asked. We want you to have enough time to try BioBuddy and ensure it's the right fit for your learning style.
+              We offer a full refund within 14 days of your lifetime license purchase, no questions asked. We want you to have enough time to try BioBuddy and ensure it&apos;s the right fit for your learning style.
             </p>
 
             <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl p-6 mb-6">
@@ -36,7 +36,7 @@ export default function RefundPolicy() {
               <ul className="list-disc pl-6 mb-0 text-slate-700 dark:text-slate-300 space-y-2">
                 <li><strong>Eligibility window:</strong> Must be within 14 days of purchase</li>
                 <li><strong>Process:</strong> Email faliqwicaksono21@gmail.com with your order number</li>
-                <li><strong>No questions asked:</strong> We'll process your refund without requiring a reason</li>
+                <li><strong>No questions asked:</strong> We&apos;ll process your refund without requiring a reason</li>
                 <li><strong>Timeline:</strong> Refunds processed within 5-7 business days</li>
                 <li><strong>Method:</strong> Refund issued to your original payment method</li>
               </ul>
@@ -44,10 +44,10 @@ export default function RefundPolicy() {
 
             <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3 mt-6">After 14 Days</h3>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
-              Lifetime licenses are non-refundable after the 14-day window. This is because the lifetime license provides permanent access to BioBuddy's features and ongoing updates.
+              Lifetime licenses are non-refundable after the 14-day window. This is because the lifetime license provides permanent access to BioBuddy&apos;s features and ongoing updates.
             </p>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
-              <strong>Tip:</strong> Try the free tier or monthly subscription first if you're unsure about committing to a lifetime license!
+              <strong>Tip:</strong> Try the free tier or monthly subscription first if you&apos;re unsure about committing to a lifetime license!
             </p>
           </section>
 
@@ -75,8 +75,8 @@ export default function RefundPolicy() {
               <ol className="list-decimal pl-6 text-slate-700 dark:text-slate-300 space-y-2">
                 <li>Log in to your BioBuddy account</li>
                 <li>Go to your Dashboard</li>
-                <li>Click on "Manage Subscription"</li>
-                <li>Click "Cancel Subscription"</li>
+                <li>Click on &quot;Manage Subscription&quot;</li>
+                <li>Click &quot;Cancel Subscription&quot;</li>
                 <li>Follow the confirmation prompts</li>
               </ol>
             </div>
@@ -85,16 +85,16 @@ export default function RefundPolicy() {
               <p className="text-slate-700 dark:text-slate-300 mb-3 font-semibold">Option 2: Email Us</p>
               <ul className="list-disc pl-6 text-slate-700 dark:text-slate-300 space-y-2">
                 <li>Email: <a href="mailto:faliqwicaksono21@gmail.com" className="text-blue-600 dark:text-blue-400 hover:underline">faliqwicaksono21@gmail.com</a></li>
-                <li>Subject line: "Cancel Monthly Subscription"</li>
+                <li>Subject line: &quot;Cancel Monthly Subscription&quot;</li>
                 <li>Include: Your account email address</li>
-                <li>We'll confirm your cancellation within 24 hours</li>
+                <li>We&apos;ll confirm your cancellation within 24 hours</li>
               </ul>
             </div>
 
             <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3 mt-6">What Happens After Cancellation?</h3>
             <ul className="list-disc pl-6 mb-4 text-slate-700 dark:text-slate-300 space-y-2">
               <li>Your subscription will not renew at the end of your current billing period</li>
-              <li>You'll retain full access to premium features until your paid period ends</li>
+              <li>You&apos;ll retain full access to premium features until your paid period ends</li>
               <li>After your period ends, your account automatically reverts to the free tier (4 topics)</li>
               <li>Your saved concept maps and data remain intact</li>
               <li>You can resubscribe anytime to regain premium access</li>
@@ -102,14 +102,14 @@ export default function RefundPolicy() {
 
             <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3 mt-6">Why No Partial Month Refunds?</h3>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
-              Since monthly subscriptions are priced affordably at $4.99/month and can be canceled anytime without fees, we do not offer refunds for partial months. You're only billed for the month you're currently using, and you keep access through your paid period even after cancellation.
+              Since monthly subscriptions are priced affordably at $4.99/month and can be canceled anytime without fees, we do not offer refunds for partial months. You&apos;re only billed for the month you&apos;re currently using, and you keep access through your paid period even after cancellation.
             </p>
           </section>
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-slate-900 dark:text-white mb-4">3. Free Tier</h2>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
-              The free tier is always available at no cost and requires no payment information. There are no refunds to process since it's completely free!
+              The free tier is always available at no cost and requires no payment information. There are no refunds to process since it&apos;s completely free!
             </p>
             <ul className="list-disc pl-6 mb-4 text-slate-700 dark:text-slate-300 space-y-2">
               <li>Access to 4 unique topics</li>
@@ -123,7 +123,7 @@ export default function RefundPolicy() {
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-slate-900 dark:text-white mb-4">4. How to Request a Refund</h2>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
-              If you're eligible for a refund (lifetime license within 14 days), here's how to request one:
+              If you&apos;re eligible for a refund (lifetime license within 14 days), here&apos;s how to request one:
             </p>
 
             <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-6 mb-6">
@@ -166,15 +166,15 @@ export default function RefundPolicy() {
 
             <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3 mt-6">📅 Refund Processing Timeline</h3>
             <ul className="list-disc pl-6 mb-4 text-slate-700 dark:text-slate-300 space-y-2">
-              <li><strong>Confirmation:</strong> You'll receive an email confirmation within 24 hours</li>
+              <li><strong>Confirmation:</strong> You&apos;ll receive an email confirmation within 24 hours</li>
               <li><strong>Processing:</strong> Refunds are processed within 5-7 business days</li>
               <li><strong>Bank processing:</strong> May take an additional 3-5 days to appear in your account</li>
               <li><strong>Refund method:</strong> Issued to your original payment method (credit card, PayPal, etc.)</li>
-              <li><strong>Notification:</strong> You'll receive an email when the refund is complete</li>
+              <li><strong>Notification:</strong> You&apos;ll receive an email when the refund is complete</li>
             </ul>
 
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed mt-4">
-              <strong>Note:</strong> If you don't see your refund after 10 business days, please check with your bank or contact us for assistance.
+              <strong>Note:</strong> If you don&apos;t see your refund after 10 business days, please check with your bank or contact us for assistance.
             </p>
           </section>
 
@@ -192,19 +192,19 @@ export default function RefundPolicy() {
 
             <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3 mt-6">Special Circumstances</h3>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
-              If you have special circumstances not covered by this policy (e.g., technical issues preventing use, billing errors, duplicate charges), please contact us at faliqwicaksono21@gmail.com. We'll review your case individually and work with you to find a fair solution.
+              If you have special circumstances not covered by this policy (e.g., technical issues preventing use, billing errors, duplicate charges), please contact us at faliqwicaksono21@gmail.com. We&apos;ll review your case individually and work with you to find a fair solution.
             </p>
 
             <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3 mt-6">Upgrading from Monthly to Lifetime</h3>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
-              If you're currently on a monthly subscription and want to upgrade to a lifetime license, email us! We'll help you upgrade and can credit your most recent monthly payment toward the lifetime price as a courtesy.
+              If you&apos;re currently on a monthly subscription and want to upgrade to a lifetime license, email us! We&apos;ll help you upgrade and can credit your most recent monthly payment toward the lifetime price as a courtesy.
             </p>
           </section>
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-slate-900 dark:text-white mb-4">6. Payment Disputes and Chargebacks</h2>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
-              If you have any billing concerns or believe you were charged incorrectly, please contact us directly before initiating a chargeback with your bank. We're happy to resolve any payment issues quickly and fairly.
+              If you have any billing concerns or believe you were charged incorrectly, please contact us directly before initiating a chargeback with your bank. We&apos;re happy to resolve any payment issues quickly and fairly.
             </p>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
               <strong>Important:</strong> Filing a chargeback without contacting us first may result in:
@@ -215,14 +215,14 @@ export default function RefundPolicy() {
               <li>Potential ineligibility for future refunds or service</li>
             </ul>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
-              We process legitimate refund requests within 24 hours, so there's no need to go through your bank. Let's resolve it together!
+              We process legitimate refund requests within 24 hours, so there&apos;s no need to go through your bank. Let&apos;s resolve it together!
             </p>
           </section>
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-slate-900 dark:text-white mb-4">7. Questions About Refunds?</h2>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed mb-6">
-              We're here to help! If you have any questions about our refund policy, billing, or subscriptions, don't hesitate to reach out.
+              We&apos;re here to help! If you have any questions about our refund policy, billing, or subscriptions, don&apos;t hesitate to reach out.
             </p>
 
             <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-6 mb-6">
@@ -257,7 +257,7 @@ export default function RefundPolicy() {
               This Refund Policy is effective as of {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} and applies to all BioBuddy purchases.
             </p>
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              We reserve the right to update this policy. Any changes will be posted on this page with an updated date. For significant changes, we'll notify active subscribers via email.
+              We reserve the right to update this policy. Any changes will be posted on this page with an updated date. For significant changes, we&apos;ll notify active subscribers via email.
             </p>
           </div>
         </div>
