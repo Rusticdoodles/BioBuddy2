@@ -32,6 +32,11 @@ import { useChatHandlers } from '@/hooks/useChatHandlers';
 import { useMapUpdate } from '@/hooks/useMapUpdate';
 import { useTour } from '@/hooks/useTour';
 import { FeedbackProvider } from '@/contexts/FeedbackContext';
+import { useUser } from '@/components/AuthProvider';
+import { canGenerateMap, trackMapGeneration, getMapsThisMonth, getTopicsUsed, getUserSubscription } from '@/lib/usage';
+import { AuthModal } from '@/components/AuthModal';
+import { UpgradeModal } from '@/components/UpgradeModal';
+import { SoftLimitModal } from '@/components/SoftLimitModal';
 
 const flowKey = 'biobuddy-concept-map-flow';
 const TOPIC_CHATS_KEY = 'biobuddy-topic-chats';
@@ -63,6 +68,15 @@ export default function MapPage() {
   const [forceRegenerateMap, setForceRegenerateMap] = useState(false);
   const lastToastedMapHashRef = useRef<string>('');
   const [autoGenerateMap, setAutoGenerateMap] = useState(true);
+
+  // Usage tracking modals
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showSoftLimitModal, setShowSoftLimitModal] = useState(false);
+  const [mapsThisMonth, setMapsThisMonth] = useState(0);
+
+  // Auth
+  const { user, loading } = useUser();
 
   // Topic management
   const {
@@ -113,11 +127,79 @@ export default function MapPage() {
     [createWrappedOnEdgesChange, onEdgesChange]
   );
 
+  // Usage tracking callbacks
+  const handleBeforeGenerate = useCallback(async (topicName: string): Promise<boolean> => {
+    console.log('🔍 Checking usage limits for topic:', topicName);
+    
+    // 1. Check if user is authenticated
+    if (!user) {
+      console.log('❌ User not authenticated - showing auth modal');
+      setShowAuthModal(true);
+      return false;
+    }
+    
+    console.log('✅ User authenticated:', user.id);
+    
+    // 2. Check if user can generate this map
+    const { allowed, reason } = await canGenerateMap(user.id, topicName);
+    
+    console.log('Can generate map?', allowed);
+    if (reason) console.log('Reason:', reason);
+    
+    // 3. Handle different limit scenarios
+    if (!allowed) {
+      if (reason === 'free_limit_reached') {
+        console.log('🚫 Free tier limit reached (4 topics) - showing upgrade modal');
+        setShowUpgradeModal(true);
+        return false;
+      }
+      
+      if (reason === 'monthly_limit_reached') {
+        console.log('🚫 Monthly map limit reached (100/month) - showing soft limit modal');
+        const count = await getMapsThisMonth(user.id);
+        setMapsThisMonth(count);
+        setShowSoftLimitModal(true);
+        return false;
+      }
+    }
+    
+    console.log('✅ Usage check passed - allowing generation');
+    return true;
+  }, [user]);
+
+  const handleAfterGenerate = useCallback(async (topicName: string, isRegeneration: boolean): Promise<void> => {
+    console.log('💾 Tracking map generation');
+    console.log('Topic:', topicName);
+    console.log('Is Regeneration:', isRegeneration);
+    
+    if (!user) {
+      console.error('❌ Cannot track - no user authenticated');
+      return;
+    }
+    
+    try {
+      // Double-check if this is actually a regeneration by checking database
+      const topicsUsed = await getTopicsUsed(user.id);
+      const topicSlug = topicName.toLowerCase().trim();
+      const actualIsRegeneration = topicsUsed.includes(topicSlug);
+      
+      await trackMapGeneration(user.id, topicName, actualIsRegeneration);
+      console.log('✅ Successfully tracked generation in database');
+    } catch (error) {
+      console.error('❌ Failed to track generation:', error);
+      // Don't block user experience if tracking fails
+      // Just log the error and continue
+    }
+  }, [user]);
+
   // Concept map generation hook
   const { generateConceptMapFromText, handleGenerateMap } = useConceptMapGeneration({
     activeTopicId,
+    activeTopic,
     setTopicChats,
     inputText,
+    onBeforeGenerate: handleBeforeGenerate,
+    onAfterGenerate: handleAfterGenerate,
   });
 
   // Map update hook
@@ -827,6 +909,18 @@ Make sure EVERY concept from the list above is included in the new map.`;
   }, [onRestore]);
 
 
+  // Show loading spinner during initial auth check
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-600 dark:text-slate-400">Loading BioBuddy...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <FeedbackProvider
       value={{
@@ -978,6 +1072,8 @@ Make sure EVERY concept from the list above is included in the new map.`;
                   isRestoringFromStorage={isRestoringFromStorage}
                   onRegenerateMindmap={handleRegenerateMindmap}
                   isRegeneratingMap={isRegeneratingMap}
+                  onUndo={handleUndo}
+                  onRedo={handleRedo}
                 />
               </div>
             </div>
@@ -994,6 +1090,56 @@ Make sure EVERY concept from the list above is included in the new map.`;
           </main>
         )}
       </div>
+
+      {/* Auth Modal - Mandatory for unauthenticated users */}
+      <AuthModal 
+        isOpen={!user || showAuthModal} 
+        onClose={() => {
+          // Only allow closing if user is authenticated
+          if (user) {
+            setShowAuthModal(false);
+          }
+          // If not authenticated, do nothing (modal stays open)
+        }} 
+      />
+
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+      />
+
+      {/* Soft Limit Modal */}
+      <SoftLimitModal
+        isOpen={showSoftLimitModal}
+        onClose={() => setShowSoftLimitModal(false)}
+        mapsGenerated={mapsThisMonth}
+      />
+
+      {/* Temporary Debug Button - Remove after testing */}
+      {user && (
+        <button 
+          onClick={async () => {
+            console.log('=== DEBUG: Testing Usage Tracking ===');
+            console.log('User ID:', user.id);
+            
+            const topics = await getTopicsUsed(user.id);
+            console.log('Topics used:', topics);
+            console.log('Topic count:', topics.length);
+            
+            const maps = await getMapsThisMonth(user.id);
+            console.log('Maps this month:', maps);
+            
+            const sub = await getUserSubscription(user.id);
+            console.log('Subscription:', sub);
+            
+            console.log('=================================');
+          }}
+          className="fixed bottom-4 right-4 px-4 py-2 bg-purple-600 text-white rounded-lg shadow-lg hover:bg-purple-700 z-50"
+        >
+          Debug Usage
+        </button>
+      )}
     </div>
     </FeedbackProvider>
   );

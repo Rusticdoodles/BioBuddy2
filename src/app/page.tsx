@@ -5,9 +5,7 @@ import {
   Microscope,
   Beaker,
   Brain,
-  Activity,
   Syringe,
-  Tablets,
   Bone,
   Pill,
 } from 'lucide-react';
@@ -20,7 +18,7 @@ const Home = () => {
         {/* Decorative floating shapes - biology themed */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {/* DNA Helix - top right */}
-          <div className="z-999 absolute top-20 right-[10%] w-24 h-24 md:w-32 md:h-32 opacity-20 animate-float">
+          <div className="z-999 absolute top-20 right-[10%] w-24 h-24 md:w-32 md:h-32 opacity-20 dark:opacity-80 animate-float">
             <svg viewBox="0 0 100 100" className="w-full h-full">
               <path d="M30 10 Q 40 30, 30 50 T 30 90" stroke="#3b82f6" strokeWidth="3" fill="none" />
               <path d="M70 10 Q 60 30, 70 50 T 70 90" stroke="#3b82f6" strokeWidth="3" fill="none" />
@@ -31,12 +29,12 @@ const Home = () => {
             </svg>
           </div>
           {/*DNA Helix - left side*/}
-          <div className="z-999 absolute rotate-25 top-60 left-[10%] w-24 h-24 md:w-32 md:h-32 opacity-20 animate-float-slow">
-            <Dna className="w-40 h-40 text-blue-600"/>
+          <div className="z-999 absolute rotate-25 top-60 left-[10%] w-24 h-24 md:w-32 md:h-32 opacity-20 dark:opacity-80 animate-float-slow">
+            <Dna className="w-40 h-40 text-purple-600"/>
           </div>
           {/*Brain - bottom right*/}
-          <div className="z-999 absolute rotate-32 top-120 right-[25%] w-24 h-24 md:w-32 md:h-32 opacity-20 animate-float-slower">
-            <Brain className="w-25 h-25 text-blue-600"/>
+          <div className="z-999 absolute rotate-32 top-120 right-[25%] w-24 h-24 md:w-32 md:h-32 opacity-20 dark:opacity-80 animate-float-slower">
+            <Brain className="w-25 h-25 text-orange-600"/>
           </div>
 
           {/* Cell blob - top left */}
@@ -62,19 +60,20 @@ const Home = () => {
           <div className="z-999 absolute top-[45%] left-[8%] w-20 h-20 md:w-24 md:h-24 bg-orange-200 dark:bg-orange-900/30 rounded-full opacity-40 blur-xl animate-float-slower" />
         </div>
 
-        <main className="w-screen bg-neutral-100 mx-auto py-16 md:py-24 relative z-10">
+        <main className="w-screen bg-neutral-100 dark:bg-slate-800 mx-auto py-16 md:py-24 relative z-10">
           {/* Hero Section */}
           <div className="text-center max-w-4xl mx-auto mb-24 md:mb-32">
             {/* Main Headline */}
-            <h1 className="text-5xl md:text-5xl font-bold text-slate-900 dark:text-white mb-6 leading-tight">
-              Master Biology with
+            <h1 className="text-5xl md:text-6xl font-bold text-slate-900 dark:text-white mb-6 leading-tight">
+              Your Dedicated
               <br />
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">AI-Powered Concept Maps</span>
+              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Biology Study Buddy</span>
             </h1>
 
             {/* Subheadline */}
             <p className="text-xl md:text-2xl text-slate-600 dark:text-slate-300 mb-12 leading-relaxed max-w-3xl mx-auto">
-              Join university students who use BioBuddy to visualize complex biology concepts and ace their exams
+              Conceptualize, understand, and retain than better before. <br></br>
+              <span className="font-semibold">Made by life science students, for life science students.</span>
             </p>
 
             {/* CTA Button */}
@@ -155,13 +154,13 @@ const Home = () => {
                 {/* Floating Shapes */}
                 <Dna className="pointer-events-none absolute -top-8 -right-6 h-16 w-16"/>
                 <Pill className="pointer-events-none absolute -bottom-9 left-12 h-14 w-14 rotate-90"/>
-                <div aria-hidden="true" className="pointer-events-none absolute -top-8 left-10 h-14 w-14 rotate-30 rounded-xl bg-amber-400/80 dark:bg-amber-400/90" />
+                <div aria-hidden="true" className="pointer-events-none absolute -top-8 left-10 h-14 w-14 rotate-30 rounded-xl bg-amber-400/0 dark:bg-amber-400/20 border-2 border-amber-600" />
                 <div aria-hidden="true" className="pointer-events-none absolute -bottom-10 right-8 h-20 w-20 rounded-full bg-amber-500/60 blur-xl dark:bg-amber-400/60" />
 
                 {/* Main Card */}
-                <div className="relative rounded-3xl bg-white p-8 shadow-2xl dark:bg-slate-950">
+                <div className="relative rounded-3xl bg-white p-8 shadow-2xl dark:bg-slate-200">
                   <Image
-                    src="/assets/AI-BioBrain.png"
+                    src="/Assets/AI-BioBrain.png"
                     alt="AI-powered biology illustration"
                     width={512}
                     height={512}
@@ -199,14 +198,14 @@ const Home = () => {
               <div className="relative w-full max-w-lg rounded-[48px] bg-amber-200/70 p-12 shadow-xl dark:bg-amber-900/30">
                 {/* Floating Shapes */}
                 <Syringe className="pointer-events-none absolute -bottom-10 right-8 h-16 w-16"/>
-                <div aria-hidden="true" className="pointer-events-none absolute -bottom-6 left-0 h-14 w-14 rotate-12 rounded-2xl bg-purple-900/90 dark:bg-white/80" />
+                <div aria-hidden="true" className="pointer-events-none absolute -bottom-6 left-0 h-14 w-14 rotate-12 rounded-2xl bg-purple-900/60 dark:bg-purple-400/20 border-2 border-purple-600" />
                 <Bone className="pointer-events-none absolute -top-10 left-10 h-16 w-16"/>
-                <div aria-hidden="true" className="pointer-events-none absolute -top-8 -right-6 h-20 w-20 rounded-full bg-purple-500/60 blur-xl dark:bg-amber-400/60" />
+                <div aria-hidden="true" className="pointer-events-none absolute -top-8 -right-6 h-20 w-20 rounded-full bg-purple-500/60 blur-xl dark:bg-purple-400/60" />
 
                 {/* Main Card */}
-                <div className="relative rounded-3xl bg-white p-8 shadow-2xl dark:bg-slate-950">
+                <div className="relative rounded-3xl bg-white p-8 shadow-2xl dark:bg-slate-200">
                 <Image
-                    src="/assets/Mindmap2.png"
+                    src="/Assets/Mindmap2.png"
                     alt="AI-powered biology illustration"
                     width={512}
                     height={512}
@@ -229,13 +228,13 @@ const Home = () => {
                 {/* Floating Shapes */}
                 <Microscope className="pointer-events-none absolute -top-8 -right-6 h-16 w-16 rotate-340"/>
                 <Beaker className="pointer-events-none absolute -bottom-9 left-8 h-20 w-16 rotate-30"/>
-                <div aria-hidden="true" className="pointer-events-none absolute -top-8 left-10 h-14 w-14 rotate-30 rounded-xl bg-green-200/80 dark:bg-amber-400/90" />
-                <div aria-hidden="true" className="pointer-events-none absolute -bottom-10 right-8 h-20 w-20 rounded-full bg-green-300/60 blur-xl dark:bg-amber-400/60" />
+                <div aria-hidden="true" className="pointer-events-none absolute -top-8 left-10 h-14 w-14 rotate-30 rounded-xl bg-green-200/80 dark:bg-green-400/20 border-2 border-green-600" />
+                <div aria-hidden="true" className="pointer-events-none absolute -bottom-10 right-8 h-20 w-20 rounded-full bg-green-300/60 blur-xl dark:bg-green-400/60" />
 
                 {/* Main Card */}
-                <div className="relative rounded-3xl bg-white p-8 shadow-2xl dark:bg-slate-950">
+                <div className="relative rounded-3xl bg-white p-8 shadow-2xl dark:bg-slate-200">
                   <Image
-                      src="/assets/Flashcards2.png"
+                      src="/Assets/Flashcards2.png"
                       alt="AI-powered biology illustration"
                       width={512}
                       height={512}
@@ -268,17 +267,17 @@ const Home = () => {
             
             {/* Floating accents */}
             <div aria-hidden="true" className="pointer-events-none">
-              <div className="z-999 absolute left-9 top-10 h-16 w-16 -rotate-12 rounded-2xl bg-white/70 shadow-lg dark:bg-white/10" />
-              <div className="z-999 absolute right-6 top-12 h-20 w-20 rotate-6 rounded-full bg-slate-900/70 shadow-lg dark:bg-white/20" />
-              <div className="z-999 absolute right-13 top-100 h-14 w-14 rotate-12 rounded-xl bg-white/80 shadow-md dark:bg-white/10" />
-              <div className="z-999 absolute left-24 top-80 h-12 w-12 rotate-12 rounded-full bg-slate-900/70 shadow-md dark:bg-white/20" />
-              <div className="z-999 absolute left-1/2 top-105 h-16 w-16 -translate-x-1/2 rotate-12 rounded-2xl bg-white/70 shadow-md dark:bg-white/10" />
+              <div className="z-999 absolute left-9 top-10 h-16 w-16 -rotate-12 rounded-2xl bg-blue-500 shadow-lg dark:bg-blue-400/20 border-2 border-blue-400" />
+              <div className="z-999 absolute right-6 top-12 h-20 w-20 rotate-6 rounded-full bg-orange-500 shadow-lg dark:bg-orange-400/20 border-2 border-orange-400" />
+              <div className="z-999 absolute right-13 top-100 h-14 w-14 rotate-12 rounded-xl bg-green-300 shadow-md dark:bg-green-300/20 border-2 border-green-400" />
+              <div className="z-999 absolute left-24 top-80 h-12 w-12 rotate-12 rounded-full bg-purple-400 shadow-md dark:bg-purple-400/20 border-2 border-purple-400" />
+              <div className="z-999 absolute left-1/2 top-105 h-16 w-16 -translate-x-1/2 rotate-12 rounded-2xl bg-red-200 shadow-md dark:bg-red-200/20 border-2 border-red-300" />
             </div>
 
             {/* CTA Card */}
             <div className="relative w-full rounded-[48px] bg-white px-8 py-20 text-center shadow-2xl ring-1 ring-slate-900/10 dark:bg-slate-900 dark:ring-white/10 sm:px-16">
               <h2 className="text-4xl font-bold text-slate-900 dark:text-white md:text-5xl">
-                Earn Back More Time For Yourself
+                Earn Back Your Time
               </h2>
               <p className="mt-6 text-lg text-slate-600 dark:text-slate-300">
                 Rather than getting stuck studying the same topic over and over again, get through them in just a couple of minutes, so that you can win back more time in your day.
@@ -286,7 +285,7 @@ const Home = () => {
               <a href="/map">
                 <button
                   type="button"
-                  className="mt-10 inline-flex items-center justify-center rounded-full bg-slate-900 px-10 py-3 text-base font-semibold text-white transition hover:-translate-y-1 hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 dark:focus-visible:outline-white"
+                  className="mt-10 inline-flex items-center justify-center rounded-full bg-blue-900/90 px-10 py-3 text-base font-semibold text-white transition hover:-translate-y-1 hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 dark:focus-visible:outline-white"
                   aria-label="Get started with BioBuddy"
                 >
                   Get started
