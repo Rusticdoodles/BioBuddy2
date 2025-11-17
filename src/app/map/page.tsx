@@ -1116,7 +1116,7 @@ Make sure EVERY concept from the list above is included in the new map.`;
         mapsGenerated={mapsThisMonth}
       />
 
-      {/* Temporary Debug Button - Remove after testing */}
+      {/* Temporary Debug Button - Remove after testing
       {user && (
         <button 
           onClick={async () => {
@@ -1139,7 +1139,7 @@ Make sure EVERY concept from the list above is included in the new map.`;
         >
           Debug Usage
         </button>
-      )}
+      )} */}
     </div>
     </FeedbackProvider>
   );

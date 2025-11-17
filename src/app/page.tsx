@@ -158,13 +158,21 @@ const Home = () => {
                 <div aria-hidden="true" className="pointer-events-none absolute -bottom-10 right-8 h-20 w-20 rounded-full bg-amber-500/60 blur-xl dark:bg-amber-400/60" />
 
                 {/* Main Card */}
-                <div className="relative rounded-3xl bg-white p-8 shadow-2xl dark:bg-slate-200">
+                <div className="relative rounded-3xl bg-white p-8 shadow-2xl dark:bg-slate-800">
                   <Image
-                    src="/Assets/AI-BioBrain.png"
+                    src="/Assets/AI-Chat-light.png"
                     alt="AI-powered biology illustration"
                     width={512}
                     height={512}
-                    className="mx-auto h-auto w-full max-w-sm"
+                    className="mx-auto h-auto w-full max-w-sm dark:hidden"
+                    priority
+                  />
+                   <Image
+                    src="/Assets/AI-Chat-dark.png"
+                    alt="AI-powered biology illustration"
+                    width={512}
+                    height={512}
+                    className="mx-auto h-auto w-full max-w-sm hidden dark:block"
                     priority
                   />
                 </div>
@@ -203,13 +211,21 @@ const Home = () => {
                 <div aria-hidden="true" className="pointer-events-none absolute -top-8 -right-6 h-20 w-20 rounded-full bg-purple-500/60 blur-xl dark:bg-purple-400/60" />
 
                 {/* Main Card */}
-                <div className="relative rounded-3xl bg-white p-8 shadow-2xl dark:bg-slate-200">
+                <div className="relative rounded-3xl bg-white p-8 shadow-2xl dark:bg-slate-800">
                 <Image
-                    src="/Assets/Mindmap2.png"
+                    src="/Assets/Mindmap-image-light.png"
                     alt="AI-powered biology illustration"
                     width={512}
                     height={512}
-                    className="mx-auto h-auto w-full max-w-sm"
+                    className="mx-auto h-auto w-full max-w-sm dark:hidden"
+                    priority
+                  />
+                  <Image
+                    src="/Assets/Mindmap-image-dark.png"
+                    alt="AI-powered biology illustration"
+                    width={512}
+                    height={512}
+                    className="mx-auto h-auto w-full max-w-sm hidden dark:block"
                     priority
                   />
                 </div>
