@@ -231,7 +231,7 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
             ? 'Reset your password'
             : isSignUpMode
             ? 'Create your BioBuddy account'
-            : 'Welcome back to BioBuddy'}
+            : 'Welcome to BioBuddy'}
         </h2>
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
           {isForgotPasswordMode
