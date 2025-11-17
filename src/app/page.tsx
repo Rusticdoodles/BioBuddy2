@@ -155,7 +155,7 @@ const Home = () => {
                 <Dna className="pointer-events-none absolute -top-8 -right-6 h-16 w-16"/>
                 <Pill className="pointer-events-none absolute -bottom-9 left-12 h-14 w-14 rotate-90"/>
                 <div aria-hidden="true" className="pointer-events-none absolute -top-8 left-10 h-14 w-14 rotate-30 rounded-xl bg-amber-400/0 dark:bg-amber-400/20 border-2 border-amber-600" />
-                <div aria-hidden="true" className="pointer-events-none absolute -bottom-10 right-8 h-20 w-20 rounded-full bg-amber-500/60 blur-xl dark:bg-amber-400/60" />
+                <div aria-hidden="true" className="z-999 pointer-events-none absolute -bottom-10 right-8 h-20 w-20 rounded-full bg-amber-500/60 blur-xl dark:bg-amber-400/60" />
 
                 {/* Main Card */}
                 <div className="relative rounded-3xl bg-white p-8 shadow-2xl dark:bg-slate-800">
@@ -208,7 +208,7 @@ const Home = () => {
                 <Syringe className="pointer-events-none absolute -bottom-10 right-8 h-16 w-16"/>
                 <div aria-hidden="true" className="pointer-events-none absolute -bottom-6 left-0 h-14 w-14 rotate-12 rounded-2xl bg-purple-900/60 dark:bg-purple-400/20 border-2 border-purple-600" />
                 <Bone className="pointer-events-none absolute -top-10 left-10 h-16 w-16"/>
-                <div aria-hidden="true" className="pointer-events-none absolute -top-8 -right-6 h-20 w-20 rounded-full bg-purple-500/60 blur-xl dark:bg-purple-400/60" />
+                <div aria-hidden="true" className="z-999 pointer-events-none absolute -top-8 -right-6 h-20 w-20 rounded-full bg-purple-500/60 blur-xl dark:bg-purple-400/60" />
 
                 {/* Main Card */}
                 <div className="relative rounded-3xl bg-white p-8 shadow-2xl dark:bg-slate-800">
@@ -245,7 +245,7 @@ const Home = () => {
                 <Microscope className="pointer-events-none absolute -top-8 -right-6 h-16 w-16 rotate-340"/>
                 <Beaker className="pointer-events-none absolute -bottom-9 left-8 h-20 w-16 rotate-30"/>
                 <div aria-hidden="true" className="pointer-events-none absolute -top-8 left-10 h-14 w-14 rotate-30 rounded-xl bg-green-200/80 dark:bg-green-400/20 border-2 border-green-600" />
-                <div aria-hidden="true" className="pointer-events-none absolute -bottom-10 right-8 h-20 w-20 rounded-full bg-green-300/60 blur-xl dark:bg-green-400/60" />
+                <div aria-hidden="true" className="z-999 pointer-events-none absolute -bottom-10 right-8 h-20 w-20 rounded-full bg-green-300/60 blur-xl dark:bg-green-400/60" />
 
                 {/* Main Card */}
                 <div className="relative rounded-3xl bg-white p-8 shadow-2xl dark:bg-slate-200">
