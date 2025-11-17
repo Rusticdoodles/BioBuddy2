@@ -51,7 +51,7 @@ export const Navbar = () => {
 
           <div className="flex items-center gap-4">
 
-            {pathname !== "/" && (
+            {pathname !== "/" && pathname !== "/pricing" && (
               <button
                 data-tour="feedback-btn"
                 onClick={() => setIsFeedbackOpen(true)}
