@@ -1,0 +1,13 @@
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Disallow API routes
+Disallow: /api/
+
+# Disallow dashboard (requires authentication)
+Disallow: /dashboard
+
+# Sitemap
+Sitemap: https://biobuddy.io/sitemap.xml
+
