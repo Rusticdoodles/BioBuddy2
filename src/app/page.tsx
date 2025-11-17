@@ -305,28 +305,36 @@ const Home = () => {
               {[
                 {
                   title: "Platform",
-                  links: ["Pricing"],
+                  links: [{ name: "Pricing", href: "/pricing" }],
                 },
                 {
                   title: "BioBuddy",
-                  links: ["About"],
+                  links: [{ name: "About", href: "#" }],
                 },
                 {
                   title: "Support",
-                  links: ["Contact"],
+                  links: [{ name: "Contact", href: "/contact" }],
+                },
+                {
+                  title: "Legal",
+                  links: [
+                    { name: "Privacy Policy", href: "/privacy-policy" },
+                    { name: "Terms of Service", href: "/terms-of-service" },
+                    { name: "Refund Policy", href: "/refund-policy" },
+                  ],
                 },
               ].map(({ title, links }) => (
                 <div key={title} className="space-y-3">
                   <span className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">{title}</span>
                   <ul className="space-y-2">
                     {links.map((link) => (
-                      <li key={link}>
+                      <li key={link.name}>
                         <a
-                          href="#"
+                          href={link.href}
                           className="transition hover:text-slate-900 hover:underline dark:hover:text-white"
-                          aria-label={link}
+                          aria-label={link.name}
                         >
-                          {link}
+                          {link.name}
                         </a>
                       </li>
                     ))}
