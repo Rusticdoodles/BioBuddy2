@@ -85,14 +85,14 @@ export async function POST(request: Request) {
     console.log('📊 Total subscriptions:', data.data?.length);
     
     // Find subscription matching user's email
-    const lemonSubscription = data.data?.find((sub: any) => 
+    const lemonSubscription = data.data?.find((sub: { attributes: { user_email?: string; status: string } }) => 
       sub.attributes.user_email?.toLowerCase() === userEmail?.toLowerCase() &&
       sub.attributes.status === 'active'
     );
 
     if (!lemonSubscription) {
       console.error('❌ No matching subscription found for email:', userEmail);
-      console.error('❌ Available subscriptions:', data.data?.map((s: any) => ({
+      console.error('❌ Available subscriptions:', data.data?.map((s: { id: string; attributes: { user_email?: string; status: string } }) => ({
         id: s.id,
         email: s.attributes.user_email,
         status: s.attributes.status

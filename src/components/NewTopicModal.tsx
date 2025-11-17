@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Sparkles, X } from 'lucide-react';
 
 interface NewTopicModalProps {
@@ -35,6 +35,11 @@ export const NewTopicModal = ({
     return () => window.clearTimeout(timer);
   }, [defaultValue, isOpen]);
 
+  const handleCancel = useCallback(() => {
+    setTopicName('');
+    onClose();
+  }, [onClose]);
+
   useEffect(() => {
     if (!isOpen) {
       return;
@@ -51,16 +56,11 @@ export const NewTopicModal = ({
 
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
-  }, [isOpen]);
+  }, [isOpen, handleCancel]);
 
   if (!isOpen) {
     return null;
   }
-
-  const handleCancel = () => {
-    setTopicName('');
-    onClose();
-  };
 
   const handleOverlayClick = () => {
     handleCancel();

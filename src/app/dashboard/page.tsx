@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useUser } from '@/components/AuthProvider';
 import { getUserSubscription, getTopicsUsed, getMapsThisMonth } from '@/lib/usage';
 import { useRouter } from 'next/navigation';
@@ -20,18 +20,7 @@ export default function DashboardPage() {
   const [loadingStats, setLoadingStats] = useState(true);
   const [isCancelling, setIsCancelling] = useState(false);
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/');
-      return;
-    }
-
-    if (user) {
-      loadStats();
-    }
-  }, [user, loading, router]);
-
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     if (!user) {
       return;
     }
@@ -56,7 +45,18 @@ export default function DashboardPage() {
     } finally {
       setLoadingStats(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/');
+      return;
+    }
+
+    if (user) {
+      loadStats();
+    }
+  }, [user, loading, router, loadStats]);
 
   const handleCancelSubscription = async () => {
     if (!user) return;
@@ -175,7 +175,7 @@ export default function DashboardPage() {
             
             {stats.plan === 'free' && (
               <p className="text-slate-600 dark:text-slate-300">
-                You're on the free tier. Upgrade to unlock unlimited topics!
+                You&apos;re on the free tier. Upgrade to unlock unlimited topics!
               </p>
             )}
             

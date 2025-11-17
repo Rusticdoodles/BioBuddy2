@@ -51,13 +51,13 @@ export const SoftLimitModal = ({ isOpen, onClose, mapsGenerated }: SoftLimitModa
             📊 High Usage Detected
           </h2>
           <p className="text-lg text-slate-600 dark:text-slate-300">
-            You've generated <span className="font-semibold text-blue-600 dark:text-blue-400">{mapsGenerated}</span> maps this month!
+            You&apos;ve generated <span className="font-semibold text-blue-600 dark:text-blue-400">{mapsGenerated}</span> maps this month!
           </p>
         </div>
 
         <div className="space-y-4 mb-6">
           <p className="text-slate-700 dark:text-slate-300 text-center">
-            That's amazing - you're really getting value from BioBuddy!
+            That&apos;s amazing - you&apos;re really getting value from BioBuddy!
           </p>
           
           <p className="text-slate-600 dark:text-slate-400 text-sm text-center">

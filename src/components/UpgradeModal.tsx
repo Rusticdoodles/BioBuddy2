@@ -54,10 +54,10 @@ export const UpgradeModal = ({ isOpen, onClose }: UpgradeModalProps) => {
 
         <div className="text-center mb-8">
           <h2 id="upgrade-modal-title" className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
-            🎉 You've Tried BioBuddy!
+            🎉 You&apos;ve Tried BioBuddy!
           </h2>
           <p className="text-lg text-slate-600 dark:text-slate-300">
-            You've explored 4 topics. Ready to unlock unlimited access?
+            You&apos;ve explored 4 topics. Ready to unlock unlimited access?
           </p>
         </div>
 

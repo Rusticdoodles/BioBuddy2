@@ -5,9 +5,7 @@ import {
   Microscope,
   Beaker,
   Brain,
-  Activity,
   Syringe,
-  Tablets,
   Bone,
   Pill,
 } from 'lucide-react';

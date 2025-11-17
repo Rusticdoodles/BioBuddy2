@@ -103,7 +103,7 @@ export async function POST(request: Request) {
   }
 }
 
-async function handleSubscriptionCreated(body: any) {
+async function handleSubscriptionCreated(body: { data: { id?: string; attributes: { user_email?: string; variant_id?: string; status?: string } } }) {
   const customerEmail = body.data.attributes.user_email;
   const subscriptionId = body.data.id?.toString(); // This is the actual subscription ID
   const variantId = body.data.attributes.variant_id?.toString();
@@ -142,7 +142,7 @@ async function handleSubscriptionCreated(body: any) {
   await createOrUpdateSubscription(userId, variantId, subscriptionId);
 }
 
-async function handleOrderCreated(body: any) {
+async function handleOrderCreated(body: { data: { relationships?: { subscription?: { data?: { id?: string } } }; attributes: { user_email?: string; first_order_item?: { variant_id?: string; subscription_id?: string }; status?: string } } }) {
   const customerEmail = body.data.attributes.user_email;
   const variantId = body.data.attributes.first_order_item?.variant_id?.toString();
   const orderStatus = body.data.attributes.status;
@@ -190,10 +190,15 @@ async function handleOrderCreated(body: any) {
   await createOrUpdateSubscription(userId, variantId, subscriptionId);
 }
 
-async function createOrUpdateSubscription(userId: string, variantId: string, subscriptionId?: string) {
+async function createOrUpdateSubscription(userId: string, variantId: string | undefined, subscriptionId?: string | null) {
   // Determine plan type based on variant ID
   const lifetimeVariantId = process.env.LEMONSQUEEZY_LIFETIME_VARIANT_ID;
   const monthlyVariantId = process.env.LEMONSQUEEZY_MONTHLY_VARIANT_ID;
+  
+  if (!variantId) {
+    console.error('Missing variant ID');
+    return;
+  }
   
   let planType: 'lifetime' | 'monthly';
   let expiresAt: string | null = null;
@@ -261,7 +266,7 @@ async function createOrUpdateSubscription(userId: string, variantId: string, sub
   }
 }
 
-async function handleSubscriptionPayment(body: any) {
+async function handleSubscriptionPayment(body: { data: { id?: string; attributes: { user_email?: string } } }) {
   const customerEmail = body.data.attributes.user_email;
   const subscriptionId = body.data.id?.toString(); // This IS the subscription ID for subscription events
   
@@ -308,7 +313,7 @@ async function handleSubscriptionPayment(body: any) {
   }
 }
 
-async function handleSubscriptionCancelled(body: any) {
+async function handleSubscriptionCancelled(body: { data: { attributes: { user_email?: string } } }) {
   const customerEmail = body.data.attributes.user_email;
   
   console.log('Subscription cancelled for:', customerEmail);
