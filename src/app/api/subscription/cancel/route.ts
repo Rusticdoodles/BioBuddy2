@@ -103,13 +103,19 @@ export async function POST(request: Request) {
     }
 
     // Update subscription status in database
-    // Note: We keep expires_at as-is since that's when the subscription access actually ends
+    // Store expires_at from Lemon Squeezy if available, otherwise keep existing
     console.log('💾 Updating database: setting status to cancelled');
+    const updateData: { status: string; expires_at?: string } = { 
+      status: 'cancelled'
+    };
+    
+    if (endsAt) {
+      updateData.expires_at = endsAt;
+    }
+    
     const { error: updateError } = await supabaseAdmin
       .from('subscriptions')
-      .update({ 
-        status: 'cancelled'
-      })
+      .update(updateData)
       .eq('id', subscription.id);
 
     if (updateError) {
@@ -118,12 +124,15 @@ export async function POST(request: Request) {
     }
 
     console.log('✅ Database updated successfully - subscription cancellation complete!');
-    console.log('📅 Subscription will remain active until:', subscription.expires_at);
+    
+    // Use the endsAt from Lemon Squeezy if available, otherwise use existing expires_at
+    const finalExpiresAt = endsAt || subscription.expires_at;
+    console.log('📅 Subscription will remain active until:', finalExpiresAt);
 
     return Response.json({ 
       success: true, 
       message: 'Subscription cancelled successfully',
-      endsAt: subscription.expires_at
+      expiresAt: finalExpiresAt
     });
 
   } catch (error) {

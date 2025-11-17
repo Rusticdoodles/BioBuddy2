@@ -15,7 +15,7 @@ export default function DashboardPage() {
     mapsThisMonth: 0,
     topics: [] as string[],
     subscriptionStatus: 'active' as 'active' | 'cancelled' | 'inactive',
-    endsAt: null as string | null,
+    expiresAt: null as string | null,
   });
   const [loadingStats, setLoadingStats] = useState(true);
   const [isCancelling, setIsCancelling] = useState(false);
@@ -49,7 +49,7 @@ export default function DashboardPage() {
         mapsThisMonth: maps,
         topics,
         subscriptionStatus: subscription?.status || 'inactive',
-        endsAt: subscription?.expires_at || null,
+        expiresAt: subscription?.expires_at || null,
       });
     } catch (error) {
       console.error('Error loading stats:', error);
@@ -81,8 +81,8 @@ export default function DashboardPage() {
       const data = await response.json();
 
       if (response.ok) {
-        const endsAtDate = data.endsAt ? new Date(data.endsAt).toLocaleDateString() : 'the end of your billing period';
-        alert(`Subscription cancelled successfully. You will retain access until ${endsAtDate}.`);
+        const expiresAtDate = data.expiresAt ? new Date(data.expiresAt).toLocaleDateString() : 'the end of your billing period';
+        alert(`Subscription cancelled successfully. You will retain access until ${expiresAtDate}.`);
         // Reload stats to update UI
         await loadStats();
       } else {
@@ -97,10 +97,10 @@ export default function DashboardPage() {
   };
 
   const getRemainingDays = (): number | null => {
-    if (!stats.endsAt) return null;
-    const endsAt = new Date(stats.endsAt);
+    if (!stats.expiresAt) return null;
+    const expiresAt = new Date(stats.expiresAt);
     const now = new Date();
-    const diffTime = endsAt.getTime() - now.getTime();
+    const diffTime = expiresAt.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays > 0 ? diffDays : 0;
   };
@@ -125,13 +125,41 @@ export default function DashboardPage() {
     lifetime: 'Lifetime',
   };
 
+  const handleGoBack = () => {
+    router.back();
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 py-8 dark:bg-slate-900">
       <div className="container mx-auto px-4">
         <div className="mx-auto max-w-4xl">
-          <h1 className="mb-8 text-4xl font-bold text-slate-900 dark:text-white">
-            Dashboard
-          </h1>
+          <div className="mb-4 flex flex-col items-start gap-4">
+            <h1 className="text-4xl font-bold text-slate-900 dark:text-white">
+              Dashboard
+            </h1>
+            <button
+              onClick={handleGoBack}
+              aria-label="Go back to previous page"
+              className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+                className="h-4 w-4"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15.75 19.5L8.25 12l7.5-7.5"
+                />
+              </svg>
+              Back
+            </button>
+          </div>
+          <div></div>
 
           {/* Plan Info Card */}
           <div className="mb-8 rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
@@ -163,8 +191,8 @@ export default function DashboardPage() {
                         {getRemainingDays() !== null ? (
                           <>
                             You still have access to premium features for <strong>{getRemainingDays()} {getRemainingDays() === 1 ? 'day' : 'days'}</strong>.
-                            {stats.endsAt && (
-                              <> Your subscription will end on <strong>{new Date(stats.endsAt).toLocaleDateString()}</strong>.</>
+                            {stats.expiresAt && (
+                              <> Your subscription will end on <strong>{new Date(stats.expiresAt).toLocaleDateString()}</strong>.</>
                             )}
                           </>
                         ) : (

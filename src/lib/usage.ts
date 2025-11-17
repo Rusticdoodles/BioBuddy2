@@ -25,19 +25,47 @@ export interface MapGeneration {
 
 export async function getUserSubscription(userId: string): Promise<Subscription | null> {
   try {
-    const { data, error } = await supabase
+    // First try to get active subscription
+    const { data: activeData, error: activeError } = await supabase
       .from('subscriptions')
       .select('*')
       .eq('user_id', userId)
       .eq('status', 'active')
       .maybeSingle();
 
-    if (error) {
-      console.error('Error fetching subscription:', error);
+    if (activeError) {
+      console.error('Error fetching active subscription:', activeError);
+    }
+
+    if (activeData) {
+      return activeData;
+    }
+
+    // If no active subscription, check for cancelled subscription that hasn't expired
+    const { data: cancelledData, error: cancelledError } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('status', 'cancelled')
+      .maybeSingle();
+
+    if (cancelledError) {
+      console.error('Error fetching cancelled subscription:', cancelledError);
       return null;
     }
 
-    return data;
+    // Check if cancelled subscription still has time left
+    if (cancelledData && cancelledData.expires_at) {
+      const expiresAt = new Date(cancelledData.expires_at);
+      const now = new Date();
+      
+      if (expiresAt > now) {
+        // Subscription is cancelled but still active until expires_at
+        return cancelledData;
+      }
+    }
+
+    return null;
   } catch (error) {
     console.error('Exception fetching subscription:', error);
     return null;
