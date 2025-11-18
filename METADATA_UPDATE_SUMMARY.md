@@ -351,3 +351,4 @@ https://nextjs.org/docs/app/building-your-application/optimizing/metadata
 *Next.js App Router (App Directory)*
 *Domain: https://biobuddy.io*
 
+

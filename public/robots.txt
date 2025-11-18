@@ -11,3 +11,4 @@ Disallow: /dashboard
 # Sitemap
 Sitemap: https://biobuddy.io/sitemap.xml
 
+

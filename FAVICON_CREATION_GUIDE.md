@@ -356,3 +356,4 @@ Your BioBuddy will look professional across all platforms!
 
 *Happy designing! 🎨*
 
+
