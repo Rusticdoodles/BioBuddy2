@@ -56,6 +56,7 @@ export const LaunchBanner = () => {
     return () => clearInterval(timer)
   }, [endDate])
 
+
   const handleDismiss = () => {
     setIsVisible(false)
     localStorage.setItem('launchBannerDismissed', 'true')
@@ -76,7 +77,7 @@ export const LaunchBanner = () => {
   if (!isVisible || isExpired) return null
 
   return (
-    <div className="fixed top-0 left-0 right-0 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 text-white py-3 px-4 z-50 shadow-lg">
+    <div className="sticky top-0 left-0 right-0 w-full bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 text-white py-3 px-4 z-50 shadow-lg">
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-center sm:text-left relative">
         {/* Message */}
         <div className="flex items-center gap-2">

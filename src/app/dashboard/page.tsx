@@ -5,6 +5,7 @@ import { useUser } from '@/components/AuthProvider';
 import { getUserSubscription, getTopicsUsed, getMapsThisMonth } from '@/lib/usage';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Navbar } from '@/components/navbar';
 
 export default function DashboardPage() {
   const { user, loading } = useUser();
@@ -130,8 +131,9 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8 dark:bg-slate-900">
-      <div className="container mx-auto px-4">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+      <Navbar />
+      <div className="container mx-auto px-4 py-8">
         <div className="mx-auto max-w-4xl">
           <div className="mb-4 flex flex-col items-start gap-4">
             <h1 className="text-4xl font-bold text-slate-900 dark:text-white">

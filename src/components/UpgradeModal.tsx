@@ -15,10 +15,16 @@ export const UpgradeModal = ({ isOpen, onClose }: UpgradeModalProps) => {
     return null;
   }
 
-  // Create checkout URLs with user email pre-filled
-  const lifetimeUrl = user?.email 
-    ? `${process.env.NEXT_PUBLIC_LEMONSQUEEZY_LIFETIME_CHECKOUT_URL}?checkout[email]=${encodeURIComponent(user.email)}`
-    : process.env.NEXT_PUBLIC_LEMONSQUEEZY_LIFETIME_CHECKOUT_URL;
+  // Create checkout URLs with user email pre-filled and discount code
+  const lifetimeUrl = (() => {
+    const baseUrl = process.env.NEXT_PUBLIC_LEMONSQUEEZY_LIFETIME_CHECKOUT_URL || '';
+    const params = new URLSearchParams();
+    if (user?.email) {
+      params.set('checkout[email]', user.email);
+    }
+    params.set('checkout[discount_code]', 'LAUNCH');
+    return `${baseUrl}?${params.toString()}`;
+  })();
 
   const monthlyUrl = user?.email
     ? `${process.env.NEXT_PUBLIC_LEMONSQUEEZY_MONTHLY_CHECKOUT_URL}?checkout[email]=${encodeURIComponent(user.email)}`
@@ -75,8 +81,11 @@ export const UpgradeModal = ({ isOpen, onClose }: UpgradeModalProps) => {
                 <h2 className="text-center text-xl font-bold pb-2">Lifetime Plan</h2>
                 <p className="text-center text-sm">Access to everything in BioFlow. Forever.</p>
               </div>
-              <div className="py-4">
-                <span className="text-5xl font-bold text-slate-900 dark:text-white">$39</span>
+              <div className="py-4 relative">
+                  <div className="flex items-center justify-center gap-3 relative">
+                    <span className="text-4xl font-bold text-slate-900 dark:text-slate-400 gradient-strikethrough">$39</span>
+                    <span className="text-5xl font-bold text-slate-900 dark:text-white"> $29</span>
+                  </div>
                 <p className="text- text-slate-600 dark:text-slate-400 mt-1">one-time payment</p>
               </div>
               <a

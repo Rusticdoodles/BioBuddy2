@@ -343,3 +343,20 @@ select:disabled {
     background-position: 100% 50%;
   }
 }
+
+.gradient-strikethrough {
+  position: relative;
+  opacity: 0.6;
+}
+
+.gradient-strikethrough::after {
+  content: '';
+  position: absolute;
+  left: -5%;
+  top: 50%;
+  width: 110%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent 0%, #ef4444 20%, #dc2626 50%, #ef4444 80%, transparent 100%);
+  transform: translateY(-50%) rotate(-45deg);
+  box-shadow: 0 1px 2px rgba(220, 38, 38, 0.3);
+}

@@ -18,7 +18,7 @@ const Home = () => {
         {/* Decorative floating shapes - biology themed */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {/* DNA Helix - top right */}
-          <div className="z-999 absolute top-20 right-[10%] w-24 h-24 md:w-32 md:h-32 opacity-20 dark:opacity-80 animate-float">
+          <div className="z-49 absolute top-20 right-[10%] w-24 h-24 md:w-32 md:h-32 opacity-20 dark:opacity-80 animate-float">
             <svg viewBox="0 0 100 100" className="w-full h-full">
               <path d="M30 10 Q 40 30, 30 50 T 30 90" stroke="#3b82f6" strokeWidth="3" fill="none" />
               <path d="M70 10 Q 60 30, 70 50 T 70 90" stroke="#3b82f6" strokeWidth="3" fill="none" />
@@ -29,20 +29,20 @@ const Home = () => {
             </svg>
           </div>
           {/*DNA Helix - left side*/}
-          <div className="z-999 absolute rotate-25 top-60 left-[10%] w-24 h-24 md:w-32 md:h-32 opacity-20 dark:opacity-80 animate-float-slow">
+          <div className="z-49 absolute rotate-25 top-60 left-[10%] w-24 h-24 md:w-32 md:h-32 opacity-20 dark:opacity-80 animate-float-slow">
             <Dna className="w-40 h-40 text-purple-600"/>
           </div>
           {/*Brain - bottom right*/}
-          <div className="z-999 absolute rotate-32 top-120 right-[25%] w-24 h-24 md:w-32 md:h-32 opacity-20 dark:opacity-80 animate-float-slower">
+          <div className="z-49 absolute rotate-32 top-120 right-[25%] w-24 h-24 md:w-32 md:h-32 opacity-20 dark:opacity-80 animate-float-slower">
             <Brain className="w-25 h-25 text-orange-600"/>
           </div>
 
           {/* Cell blob - top left */}
-          <div className="z-999 absolute top-32 left-[5%] w-32 h-32 md:w-40 md:h-40 bg-green-200 dark:bg-green-900/30 rounded-full opacity-30 blur-2xl animate-float-slow" />
+          <div className="z-49 absolute top-32 left-[5%] w-32 h-32 md:w-40 md:h-40 bg-green-200 dark:bg-green-900/30 rounded-full opacity-30 blur-2xl animate-float-slow" />
           {/* Mitochondria shape - bottom left */}
-          <div className="z-999 absolute bottom-20 left-[15%] w-40 h-20 md:w-48 md:h-24 bg-purple-200 dark:bg-purple-900/30 rounded-full opacity-25 blur-xl animate-float-slower" />
+          <div className="z-49 absolute bottom-20 left-[15%] w-40 h-20 md:w-48 md:h-24 bg-purple-200 dark:bg-purple-900/30 rounded-full opacity-25 blur-xl animate-float-slower" />
           {/* Molecule structure - bottom right */}
-          <div className="z-999 absolute bottom-32 right-[20%] opacity-20 animate-float hidden md:block">
+          <div className="z-49 absolute bottom-32 right-[20%] opacity-20 animate-float hidden md:block">
             <svg width="100" height="100" viewBox="0 0 100 100">
               <circle cx="50" cy="20" r="8" fill="#f59e0b" />
               <circle cx="80" cy="50" r="8" fill="#f59e0b" />
@@ -55,9 +55,9 @@ const Home = () => {
             </svg>
           </div>
           {/* Abstract blob - right side */}
-          <div className="z-999 absolute top-1/2 right-[8%] w-48 h-48 md:w-56 md:h-56 bg-blue-100 dark:bg-blue-900/20 rounded-full opacity-20 blur-3xl animate-float-slow" />
+          <div className="z-49 absolute top-1/2 right-[8%] w-48 h-48 md:w-56 md:h-56 bg-blue-100 dark:bg-blue-900/20 rounded-full opacity-20 blur-3xl animate-float-slow" />
           {/* Small accent circle - left side */}
-          <div className="z-999 absolute top-[45%] left-[8%] w-20 h-20 md:w-24 md:h-24 bg-orange-200 dark:bg-orange-900/30 rounded-full opacity-40 blur-xl animate-float-slower" />
+          <div className="z-49 absolute top-[45%] left-[8%] w-20 h-20 md:w-24 md:h-24 bg-orange-200 dark:bg-orange-900/30 rounded-full opacity-40 blur-xl animate-float-slower" />
         </div>
 
         <main className="w-screen bg-neutral-100 dark:bg-slate-800 mx-auto py-16 md:py-24 relative z-10">
@@ -95,7 +95,7 @@ const Home = () => {
           <div className="max-w-6xl mx-auto">
             <div className="grid md:grid-cols-3 gap-6 md:gap-8">
               {/* Card 1 - AI Powered */}
-              <div className="z-100 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-8 rounded-2xl border-2 border-blue-200 dark:border-blue-800 hover:scale-105 transition-transform duration-300">
+              <div className="z-49 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-8 rounded-2xl border-2 border-blue-200 dark:border-blue-800 hover:scale-105 transition-transform duration-300">
                 <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mb-4">
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
@@ -113,7 +113,7 @@ const Home = () => {
               </div>
 
               {/* Card 2 - Visual Maps */}
-              <div className="z-100 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-8 rounded-2xl border-2 border-green-200 dark:border-green-800 hover:scale-105 transition-transform duration-300">
+              <div className="z-49 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-8 rounded-2xl border-2 border-green-200 dark:border-green-800 hover:scale-105 transition-transform duration-300">
                 <div className="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center mb-4">
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -126,7 +126,7 @@ const Home = () => {
               </div>
 
               {/* Card 3 - Study Anywhere */}
-              <div className="z-100 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-8 rounded-2xl border-2 border-purple-200 dark:border-purple-800 hover:scale-105 transition-transform duration-300">
+              <div className="z-49 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-8 rounded-2xl border-2 border-purple-200 dark:border-purple-800 hover:scale-105 transition-transform duration-300">
                 <div className="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center mb-4">
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -155,7 +155,7 @@ const Home = () => {
                 <Dna className="pointer-events-none absolute -top-8 -right-6 h-16 w-16"/>
                 <Pill className="pointer-events-none absolute -bottom-9 left-12 h-14 w-14 rotate-90"/>
                 <div aria-hidden="true" className="pointer-events-none absolute -top-8 left-10 h-14 w-14 rotate-30 rounded-xl bg-amber-400/0 dark:bg-amber-400/20 border-2 border-amber-600" />
-                <div aria-hidden="true" className="z-999 pointer-events-none absolute -bottom-10 right-8 h-20 w-20 rounded-full bg-amber-500/60 blur-xl dark:bg-amber-400/60" />
+                <div aria-hidden="true" className="z-49 pointer-events-none absolute -bottom-10 right-8 h-20 w-20 rounded-full bg-amber-500/60 blur-xl dark:bg-amber-400/60" />
 
                 {/* Main Card */}
                 <div className="relative rounded-3xl bg-white p-8 shadow-2xl dark:bg-slate-800">
@@ -208,7 +208,7 @@ const Home = () => {
                 <Syringe className="pointer-events-none absolute -bottom-10 right-8 h-16 w-16"/>
                 <div aria-hidden="true" className="pointer-events-none absolute -bottom-6 left-0 h-14 w-14 rotate-12 rounded-2xl bg-purple-900/60 dark:bg-purple-400/20 border-2 border-purple-600" />
                 <Bone className="pointer-events-none absolute -top-10 left-10 h-16 w-16"/>
-                <div aria-hidden="true" className="z-999 pointer-events-none absolute -top-8 -right-6 h-20 w-20 rounded-full bg-purple-500/60 blur-xl dark:bg-purple-400/60" />
+                <div aria-hidden="true" className="z-49 pointer-events-none absolute -top-8 -right-6 h-20 w-20 rounded-full bg-purple-500/60 blur-xl dark:bg-purple-400/60" />
 
                 {/* Main Card */}
                 <div className="relative rounded-3xl bg-white p-8 shadow-2xl dark:bg-slate-800">
@@ -245,7 +245,7 @@ const Home = () => {
                 <Microscope className="pointer-events-none absolute -top-8 -right-6 h-16 w-16 rotate-340"/>
                 <Beaker className="pointer-events-none absolute -bottom-9 left-8 h-20 w-16 rotate-30"/>
                 <div aria-hidden="true" className="pointer-events-none absolute -top-8 left-10 h-14 w-14 rotate-30 rounded-xl bg-green-200/80 dark:bg-green-400/20 border-2 border-green-600" />
-                <div aria-hidden="true" className="z-999 pointer-events-none absolute -bottom-10 right-8 h-20 w-20 rounded-full bg-green-300/60 blur-xl dark:bg-green-400/60" />
+                <div aria-hidden="true" className="z-49 pointer-events-none absolute -bottom-10 right-8 h-20 w-20 rounded-full bg-green-300/60 blur-xl dark:bg-green-400/60" />
 
                 {/* Main Card */}
                 <div className="relative rounded-3xl bg-white p-8 shadow-2xl dark:bg-slate-200">
@@ -283,11 +283,11 @@ const Home = () => {
             
             {/* Floating accents */}
             <div aria-hidden="true" className="pointer-events-none">
-              <div className="z-999 absolute left-9 top-10 h-16 w-16 -rotate-12 rounded-2xl bg-blue-500 shadow-lg dark:bg-blue-400/20 border-2 border-blue-400" />
-              <div className="z-999 absolute right-6 top-12 h-20 w-20 rotate-6 rounded-full bg-orange-500 shadow-lg dark:bg-orange-400/20 border-2 border-orange-400" />
-              <div className="z-999 absolute right-13 top-100 h-14 w-14 rotate-12 rounded-xl bg-green-300 shadow-md dark:bg-green-300/20 border-2 border-green-400" />
-              <div className="z-999 absolute left-24 top-80 h-12 w-12 rotate-12 rounded-full bg-purple-400 shadow-md dark:bg-purple-400/20 border-2 border-purple-400" />
-              <div className="z-999 absolute left-1/2 top-105 h-16 w-16 -translate-x-1/2 rotate-12 rounded-2xl bg-red-200 shadow-md dark:bg-red-200/20 border-2 border-red-300" />
+              <div className="z-49 absolute left-9 top-10 h-16 w-16 -rotate-12 rounded-2xl bg-blue-500 shadow-lg dark:bg-blue-400/20 border-2 border-blue-400" />
+              <div className="z-49 absolute right-6 top-12 h-20 w-20 rotate-6 rounded-full bg-orange-500 shadow-lg dark:bg-orange-400/20 border-2 border-orange-400" />
+              <div className="z-49 absolute right-13 top-100 h-14 w-14 rotate-12 rounded-xl bg-green-300 shadow-md dark:bg-green-300/20 border-2 border-green-400" />
+              <div className="z-49 absolute left-24 top-80 h-12 w-12 rotate-12 rounded-full bg-purple-400 shadow-md dark:bg-purple-400/20 border-2 border-purple-400" />
+              <div className="z-49 absolute left-1/2 top-105 h-16 w-16 -translate-x-1/2 rotate-12 rounded-2xl bg-red-200 shadow-md dark:bg-red-200/20 border-2 border-red-300" />
             </div>
 
             {/* CTA Card */}
