@@ -46,7 +46,7 @@ const PricingPage = () => {
               
               <div className="text-center flex flex-col flex-1">
                 <div className="py-8">
-                  <span className="text-6xl font-bold text-slate-900 dark:text-white">$39</span>
+                  <span className="text-6xl font-bold text-slate-900 dark:text-white line-through">$39</span>
                   <p className="text-md text-slate-600 dark:text-slate-400 mt-1">one-time payment</p>
                 </div>
                 <a

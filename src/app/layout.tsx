@@ -5,6 +5,7 @@ import "@/styles/tour.css";
 import "@/styles/selection.css";
 
 import { AuthProvider } from "@/components/AuthProvider";
+import { LaunchBanner } from "@/components/LaunchBanner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -111,7 +112,10 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <LaunchBanner />
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );
