@@ -6,6 +6,7 @@ import "@/styles/selection.css";
 
 import { AuthProvider } from "@/components/AuthProvider";
 import { LaunchBanner } from "@/components/LaunchBanner";
+import { PurchaseSuccessHandler } from "@/components/PurchaseSuccessHandler";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -114,6 +115,7 @@ export default function RootLayout({
       >
         <AuthProvider>
           <LaunchBanner />
+          <PurchaseSuccessHandler />
           {children}
         </AuthProvider>
       </body>

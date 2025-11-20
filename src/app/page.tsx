@@ -83,7 +83,7 @@ const Home = () => {
                 className="px-8 py-4 bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-white dark:text-slate-900 font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 inline-flex items-center gap-2 text-lg"
                 aria-label="Start learning with BioBuddy"
               >
-                Start Learning Free
+                Start Learning
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
@@ -198,7 +198,7 @@ const Home = () => {
                 <p className="text-md font-semibold uppercase tracking-[0.4em] text-slate-500">conceptualize</p>
                 <h2 className="text-5xl font-bold leading-tight text-slate-900 dark:text-white">Auto-Tailored Maps</h2>
                 <p className="text-xl leading-relaxed text-slate-600 dark:text-slate-300">
-                  Have completely customised mindmaps that is tailored to what you are learning that you can play around with and edit. 
+                  Have completely customised mindmaps created from your notes or from conversations with our AI that is tailored to what you are learning that you can play around with and edit. 
                 </p>
               </div>
               {/* Illustration */}
@@ -264,13 +264,51 @@ const Home = () => {
             {/* Copy */}
             <div className="space-y-6 mr-30">
               <p className="text-md font-semibold uppercase tracking-[0.4em] text-slate-500">coming soon</p>
-              <h2 className="text-5xl font-bold leading-tight text-slate-900 dark:text-white">Auto-Tailored Flashcards</h2>
+              <h2 className="text-5xl font-bold leading-tight text-slate-900 dark:text-white">One-Click Flashcards</h2>
               <p className="text-xl leading-relaxed text-slate-600 dark:text-slate-300">
                 Gone are the days where you have to spend hours creating a custom deck. Be able to save Anki flashcards with just a click of a button based off what you are learning, so you can hone your memorisation game.
               </p>
             </div>
           </div>
         </section>
+
+                {/*Quizes*/}
+                <section className="mx-auto max-w-screen-2xl w-full rounded-3xl bg-white px-6 py-20 dark:bg-slate-900">
+          <div className="grid items-center gap-12 md:grid-cols-2">
+              {/* Copy */}
+              <div className="space-y-6 ml-30">
+                <p className="text-md font-semibold uppercase tracking-[0.4em] text-slate-500">COMING SOON</p>
+                <h2 className="text-5xl font-bold leading-tight text-slate-900 dark:text-white">Customized Quizzes</h2>
+                <p className="text-xl leading-relaxed text-slate-600 dark:text-slate-300">
+                  Test your recall with fun and interactive quizzes that are designed around your content with just a few clicks. You'll be able to control the difficulty to your liking.
+                </p>
+              </div>
+              {/* Illustration */}
+            <div className="relative flex justify-center">
+              <div className="relative w-full max-w-lg rounded-[48px] bg-amber-200/70 p-12 shadow-xl dark:bg-amber-900/30">
+                {/* Floating Shapes */}
+                <Syringe className="pointer-events-none absolute -bottom-10 right-8 h-16 w-16"/>
+                <div aria-hidden="true" className="pointer-events-none absolute -bottom-6 left-0 h-14 w-14 rotate-12 rounded-2xl bg-purple-900/60 dark:bg-purple-400/20 border-2 border-purple-600" />
+                <Bone className="pointer-events-none absolute -top-10 left-10 h-16 w-16"/>
+                <div aria-hidden="true" className="z-49 pointer-events-none absolute -top-8 -right-6 h-20 w-20 rounded-full bg-purple-500/60 blur-xl dark:bg-purple-400/60" />
+
+                {/* Main Card */}
+                <div className="relative rounded-3xl bg-white p-8 shadow-2xl dark:bg-slate-200">
+                <Image
+                    src="/Assets/Quiz.png"
+                    alt="AI-powered biology illustration"
+                    width={512}
+                    height={512}
+                    className="mx-auto h-auto w-full max-w-sm"
+                    priority
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        
         {/*----------------------------------------------------------------------------------------------------------------------------------- */}
                 {/* Finale Hero + Footer */}
                 <section className="relative w-screen mt-16 overflow-hidden bg-gradient-to-b from-sky-200 via-sky-200 to-sky-300 pb-24 pt-32 dark:from-slate-800 dark:via-slate-800 dark:to-slate-900">

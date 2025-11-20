@@ -83,7 +83,7 @@ export const LaunchBanner = () => {
         <div className="flex items-center gap-2">
           <span className="text-lg" aria-hidden="true">🚀</span>
           <span className="font-medium">
-            Launch Special: <span className="font-bold">%25 off</span> lifetime access!
+            Launch Special: <span className="font-bold">%25 off</span> lifetime access! Use the discount code:
           </span>
         </div>
 
