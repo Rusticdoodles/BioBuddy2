@@ -47,10 +47,8 @@ export async function POST(request: NextRequest) {
 
     console.log('🤖 Received chat request:', { message, historyLength: conversationHistory?.length || 0, currentTopic });
 
-    // Check if user is asking about a different topic
-    if (currentTopic && conversationHistory && conversationHistory.length > 0) {
-      // Check if user is explicitly overriding a previous suggestion
-      const overrideSignals = [
+    // Override signals - messages that indicate user wants to continue in current topic
+    const overrideSignals = [
         'no, i am correct',
         'no i am correct',
         'tell me anyway',
@@ -67,12 +65,17 @@ export async function POST(request: NextRequest) {
         'add anyway',
         'add it here anyway',
         'tell me anyway',
-        'just tell me',
-        'continue in this topic'
-      ];
-      
-      const messageLower = message.toLowerCase();
-      const isOverride = overrideSignals.some(signal => messageLower.includes(signal));
+      'just tell me',
+      'continue in this topic'
+    ];
+    
+    // Check if this is an override message (calculated once, used throughout)
+    const messageLower = message.toLowerCase();
+    const isOverride = overrideSignals.some(signal => messageLower.includes(signal));
+    
+    // Check if user is asking about a different topic
+    if (currentTopic && conversationHistory && conversationHistory.length > 0) {
+      // Check if user is explicitly overriding a previous suggestion
       
       if (isOverride) {
         console.log('✓ User override detected - skipping topic drift check');
@@ -128,9 +131,34 @@ For better organization, I recommend creating a new topic chat specifically for 
       role: msg.role,
       content: msg.content
     }));
-    const shouldGenerateMap = shouldGenerateConceptMap(message, chatHistoryForIntent);
     
-    console.log(`🧠 Intent detection: ${shouldGenerateMap ? '✅ Will generate concept map' : '⏭️ Skipping concept map (follow-up/clarification)'}`);
+    // If override detected, check if last assistant message was a suggestion
+    // If so, treat this as answering the original question and force map generation
+    let shouldForceMapGeneration = false;
+    if (isOverride && conversationHistory && conversationHistory.length > 0) {
+      const lastAssistantMsg = [...conversationHistory]
+        .reverse()
+        .find((msg: HistoryMessage) => msg.role === 'assistant');
+      
+      // Check if last assistant message looks like a suggestion (contains topic drift indicators)
+      if (lastAssistantMsg && (
+        lastAssistantMsg.content.includes('different from your current topic') ||
+        lastAssistantMsg.content.includes('I notice you\'re asking about') ||
+        lastAssistantMsg.content.includes('Want to continue in this topic anyway')
+      )) {
+        console.log('🔄 Override message detected after suggestion - forcing map generation');
+        shouldForceMapGeneration = true;
+      }
+    }
+    
+    let shouldGenerateMap = shouldGenerateConceptMap(message, chatHistoryForIntent);
+    
+    // Force map generation if override follows a suggestion
+    if (shouldForceMapGeneration) {
+      shouldGenerateMap = true;
+    }
+    
+    console.log(`🧠 Intent detection: ${shouldGenerateMap ? '✅ Will generate concept map' : '⏭️ Skipping concept map (follow-up/clarification)'}${shouldForceMapGeneration ? ' [forced by override]' : ''}`);
 
     // Create system prompt conditionally based on intent detection
     const systemPrompt = shouldGenerateMap

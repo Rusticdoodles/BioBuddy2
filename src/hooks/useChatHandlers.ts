@@ -140,8 +140,41 @@ export const useChatHandlers = ({
     const userMsg = { role: 'user' as const, content: userMessage_trimmed };
     const updatedChatMessages = [...chatMessages, userMsg];
     
+    // Check if this is an override message (user continuing in current topic after suggestion)
+    const overrideSignals = [
+      'no, i am correct',
+      'no i am correct',
+      'tell me anyway',
+      'add it here',
+      'add it to this',
+      'keep it here',
+      'stay in this topic',
+      'add to this map',
+      'merge it here',
+      'just add it',
+      'ignore that',
+      'override',
+      'continue here',
+      'add anyway',
+      'add it here anyway',
+      'tell me anyway',
+      'just tell me',
+      'continue in this topic'
+    ];
+    const messageLower = userMessage_trimmed.toLowerCase();
+    const isOverride = overrideSignals.some(signal => messageLower.includes(signal));
+    
+    // Check if there's no existing map yet (first map for this topic)
+    const hasNoMapYet = !activeTopic?.conceptMapData?.nodes || activeTopic.conceptMapData.nodes.length === 0;
+    
     const currentMessages = activeTopic?.messages || [];
-    const shouldGenerate = autoGenerateMap && shouldGenerateConceptMap(userMessage_trimmed, currentMessages);
+    let shouldGenerate = autoGenerateMap && shouldGenerateConceptMap(userMessage_trimmed, currentMessages);
+    
+    // If this is an override message and there's no map yet, force map generation
+    if (isOverride && hasNoMapYet) {
+      console.log('🔄 Override message detected with no existing map - forcing map generation');
+      shouldGenerate = true;
+    }
 
     setTopicChats(prev => prev.map(topic =>
       topic.id === activeTopicId
@@ -223,6 +256,9 @@ export const useChatHandlers = ({
           .trim();
       }
 
+      // If override message and API returned a concept map but shouldGenerate is false, still use it
+      const shouldUseMap = shouldGenerate || (isOverride && hasNoMapYet && data.conceptMap);
+      
       setTopicChats(prev => prev.map(topic =>
         topic.id === activeTopicId
           ? { 
@@ -234,7 +270,7 @@ export const useChatHandlers = ({
                 imageSource: 'wikimedia',
                 searchTerms: data.searchTerms,
               }], 
-              conceptMapData: shouldGenerate ? (data.conceptMap || topic.conceptMapData) : topic.conceptMapData,
+              conceptMapData: shouldUseMap ? (data.conceptMap || topic.conceptMapData) : topic.conceptMapData,
               loadingState: 'success' as LoadingState,
               updatedAt: new Date().toISOString()
             }
@@ -243,8 +279,9 @@ export const useChatHandlers = ({
 
       console.log("✅ Chat message processed successfully!");
 
-      if (shouldGenerate) {
-        console.log('✅ shouldGenerate is TRUE - proceeding with map generation');
+      if (shouldGenerate || (isOverride && hasNoMapYet && data.conceptMap)) {
+        const effectiveShouldGenerate = shouldGenerate || (isOverride && hasNoMapYet);
+        console.log(`✅ ${effectiveShouldGenerate ? 'shouldGenerate' : 'override'} is TRUE - proceeding with map generation`);
         if (data.conceptMap && data.conceptMap.nodes && data.conceptMap.edges) {
           console.log('📊 Using concept map from Claude');
           setShowSuccessBanner(true);

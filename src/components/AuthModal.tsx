@@ -105,8 +105,9 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
       setIsSubmitting(true);
       setMessage(null);
 
+      const redirectUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${redirectUrl}/reset-password`,
       });
 
       if (error) {
@@ -147,9 +148,13 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
       setMessage(null);
 
       if (isSignUpMode) {
+        const redirectUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
         const { error } = await supabase.auth.signUp({
           email: email.trim(),
           password: password.trim(),
+          options: {
+            emailRedirectTo: `${redirectUrl}/auth/callback`,
+          },
         });
 
         if (error) {
