@@ -33,7 +33,7 @@ import { useMapUpdate } from '@/hooks/useMapUpdate';
 import { useTour } from '@/hooks/useTour';
 import { FeedbackProvider } from '@/contexts/FeedbackContext';
 import { useUser } from '@/components/AuthProvider';
-import { canGenerateMap, trackMapGeneration, getMapsThisMonth, getTopicsUsed, getUserSubscription } from '@/lib/usage';
+import { canGenerateMap, trackMapGeneration, getMapsThisMonth, getTopicsUsed } from '@/lib/usage';
 import { AuthModal } from '@/components/AuthModal';
 import { UpgradeModal } from '@/components/UpgradeModal';
 import { SoftLimitModal } from '@/components/SoftLimitModal';

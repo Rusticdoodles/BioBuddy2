@@ -8,3 +8,4 @@ export const PurchaseSuccessHandler = () => {
   return <PurchaseSuccessModal isOpen={showModal} onClose={handleClose} planType={planType} />;
 };
 
+

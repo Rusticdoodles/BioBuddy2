@@ -280,7 +280,7 @@ const Home = () => {
                 <p className="text-md font-semibold uppercase tracking-[0.4em] text-slate-500">COMING SOON</p>
                 <h2 className="text-5xl font-bold leading-tight text-slate-900 dark:text-white">Customized Quizzes</h2>
                 <p className="text-xl leading-relaxed text-slate-600 dark:text-slate-300">
-                  Test your recall with fun and interactive quizzes that are designed around your content with just a few clicks. You'll be able to control the difficulty to your liking.
+                  Test your recall with fun and interactive quizzes that are designed around your content with just a few clicks. You&apos;ll be able to control the difficulty to your liking.
                 </p>
               </div>
               {/* Illustration */}
