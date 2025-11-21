@@ -13,6 +13,7 @@ interface TopicsSidebarProps {
   onCreateTopic: (name: string) => void;
   onSwitchTopic: (topicId: string) => void;
   onDeleteTopic: (topicId: string) => void;
+  onRenameTopic: (topicId: string, newName: string) => void;
 }
 
 export const TopicsSidebar: React.FC<TopicsSidebarProps> = ({
@@ -21,8 +22,11 @@ export const TopicsSidebar: React.FC<TopicsSidebarProps> = ({
   onCreateTopic,
   onSwitchTopic,
   onDeleteTopic,
+  onRenameTopic,
 }) => {
   const [isNewTopicModalOpen, setIsNewTopicModalOpen] = useState(false);
+  const [editingTopicId, setEditingTopicId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
 
   
 const handleDeleteTopic = useCallback(
@@ -107,6 +111,34 @@ const handleDeleteTopic = useCallback(
     [onSwitchTopic],
   );
 
+  const handleStartEdit = useCallback((event: React.MouseEvent, topicId: string, currentName: string) => {
+    event.stopPropagation();
+    setEditingTopicId(topicId);
+    setEditingName(currentName);
+  }, []);
+
+  const handleCancelEdit = useCallback(() => {
+    setEditingTopicId(null);
+    setEditingName('');
+  }, []);
+
+  const handleSaveEdit = useCallback((topicId: string) => {
+    if (editingName.trim()) {
+      onRenameTopic(topicId, editingName.trim());
+    }
+    handleCancelEdit();
+  }, [editingName, onRenameTopic, handleCancelEdit]);
+
+  const handleEditKeyDown = useCallback((event: React.KeyboardEvent, topicId: string) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      handleSaveEdit(topicId);
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      handleCancelEdit();
+    }
+  }, [handleSaveEdit, handleCancelEdit]);
+
   return (
     <>
       <div data-tour="topics-sidebar" className="flex w-64 flex-col border-r border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
@@ -160,32 +192,59 @@ const handleDeleteTopic = useCallback(
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
-                    <h3 className={`text-sm font-medium truncate ${
-                      topic.id === activeTopicId
-                        ? 'text-blue-900 dark:text-blue-100'
-                        : 'text-slate-900 dark:text-white'
-                    }`}>
-                      {topic.name}
-                    </h3>
+                    {editingTopicId === topic.id ? (
+                      <input
+                        type="text"
+                        value={editingName}
+                        onChange={(e) => setEditingName(e.target.value)}
+                        onBlur={() => handleSaveEdit(topic.id)}
+                        onKeyDown={(e) => handleEditKeyDown(e, topic.id)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-full text-sm font-medium bg-white dark:bg-slate-800 border border-blue-300 dark:border-blue-600 rounded px-2 py-1 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        autoFocus
+                      />
+                    ) : (
+                      <h3 className={`text-sm font-medium truncate ${
+                        topic.id === activeTopicId
+                          ? 'text-blue-900 dark:text-blue-100'
+                          : 'text-slate-900 dark:text-white'
+                      }`}>
+                        {topic.name}
+                      </h3>
+                    )}
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                       {topic.messages.length} messages
                       {topic.nodes.length > 0 && ` • ${topic.nodes.length} nodes`}
                     </p>
                   </div>
                   
-                  {/* Delete button */}
-                  <button
-                    onClick={(event) =>
-                      handleDeleteTopic(event, topic.id, topic.name)
-                    }
-                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded hover-scale-sm transition-opacity"
-                    title="Delete topic"
-                    aria-label="Delete topic"
-                  >
-                    <svg className="w-4 h-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {/* Edit button */}
+                    <button
+                      onClick={(event) => handleStartEdit(event, topic.id, topic.name)}
+                      className="p-1 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded hover-scale-sm"
+                      title="Edit topic name"
+                      aria-label="Edit topic name"
+                    >
+                      <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                    
+                    {/* Delete button */}
+                    <button
+                      onClick={(event) =>
+                        handleDeleteTopic(event, topic.id, topic.name)
+                      }
+                      className="p-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded hover-scale-sm"
+                      title="Delete topic"
+                      aria-label="Delete topic"
+                    >
+                      <svg className="w-4 h-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

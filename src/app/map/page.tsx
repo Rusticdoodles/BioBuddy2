@@ -87,6 +87,7 @@ export default function MapPage() {
     handleCreateTopic,
     handleSwitchTopic,
     handleDeleteTopic,
+    handleRenameTopic,
     handleClearChat,
   } = useTopicManagement();
 
@@ -128,6 +129,9 @@ export default function MapPage() {
   );
 
   // Usage tracking callbacks
+  // Store matched topic slug from canGenerateMap for use in tracking
+  const matchedTopicSlugRef = useRef<string | undefined>(undefined);
+
   const handleBeforeGenerate = useCallback(async (topicName: string): Promise<boolean> => {
     console.log('🔍 Checking usage limits for topic:', topicName);
     
@@ -140,13 +144,23 @@ export default function MapPage() {
     
     console.log('✅ User authenticated:', user.id);
     
-    // 2. Check if user can generate this map
-    const { allowed, reason } = await canGenerateMap(user.id, topicName);
+    // 2. Get the stable slug from the active topic if it exists, otherwise use the topic name
+    // This ensures we use the same slug even if the topic name was edited
+    const stableSlug = activeTopic?.slug || topicName.toLowerCase().trim();
+    
+    // 3. Check if user can generate this map using the stable slug
+    const { allowed, reason, matchedTopicSlug, isExactMatch } = await canGenerateMap(user.id, stableSlug);
+    
+    // Store matched topic slug for later use in tracking
+    matchedTopicSlugRef.current = matchedTopicSlug;
     
     console.log('Can generate map?', allowed);
     if (reason) console.log('Reason:', reason);
+    if (matchedTopicSlug && !isExactMatch) {
+      console.log(`🔍 Fuzzy match found: using "${matchedTopicSlug}" instead of "${stableSlug}"`);
+    }
     
-    // 3. Handle different limit scenarios
+    // 4. Handle different limit scenarios
     if (!allowed) {
       if (reason === 'free_limit_reached') {
         console.log('🚫 Free tier limit reached (4 topics) - showing upgrade modal');
@@ -165,7 +179,7 @@ export default function MapPage() {
     
     console.log('✅ Usage check passed - allowing generation');
     return true;
-  }, [user]);
+  }, [user, activeTopic]);
 
   const handleAfterGenerate = useCallback(async (topicName: string, isRegeneration: boolean): Promise<void> => {
     console.log('💾 Tracking map generation');
@@ -178,19 +192,51 @@ export default function MapPage() {
     }
     
     try {
-      // Double-check if this is actually a regeneration by checking database
-      const topicsUsed = await getTopicsUsed(user.id);
-      const topicSlug = topicName.toLowerCase().trim();
-      const actualIsRegeneration = topicsUsed.includes(topicSlug);
+      // Get the stable slug from active topic, or generate from name if not set
+      const stableSlug = activeTopic?.slug || topicName.toLowerCase().trim();
       
-      await trackMapGeneration(user.id, topicName, actualIsRegeneration);
+      // If topic doesn't have a slug yet, set it now (for topics created before slug support)
+      if (activeTopic && !activeTopic.slug) {
+        setTopicChats(prev => prev.map(topic =>
+          topic.id === activeTopic.id
+            ? { ...topic, slug: stableSlug }
+            : topic
+        ));
+        console.log(`📝 Set slug for topic "${activeTopic.name}": "${stableSlug}"`);
+      }
+      
+      // Use matched topic slug from canGenerateMap if available (from fuzzy matching)
+      const matchedTopicSlug = matchedTopicSlugRef.current;
+      
+      // Determine if this is actually a regeneration
+      let actualIsRegeneration = isRegeneration;
+      
+      // Use the stable slug or matched slug for tracking
+      const finalSlug = matchedTopicSlug || stableSlug;
+      
+      if (matchedTopicSlug) {
+        // If we found a matched topic (fuzzy match), it's a regeneration
+        actualIsRegeneration = true;
+        console.log(`📝 Using matched topic slug for tracking: "${matchedTopicSlug}"`);
+      } else {
+        // Double-check if this is actually a regeneration by checking database
+        const topicsUsed = await getTopicsUsed(user.id);
+        actualIsRegeneration = topicsUsed.includes(finalSlug);
+      }
+      
+      // Track using the display name but the stable/matched slug for database consistency
+      await trackMapGeneration(user.id, topicName, actualIsRegeneration, finalSlug);
       console.log('✅ Successfully tracked generation in database');
+      
+      // Clear the matched topic slug after use
+      matchedTopicSlugRef.current = undefined;
     } catch (error) {
       console.error('❌ Failed to track generation:', error);
       // Don't block user experience if tracking fails
       // Just log the error and continue
+      matchedTopicSlugRef.current = undefined;
     }
-  }, [user]);
+  }, [user, activeTopic, setTopicChats]);
 
   // Concept map generation hook
   const { generateConceptMapFromText, handleGenerateMap } = useConceptMapGeneration({
@@ -949,6 +995,7 @@ Make sure EVERY concept from the list above is included in the new map.`;
         onCreateTopic={handleCreateTopic}
         onSwitchTopic={handleSwitchTopic}
         onDeleteTopic={handleDeleteTopic}
+        onRenameTopic={handleRenameTopic}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">

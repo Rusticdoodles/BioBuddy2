@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { findSimilarTopic } from '@/utils/topic-matching';
 
 const FREE_TOPIC_LIMIT = 4;
 const MONTHLY_MAP_LIMIT = 100;
@@ -124,6 +125,8 @@ export async function getMapsThisMonth(userId: string): Promise<number> {
 export interface CanGenerateMapResult {
   allowed: boolean;
   reason?: 'free_limit_reached' | 'monthly_limit_reached';
+  matchedTopicSlug?: string; // The topic slug that was matched (may differ from input due to fuzzy matching)
+  isExactMatch?: boolean; // Whether it was an exact match or fuzzy match
 }
 
 export async function canGenerateMap(
@@ -159,11 +162,27 @@ export async function canGenerateMap(
     }
 
     // If user has no subscription (free tier)
-    const isRegeneration = topicsUsed.includes(topicSlug);
+    // Use fuzzy matching to find similar topics (handles typos)
+    const topicMatch = findSimilarTopic(topicSlug, topicsUsed, 0.9, 0.85);
     
-    if (isRegeneration) {
-      // Regenerating existing topic - always allow
-      return { allowed: true };
+    if (topicMatch && topicMatch.isMatch) {
+      // Found a close match (likely a typo) - treat as regeneration
+      console.log(`🔍 Fuzzy match found: "${topicSlug}" matches "${topicMatch.topicSlug}" (similarity: ${(topicMatch.similarity * 100).toFixed(1)}%)`);
+      return { 
+        allowed: true,
+        matchedTopicSlug: topicMatch.topicSlug,
+        isExactMatch: topicMatch.similarity === 1.0
+      };
+    }
+    
+    // Check for exact match (backwards compatibility)
+    const isExactMatch = topicsUsed.includes(topicSlug);
+    if (isExactMatch) {
+      return { 
+        allowed: true,
+        matchedTopicSlug: topicSlug,
+        isExactMatch: true
+      };
     }
 
     // New topic - check limit
@@ -182,17 +201,36 @@ export async function canGenerateMap(
 export async function trackMapGeneration(
   userId: string,
   topicName: string,
-  isRegeneration: boolean
+  isRegeneration: boolean,
+  matchedTopicSlug?: string
 ): Promise<MapGeneration | null> {
   try {
     const topicSlug = topicName.toLowerCase().trim();
+    
+    // If a matched topic slug was provided (from fuzzy matching), use it
+    // Otherwise, use the normalized input topic slug
+    let finalTopicSlug = topicSlug;
+    
+    if (matchedTopicSlug) {
+      finalTopicSlug = matchedTopicSlug;
+      console.log(`📝 Using matched topic slug: "${finalTopicSlug}" (from input: "${topicSlug}")`);
+    } else if (isRegeneration) {
+      // If it's a regeneration but no matched slug provided, try fuzzy matching
+      const topicsUsed = await getTopicsUsed(userId);
+      const topicMatch = findSimilarTopic(topicSlug, topicsUsed, 0.9, 0.85);
+      
+      if (topicMatch && topicMatch.isMatch) {
+        finalTopicSlug = topicMatch.topicSlug;
+        console.log(`🔍 Fuzzy matched regeneration: "${topicSlug}" -> "${finalTopicSlug}"`);
+      }
+    }
 
     const { data, error } = await supabase
       .from('map_generations')
       .insert({
         user_id: userId,
         topic_name: topicName,
-        topic_slug: topicSlug,
+        topic_slug: finalTopicSlug,
         is_regeneration: isRegeneration,
       })
       .select()

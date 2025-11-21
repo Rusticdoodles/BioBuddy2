@@ -217,35 +217,67 @@ async function createOrUpdateSubscription(userId: string, variantId: string | un
     return;
   }
   
-  console.log('Creating subscription:', planType, expiresAt, subscriptionId);
+  // Ensure subscription ID is a string
+  const subscriptionIdStr = subscriptionId ? String(subscriptionId).trim() : null;
   
-  // Check if subscription already exists
-  const { data: existing } = await supabaseAdmin
+  console.log('📝 Creating/updating subscription:');
+  console.log('   - Plan type:', planType);
+  console.log('   - Expires at:', expiresAt);
+  console.log('   - Subscription ID:', subscriptionIdStr);
+  
+  // Check if subscription already exists (check by user_id and plan_type, regardless of status)
+  // This prevents duplicate subscriptions for the same user/plan
+  const { data: existing, error: fetchError } = await supabaseAdmin
     .from('subscriptions')
-    .select('id')
+    .select('id, status, lemon_squeezy_subscription_id')
     .eq('user_id', userId)
-    .eq('status', 'active')
-    .single();
+    .eq('plan_type', planType)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  
+  if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = no rows returned
+    console.error('Error checking for existing subscription:', fetchError);
+  }
   
   if (existing) {
-    console.log('Active subscription already exists, updating');
-    // Update existing subscription
+    console.log('✅ Existing subscription found, updating:');
+    console.log('   - Database ID:', existing.id);
+    console.log('   - Current status:', existing.status);
+    console.log('   - Current Lemon ID:', existing.lemon_squeezy_subscription_id);
+    console.log('   - New Lemon ID:', subscriptionIdStr);
+    
+    // Update existing subscription - reactivate if it was cancelled
+    const updateData: {
+      plan_type: string;
+      expires_at: string | null;
+      lemon_squeezy_subscription_id: string | null;
+      status?: string;
+    } = {
+      plan_type: planType,
+      expires_at: expiresAt,
+      lemon_squeezy_subscription_id: subscriptionIdStr,
+    };
+    
+    // If subscription was cancelled but we're getting a renewal, reactivate it
+    if (existing.status === 'cancelled') {
+      updateData.status = 'active';
+      console.log('🔄 Reactivating cancelled subscription');
+    }
+    
     const { error: updateError } = await supabaseAdmin
       .from('subscriptions')
-      .update({
-        plan_type: planType,
-        expires_at: expiresAt,
-        lemon_squeezy_subscription_id: subscriptionId,
-      })
+      .update(updateData)
       .eq('id', existing.id);
     
     if (updateError) {
-      console.error('Error updating subscription:', updateError);
+      console.error('❌ Error updating subscription:', updateError);
     } else {
-      console.log('Subscription updated successfully');
+      console.log('✅ Subscription updated successfully');
     }
   } else {
     // Create new subscription
+    console.log('➕ No existing subscription found, creating new one');
     const { error: insertError } = await supabaseAdmin
       .from('subscriptions')
       .insert({
@@ -253,15 +285,15 @@ async function createOrUpdateSubscription(userId: string, variantId: string | un
         plan_type: planType,
         status: 'active',
         expires_at: expiresAt,
-        lemon_squeezy_subscription_id: subscriptionId,
+        lemon_squeezy_subscription_id: subscriptionIdStr,
       })
       .select()
       .single();
     
     if (insertError) {
-      console.error('Error creating subscription:', insertError);
+      console.error('❌ Error creating subscription:', insertError);
     } else {
-      console.log('Subscription created successfully');
+      console.log('✅ Subscription created successfully');
     }
   }
 }
@@ -313,10 +345,15 @@ async function handleSubscriptionPayment(body: { data: { id?: string; attributes
   }
 }
 
-async function handleSubscriptionCancelled(body: { data: { attributes: { user_email?: string } } }) {
+async function handleSubscriptionCancelled(body: { data: { id?: string; attributes: { user_email?: string; ends_at?: string } } }) {
   const customerEmail = body.data.attributes.user_email;
+  const subscriptionId = body.data.id?.toString();
+  const endsAt = body.data.attributes.ends_at;
   
-  console.log('Subscription cancelled for:', customerEmail);
+  console.log('🛑 Subscription cancelled webhook received:');
+  console.log('   - Email:', customerEmail);
+  console.log('   - Subscription ID:', subscriptionId);
+  console.log('   - Ends at:', endsAt);
   
   // Get user ID from Supabase Auth
   const { data: authData, error: authError } = await supabaseAdmin.auth.admin.listUsers();
@@ -335,19 +372,37 @@ async function handleSubscriptionCancelled(body: { data: { attributes: { user_em
   
   const userId = user.id;
   
-  // Mark subscription as cancelled
-  const { error } = await supabaseAdmin
+  // Mark subscription as cancelled and update expires_at if provided
+  const updateData: { status: string; expires_at?: string } = {
+    status: 'cancelled'
+  };
+  
+  if (endsAt) {
+    updateData.expires_at = endsAt;
+    console.log('📅 Setting expires_at to:', endsAt);
+  }
+  
+  // Update by user_id and plan_type, optionally match subscription ID if available
+  let query = supabaseAdmin
     .from('subscriptions')
-    .update({
-      status: 'cancelled',
-    })
+    .update(updateData)
     .eq('user_id', userId)
     .eq('plan_type', 'monthly');
   
+  // If we have the subscription ID, use it to be more precise
+  if (subscriptionId) {
+    query = query.eq('lemon_squeezy_subscription_id', subscriptionId);
+  }
+  
+  const { error } = await query;
+  
   if (error) {
-    console.error('Error cancelling subscription:', error);
+    console.error('❌ Error cancelling subscription:', error);
   } else {
-    console.log('Subscription cancelled in database');
+    console.log('✅ Subscription cancelled in database');
+    if (endsAt) {
+      console.log('✅ Expiration date set to:', endsAt);
+    }
   }
 }
 

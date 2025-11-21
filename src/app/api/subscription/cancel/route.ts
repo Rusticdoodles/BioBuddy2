@@ -14,13 +14,15 @@ export async function POST(request: Request) {
       return Response.json({ error: 'User ID required' }, { status: 400 });
     }
 
-    // Get user's subscription
+    // Get user's subscription - check for active first, then any monthly subscription
     const { data: subscription, error: fetchError } = await supabaseAdmin
       .from('subscriptions')
       .select('*')
       .eq('user_id', userId)
       .eq('plan_type', 'monthly')
       .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (fetchError) {
@@ -28,12 +30,36 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Failed to fetch subscription' }, { status: 500 });
     }
 
+    // Check for multiple subscriptions (debugging)
+    const { data: allSubscriptions } = await supabaseAdmin
+      .from('subscriptions')
+      .select('id, status, lemon_squeezy_subscription_id, created_at')
+      .eq('user_id', userId)
+      .eq('plan_type', 'monthly');
+
+    if (allSubscriptions && allSubscriptions.length > 1) {
+      console.warn('⚠️ Multiple monthly subscriptions found:', allSubscriptions.map(s => ({
+        id: s.id,
+        status: s.status,
+        lemon_id: s.lemon_squeezy_subscription_id,
+        created: s.created_at
+      })));
+    }
+
     if (!subscription) {
-      return Response.json({ error: 'No active monthly subscription found' }, { status: 404 });
+      return Response.json({ 
+        error: 'No active monthly subscription found',
+        hint: allSubscriptions && allSubscriptions.length > 0 
+          ? `Found ${allSubscriptions.length} subscription(s) but none are active. Status: ${allSubscriptions.map(s => s.status).join(', ')}`
+          : 'No subscriptions found for this user.'
+      }, { status: 404 });
     }
 
     if (!subscription.lemon_squeezy_subscription_id) {
-      return Response.json({ error: 'Subscription ID not found' }, { status: 404 });
+      return Response.json({ 
+        error: 'Subscription ID not found',
+        hint: 'Try using the "Sync Subscription" button first to link your subscription with Lemon Squeezy.'
+      }, { status: 404 });
     }
 
     // Cancel subscription via Lemon Squeezy API
@@ -43,10 +69,27 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Server configuration error' }, { status: 500 });
     }
 
-    console.log('Attempting to cancel subscription:', subscription.lemon_squeezy_subscription_id);
+    // Ensure subscription ID is a string (Lemon Squeezy API requires string format)
+    const subscriptionId = String(subscription.lemon_squeezy_subscription_id).trim();
+    
+    console.log('🔍 Subscription details:');
+    console.log('   - Database ID:', subscription.id);
+    console.log('   - Lemon Squeezy ID (raw):', subscription.lemon_squeezy_subscription_id);
+    console.log('   - Lemon Squeezy ID (formatted):', subscriptionId);
+    console.log('   - Status:', subscription.status);
+    console.log('   - Plan Type:', subscription.plan_type);
+
+    if (!subscriptionId || subscriptionId === 'null' || subscriptionId === 'undefined') {
+      return Response.json({ 
+        error: 'Invalid subscription ID',
+        hint: 'The subscription ID is missing or invalid. Try syncing your subscription first.'
+      }, { status: 400 });
+    }
+
+    console.log('🚀 Attempting to cancel subscription via Lemon Squeezy API:', subscriptionId);
 
     const response = await fetch(
-      `https://api.lemonsqueezy.com/v1/subscriptions/${subscription.lemon_squeezy_subscription_id}`,
+      `https://api.lemonsqueezy.com/v1/subscriptions/${subscriptionId}`,
       {
         method: 'PATCH',
         headers: {
@@ -57,7 +100,7 @@ export async function POST(request: Request) {
         body: JSON.stringify({
           data: {
             type: 'subscriptions',
-            id: subscription.lemon_squeezy_subscription_id,
+            id: subscriptionId,
             attributes: {
               cancelled: true,
             },
@@ -67,15 +110,34 @@ export async function POST(request: Request) {
     );
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Lemon Squeezy API error:', errorData);
-      console.error('Response status:', response.status);
-      console.error('Subscription ID:', subscription.lemon_squeezy_subscription_id);
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = { message: 'Failed to parse error response' };
+      }
       
-      // Return more detailed error information
-      const errorMessage = errorData.errors?.[0]?.detail || 'Failed to cancel subscription with Lemon Squeezy';
+      console.error('❌ Lemon Squeezy API error:');
+      console.error('   - Status:', response.status);
+      console.error('   - Subscription ID used:', subscriptionId);
+      console.error('   - Error details:', JSON.stringify(errorData, null, 2));
+      
+      // Provide more helpful error messages
+      let errorMessage = 'Failed to cancel subscription with Lemon Squeezy';
+      if (response.status === 404) {
+        errorMessage = 'Subscription not found in Lemon Squeezy. The subscription ID may be incorrect.';
+      } else if (response.status === 401 || response.status === 403) {
+        errorMessage = 'Authentication failed with Lemon Squeezy. Please check API key configuration.';
+      } else if (errorData?.errors?.[0]?.detail) {
+        errorMessage = errorData.errors[0].detail;
+      }
+      
       return Response.json(
-        { error: errorMessage, details: errorData },
+        { 
+          error: errorMessage,
+          details: errorData,
+          subscriptionId: subscriptionId
+        },
         { status: response.status }
       );
     }

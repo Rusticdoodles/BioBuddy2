@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Dashboard',
+  title: 'Account',
   description: 'View your BioBuddy learning statistics, manage your subscription, and track your biology study progress.',
   openGraph: {
-    title: 'Dashboard | BioBuddy',
+    title: 'Account | BioBuddy',
     description: 'View your BioBuddy learning statistics, manage your subscription, and track your biology study progress.',
   },
   robots: {

@@ -6,6 +6,7 @@ import { getUserSubscription, getTopicsUsed, getMapsThisMonth } from '@/lib/usag
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Navbar } from '@/components/navbar';
+import { UpgradeModal } from '@/components/UpgradeModal';
 
 export default function DashboardPage() {
   const { user, loading } = useUser();
@@ -20,6 +21,7 @@ export default function DashboardPage() {
   });
   const [loadingStats, setLoadingStats] = useState(true);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const loadStats = useCallback(async () => {
     if (!user) {
@@ -137,7 +139,7 @@ export default function DashboardPage() {
         <div className="mx-auto max-w-4xl">
           <div className="mb-4 flex flex-col items-start gap-4">
             <h1 className="text-4xl font-bold text-slate-900 dark:text-white">
-              Dashboard
+              Account
             </h1>
             <button
               onClick={handleGoBack}
@@ -176,9 +178,18 @@ export default function DashboardPage() {
             </div>
             
             {stats.plan === 'free' && (
-              <p className="text-slate-600 dark:text-slate-300">
-                You&apos;re on the free tier. Upgrade to unlock unlimited topics!
-              </p>
+              <>
+                <p className="mb-4 text-slate-600 dark:text-slate-300">
+                  You&apos;re on the free tier. Upgrade to unlock unlimited topics!
+                </p>
+                <button
+                  onClick={() => setShowUpgradeModal(true)}
+                  className="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                  aria-label="Upgrade your plan"
+                >
+                  Upgrade Plan
+                </button>
+              </>
             )}
             
             {stats.plan === 'monthly' && (
@@ -310,6 +321,12 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+      
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+      />
     </div>
   );
 }

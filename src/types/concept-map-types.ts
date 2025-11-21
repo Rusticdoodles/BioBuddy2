@@ -26,6 +26,7 @@ export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
 export interface TopicChat {
   id: string;
   name: string;
+  slug?: string; // Stable slug field - set when first used for map generation, remains constant even when name changes
   createdAt: string;
   updatedAt: string;
   messages: ChatMessage[];

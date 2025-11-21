@@ -140,9 +140,13 @@ export const useTopicManagement = () => {
   }, [topicChats]);
 
   const handleCreateTopic = useCallback((name: string) => {
+    const topicName = name.trim() || 'New Topic';
+    const initialSlug = topicName.toLowerCase().trim();
+    
     const newTopic: TopicChat = {
       id: `topic-${Date.now()}`,
-      name: name.trim() || 'New Topic',
+      name: topicName,
+      slug: initialSlug, // Set initial slug from name
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       messages: [],
@@ -203,13 +207,22 @@ export const useTopicManagement = () => {
   }, [topicChats, activeTopicId]);
 
   const handleRenameTopic = useCallback((topicId: string, newName: string) => {
-    setTopicChats(prev => prev.map(topic =>
-      topic.id === topicId
-        ? { ...topic, name: newName.trim(), updatedAt: new Date().toISOString() }
-        : topic
-    ));
+    setTopicChats(prev => prev.map(topic => {
+      if (topic.id === topicId) {
+        // Keep the slug unchanged - only update the display name
+        // This ensures database tracking remains consistent
+        return { 
+          ...topic, 
+          name: newName.trim(), 
+          updatedAt: new Date().toISOString() 
+        };
+      }
+      return topic;
+    }));
     
-    toast.success('Topic renamed');
+    toast.success('Topic renamed', {
+      description: 'The topic slug remains unchanged for tracking purposes',
+    });
   }, []);
 
   const handleClearChat = useCallback(() => {
