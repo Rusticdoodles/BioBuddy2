@@ -251,13 +251,34 @@ async function createOrUpdateSubscription(userId: string, variantId: string | un
     const updateData: {
       plan_type: string;
       expires_at: string | null;
-      lemon_squeezy_subscription_id: string | null;
+      lemon_squeezy_subscription_id?: string | null;
       status?: string;
     } = {
       plan_type: planType,
       expires_at: expiresAt,
-      lemon_squeezy_subscription_id: subscriptionIdStr,
     };
+    
+    // Only update subscription ID if:
+    // 1. The new ID is provided (not null/empty), AND
+    // 2. Either the existing ID is missing, OR the new ID is different (might be a correction)
+    // This prevents overwriting a valid ID with null or an incorrect value
+    if (subscriptionIdStr) {
+      if (!existing.lemon_squeezy_subscription_id) {
+        // Existing subscription has no ID, so set it
+        updateData.lemon_squeezy_subscription_id = subscriptionIdStr;
+        console.log('📝 Setting subscription ID (was missing):', subscriptionIdStr);
+      } else if (existing.lemon_squeezy_subscription_id !== subscriptionIdStr) {
+        // Both exist and are different - update it (might be a correction)
+        updateData.lemon_squeezy_subscription_id = subscriptionIdStr;
+        console.log('📝 Updating subscription ID:', existing.lemon_squeezy_subscription_id, '->', subscriptionIdStr);
+      } else {
+        // Same ID, no need to update
+        console.log('ℹ️ Subscription ID unchanged:', subscriptionIdStr);
+      }
+    } else {
+      // No new ID provided - preserve existing ID
+      console.log('ℹ️ No subscription ID in webhook, preserving existing ID:', existing.lemon_squeezy_subscription_id);
+    }
     
     // If subscription was cancelled but we're getting a renewal, reactivate it
     if (existing.status === 'cancelled') {
@@ -323,25 +344,71 @@ async function handleSubscriptionPayment(body: { data: { id?: string; attributes
   
   const userId = user.id;
   
+  // First, get the existing subscription to check if it already has an ID
+  const { data: existingSubscription, error: fetchError } = await supabaseAdmin
+    .from('subscriptions')
+    .select('id, lemon_squeezy_subscription_id')
+    .eq('user_id', userId)
+    .eq('plan_type', 'monthly')
+    .maybeSingle();
+  
+  if (fetchError) {
+    console.error('❌ Error fetching existing subscription:', fetchError);
+    return;
+  }
+  
+  if (!existingSubscription) {
+    console.error('❌ No subscription found for user');
+    return;
+  }
+  
   // Extend subscription by 30 days
   const newExpiry = new Date();
   newExpiry.setDate(newExpiry.getDate() + 30);
   
+  // Only update subscription ID if:
+  // 1. The existing subscription doesn't have an ID, OR
+  // 2. The new subscription ID is provided and different from the existing one
+  // This prevents overwriting a correct ID with a wrong one (like a payment ID)
+  const updateData: {
+    expires_at: string;
+    status: string;
+    lemon_squeezy_subscription_id?: string;
+  } = {
+    expires_at: newExpiry.toISOString(),
+    status: 'active',
+  };
+  
+  // Only update subscription ID if existing one is missing or if new one is provided and valid
+  if (!existingSubscription.lemon_squeezy_subscription_id && subscriptionId) {
+    // Existing subscription has no ID, so set it
+    updateData.lemon_squeezy_subscription_id = subscriptionId;
+    console.log('📝 Setting subscription ID (was missing):', subscriptionId);
+  } else if (existingSubscription.lemon_squeezy_subscription_id && subscriptionId) {
+    // Both exist - only update if they're different (might be a correction)
+    if (existingSubscription.lemon_squeezy_subscription_id !== subscriptionId) {
+      console.log('⚠️ Subscription ID mismatch detected:');
+      console.log('   - Existing ID:', existingSubscription.lemon_squeezy_subscription_id);
+      console.log('   - New ID:', subscriptionId);
+      console.log('   - Keeping existing ID to prevent overwrite with potentially incorrect value');
+      // Don't update - keep the existing ID to prevent overwriting with wrong value
+    }
+  }
+  
   const { error } = await supabaseAdmin
     .from('subscriptions')
-    .update({
-      expires_at: newExpiry.toISOString(),
-      status: 'active',
-      lemon_squeezy_subscription_id: subscriptionId,
-    })
-    .eq('user_id', userId)
-    .eq('plan_type', 'monthly');
+    .update(updateData)
+    .eq('id', existingSubscription.id);
   
   if (error) {
     console.error('❌ Error updating subscription:', error);
   } else {
     console.log('✅ Subscription renewed until:', newExpiry);
-    console.log('✅ Subscription ID stored:', subscriptionId);
+    if (updateData.lemon_squeezy_subscription_id) {
+      console.log('✅ Subscription ID updated:', updateData.lemon_squeezy_subscription_id);
+    } else {
+      console.log('✅ Subscription ID preserved:', existingSubscription.lemon_squeezy_subscription_id);
+    }
   }
 }
 
