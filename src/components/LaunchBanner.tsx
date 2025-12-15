@@ -16,8 +16,8 @@ export const LaunchBanner = () => {
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 })
   const [isExpired, setIsExpired] = useState(false)
 
-  // Set your launch end date: December 8th, 2025 at midnight UTC
-  const endDate = new Date('2025-12-08T00:00:00Z').getTime()
+  // Set your launch end date: December 31st, 2025 at midnight UTC
+  const endDate = new Date('2025-12-31T00:00:00Z').getTime()
   const discountCode = 'LAUNCH'
 
   useEffect(() => {
