@@ -732,6 +732,8 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
                 nodeBorderRadius={8}
                 maskColor="rgba(0, 0, 0, 0.1)"
                 style={{
+                  width: 120,
+                  height: 80,
                   boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
                 }}
               />
@@ -816,20 +818,20 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
             </ReactFlow>
             
             {/* Floating Action Buttons */}
-            <div data-tour="map-controls" className="absolute bottom-52 right-4 flex flex-col gap-2">
+            <div data-tour="map-controls" className="absolute bottom-16 sm:bottom-20 md:bottom-24 lg:bottom-28 right-2 sm:right-3 md:right-4 flex flex-col gap-1.5 sm:gap-2">
               {/* Regenerate button */}
               {/* {loadingState === 'success' && nodes.length > 0 && (
                 <button
                   onClick={onRegenerateMindmap}
                   disabled={isRegeneratingMap}
-                  className={`w-12 h-12 rounded-full shadow-lg transition-all duration-200 flex items-center justify-center group mb-2 ${
+                  className={`w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 lg:w-12 lg:h-12 rounded-full shadow-lg transition-all duration-200 flex items-center justify-center group mb-1 sm:mb-2 ${
                     isRegeneratingMap
                       ? 'bg-slate-400 text-slate-200 cursor-not-allowed'
                       : 'bg-amber-600 hover:bg-amber-700 text-white hover:shadow-xl'
                   }`}
                   title="Regenerate the mindmap from current explanation"
                 >
-                  <RotateCw className={`w-5 h-5 ${isRegeneratingMap ? 'animate-spin' : ''}`} />
+                  <RotateCw className={`w-4 h-4 sm:w-4.5 sm:h-4.5 md:w-5 md:h-5 ${isRegeneratingMap ? 'animate-spin' : ''}`} />
                 </button>
               )} */}
 
@@ -837,42 +839,43 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
               <button
                 onClick={handlePerfectLayout}
                 disabled={nodes.length === 0}
-                className="w-12 h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg hover:shadow-xl hover-scale-sm hover-glow transition-all duration-200 flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 lg:w-8 lg:h-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg hover:shadow-xl hover-scale-sm hover-glow transition-all duration-200 flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Optimize layout for maximum clarity"
                 aria-label="Perfect layout"
               >
-                <Sparkles className="w-5 h-5" />
+                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-4.5 md:h-4.5 lg:w-5 lg:h-5" />
               </button>
               
               {/*Undo Button*/}
               <button
                 onClick={onUndo}
                 disabled={nodes.length === 0}
-                className="w-12 h-12 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg hover:shadow-xl hover-scale-sm hover-glow transition-all duration-200 flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 lg:w-8 lg:h-8 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg hover:shadow-xl hover-scale-sm hover-glow transition-all duration-200 flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Undo"
                 aria-label="Undo"
               >
-                <Undo2 className="w-5 h-5" />
+                <Undo2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-4.5 md:h-4.5 lg:w-5 lg:h-5" />
               </button>
 
               {/*Redo Button*/}
               <button
                 onClick={onRedo}
                 disabled={nodes.length === 0}
-                className="w-12 h-12 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg hover:shadow-xl hover-scale-sm hover-glow transition-all duration-200 flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 lg:w-8 lg:h-8 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg hover:shadow-xl hover-scale-sm hover-glow transition-all duration-200 flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Redo"
                 aria-label="Redo"
               >
-                <Redo2 className="w-5 h-5" />
+                <Redo2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-4.5 md:h-4.5 lg:w-5 lg:h-5" />
               </button>
 
               {/* Add Node button */}
               <button
                 onClick={() => setShowAddNodeForm(true)}
-                className="w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl hover-scale-sm transition-all duration-200 flex items-center justify-center group"
+                className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 lg:w-8 lg:h-8 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl hover-scale-sm transition-all duration-200 flex items-center justify-center group"
                 aria-label="Add new node"
+                title="Add Node"
               >
-                <Plus className="w-6 h-6" />
+                <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-5.5 md:h-5.5 lg:w-6 lg:h-6" />
               </button>
               
               {/* Hidden file input */}
@@ -882,38 +885,40 @@ export const ConceptMapVisualization: React.FC<ConceptMapVisualizationProps> = (
               <div className="relative">
                 <button
                   onClick={() => setShowExportMenu(!showExportMenu)}
-                  className="w-12 h-12 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg hover:shadow-xl hover-scale-sm transition-all duration-200 flex items-center justify-center group"
+                  className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 lg:w-8 lg:h-8 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg hover:shadow-xl hover-scale-sm transition-all duration-200 flex items-center justify-center group"
                   aria-label="Export/Import options"
                   title="Export/Import"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-4.5 md:h-4.5 lg:w-5 lg:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                   </svg>
                 </button>
 
                 {showExportMenu && (
-                  <div className="absolute bottom-0 right-14 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 py-2 min-w-40">
+                  <div className="absolute bottom-0 right-10 sm:right-11 md:right-12 lg:right-14 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 py-2 min-w-36 sm:min-w-40">
                     <button
                       onClick={() => {
                         handleExportJSON();
                         setShowExportMenu(false);
                       }}
-                      className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover-scale-sm flex items-center gap-2 transition-colors"
+                      className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-left text-xs sm:text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover-scale-sm flex items-center gap-2 transition-colors"
                       aria-label="Export JSON"
                     >
-                      <FileText className="w-4 h-4 text-purple-600" />
-                      Export JSON
+                      <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600" />
+                      <span className="hidden sm:inline">Export JSON</span>
+                      <span className="sm:hidden">Export</span>
                     </button>
                     <button
                       onClick={() => {
                         fileInputRef.current?.click();
                         setShowExportMenu(false);
                       }}
-                      className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover-scale-sm flex items-center gap-2 transition-colors"
+                      className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-left text-xs sm:text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover-scale-sm flex items-center gap-2 transition-colors"
                       aria-label="Import JSON"
                     >
-                      <Upload className="w-4 h-4 text-orange-600" />
-                      Import JSON
+                      <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-600" />
+                      <span className="hidden sm:inline">Import JSON</span>
+                      <span className="sm:hidden">Import</span>
                     </button>
                   </div>
                 )}

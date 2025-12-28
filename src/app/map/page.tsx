@@ -1012,10 +1012,21 @@ Make sure EVERY concept from the list above is included in the new map.`;
           <main className="flex-1 flex flex-col overflow-hidden">
             {/* Header - Mobile Optimized */}
             <div className="px-3 py-4 sm:px-4 md:px-6 lg:px-8 border-b border-slate-200 dark:border-slate-700">
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white truncate">
-                {activeTopic?.name}
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+              <div className="flex items-center gap-3 mb-2">
+                {/* Mobile Menu Button */}
+                <button
+                  onClick={() => setIsMobileSidebarOpen(true)}
+                  className="lg:hidden p-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition-colors"
+                  aria-label="Open topics menu"
+                >
+                  <Menu className="w-5 h-5" />
+                </button>
+                
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white truncate flex-1">
+                  {activeTopic?.name}
+                </h1>
+              </div>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 lg:ml-0 ml-[52px]">
                 {activeTopic?.messages.length || 0} messages • Updated {activeTopic?.updatedAt ? new Date(activeTopic.updatedAt).toLocaleDateString() : 'recently'}
               </p>
             </div>
