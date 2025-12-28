@@ -3,6 +3,7 @@
 import React, { useCallback, useState } from 'react';
 import { TopicChat } from '@/types/concept-map-types';
 import { NewTopicModal } from '@/components/NewTopicModal';
+import { X } from 'lucide-react';
 
 const TOPIC_CHATS_STORAGE_KEY = 'biobuddy-topic-chats';
 const ACTIVE_TOPIC_STORAGE_KEY = 'biobuddy-active-topic';
@@ -14,6 +15,8 @@ interface TopicsSidebarProps {
   onSwitchTopic: (topicId: string) => void;
   onDeleteTopic: (topicId: string) => void;
   onRenameTopic: (topicId: string, newName: string) => void;
+  isMobileMenuOpen?: boolean;
+  onMobileMenuToggle?: (isOpen: boolean) => void;
 }
 
 export const TopicsSidebar: React.FC<TopicsSidebarProps> = ({
@@ -23,10 +26,19 @@ export const TopicsSidebar: React.FC<TopicsSidebarProps> = ({
   onSwitchTopic,
   onDeleteTopic,
   onRenameTopic,
+  isMobileMenuOpen: externalIsMobileMenuOpen,
+  onMobileMenuToggle,
 }) => {
   const [isNewTopicModalOpen, setIsNewTopicModalOpen] = useState(false);
   const [editingTopicId, setEditingTopicId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
+  
+  // Use external state if provided, otherwise use internal state
+  const [internalIsMobileMenuOpen, setInternalIsMobileMenuOpen] = useState(false);
+  const isMobileMenuOpen = externalIsMobileMenuOpen !== undefined ? externalIsMobileMenuOpen : internalIsMobileMenuOpen;
+  const setIsMobileMenuOpen = onMobileMenuToggle 
+    ? (value: boolean) => onMobileMenuToggle(value)
+    : setInternalIsMobileMenuOpen;
 
   
 const handleDeleteTopic = useCallback(
@@ -139,118 +151,146 @@ const handleDeleteTopic = useCallback(
     }
   }, [handleSaveEdit, handleCancelEdit]);
 
+  const handleSwitchTopicAndCloseMobile = useCallback((topicId: string) => {
+    onSwitchTopic(topicId);
+    setIsMobileMenuOpen(false);
+  }, [onSwitchTopic, setIsMobileMenuOpen]);
+
   return (
     <>
-      <div data-tour="topics-sidebar" className="flex w-64 flex-col border-r border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
-      {/* Sidebar Header */}
-      <div className="border-b border-slate-200 p-4 dark:border-slate-700">
-        <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-white">
-          My Topics
-        </h2>
-        <button
-          data-tour="create-topic-btn"
-          onClick={handleOpenNewTopicModal}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 hover-lift"
-          type="button"
-          aria-haspopup="dialog"
-          aria-expanded={isNewTopicModalOpen}
-        >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          New Topic
-        </button>
-      </div>
+      {/* Mobile Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="lg:hidden fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
 
-      {/* Topics List */}
-      <div className="flex-1 overflow-y-auto p-2">
-        {topicChats.length === 0 ? (
-          <div className="py-8 px-4 text-center">
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              No topics yet. Create your first topic to get started!
-            </p>
+      {/* Sidebar */}
+      <div 
+        data-tour="topics-sidebar" 
+        className={`flex w-64 flex-col border-r border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800 transition-transform duration-300 lg:translate-x-0 ${
+          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+        } fixed lg:relative inset-y-0 left-0 z-50 lg:z-0`}
+      >
+        {/* Sidebar Header */}
+        <div className="border-b border-slate-200 p-4 dark:border-slate-700">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+              My Topics
+            </h2>
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="lg:hidden p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors"
+              aria-label="Close menu"
+            >
+              <X className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+            </button>
           </div>
-        ) : (
-          <div className="space-y-1">
-            {topicChats.map((topic, index) => (
-              <div
-                key={topic.id}
-                className={`group relative cursor-pointer rounded-lg p-3 hover-scale ${
-                  topic.id === activeTopicId
-                    ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
-                    : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'
-                } animate-fade-in-up`}
-                style={{
-                  animationDelay: `${index * 0.05}s`,
-                }}
-                onClick={() => onSwitchTopic(topic.id)}
-                onKeyDown={(event) => handleTopicKeyDown(event, topic.id)}
-                role="button"
-                tabIndex={0}
-                aria-pressed={topic.id === activeTopicId}
-                aria-label={`Open topic ${topic.name}`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
-                    {editingTopicId === topic.id ? (
-                      <input
-                        type="text"
-                        value={editingName}
-                        onChange={(e) => setEditingName(e.target.value)}
-                        onBlur={() => handleSaveEdit(topic.id)}
-                        onKeyDown={(e) => handleEditKeyDown(e, topic.id)}
-                        onClick={(e) => e.stopPropagation()}
-                        className="w-full text-sm font-medium bg-white dark:bg-slate-800 border border-blue-300 dark:border-blue-600 rounded px-2 py-1 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        autoFocus
-                      />
-                    ) : (
-                      <h3 className={`text-sm font-medium truncate ${
-                        topic.id === activeTopicId
-                          ? 'text-blue-900 dark:text-blue-100'
-                          : 'text-slate-900 dark:text-white'
-                      }`}>
-                        {topic.name}
-                      </h3>
-                    )}
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      {topic.messages.length} messages
-                      {topic.nodes.length > 0 && ` • ${topic.nodes.length} nodes`}
-                    </p>
-                  </div>
-                  
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {/* Edit button */}
-                    <button
-                      onClick={(event) => handleStartEdit(event, topic.id, topic.name)}
-                      className="p-1 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded hover-scale-sm"
-                      title="Edit topic name"
-                      aria-label="Edit topic name"
-                    >
-                      <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </button>
+          <button
+            data-tour="create-topic-btn"
+            onClick={handleOpenNewTopicModal}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 hover-lift"
+            type="button"
+            aria-haspopup="dialog"
+            aria-expanded={isNewTopicModalOpen}
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            New Topic
+          </button>
+        </div>
+
+        {/* Topics List */}
+        <div className="flex-1 overflow-y-auto p-2">
+          {topicChats.length === 0 ? (
+            <div className="py-8 px-4 text-center">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                No topics yet. Create your first topic to get started!
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {topicChats.map((topic, index) => (
+                <div
+                  key={topic.id}
+                  className={`group relative cursor-pointer rounded-lg p-3 hover-scale ${
+                    topic.id === activeTopicId
+                      ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
+                      : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'
+                  } animate-fade-in-up`}
+                  style={{
+                    animationDelay: `${index * 0.05}s`,
+                  }}
+                  onClick={() => handleSwitchTopicAndCloseMobile(topic.id)}
+                  onKeyDown={(event) => handleTopicKeyDown(event, topic.id)}
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={topic.id === activeTopicId}
+                  aria-label={`Open topic ${topic.name}`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      {editingTopicId === topic.id ? (
+                        <input
+                          type="text"
+                          value={editingName}
+                          onChange={(e) => setEditingName(e.target.value)}
+                          onBlur={() => handleSaveEdit(topic.id)}
+                          onKeyDown={(e) => handleEditKeyDown(e, topic.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-full text-sm font-medium bg-white dark:bg-slate-800 border border-blue-300 dark:border-blue-600 rounded px-2 py-1 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          autoFocus
+                        />
+                      ) : (
+                        <h3 className={`text-sm font-medium truncate ${
+                          topic.id === activeTopicId
+                            ? 'text-blue-900 dark:text-blue-100'
+                            : 'text-slate-900 dark:text-white'
+                        }`}>
+                          {topic.name}
+                        </h3>
+                      )}
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        {topic.messages.length} messages
+                        {topic.nodes.length > 0 && ` • ${topic.nodes.length} nodes`}
+                      </p>
+                    </div>
                     
-                    {/* Delete button */}
-                    <button
-                      onClick={(event) =>
-                        handleDeleteTopic(event, topic.id, topic.name)
-                      }
-                      className="p-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded hover-scale-sm"
-                      title="Delete topic"
-                      aria-label="Delete topic"
-                    >
-                      <svg className="w-4 h-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
+                    <div className="flex items-center gap-1 opacity-0 sm:opacity-0 sm:group-hover:opacity-100 group-hover:opacity-100 transition-opacity">
+                      {/* Edit button */}
+                      <button
+                        onClick={(event) => handleStartEdit(event, topic.id, topic.name)}
+                        className="p-1 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded hover-scale-sm"
+                        title="Edit topic name"
+                        aria-label="Edit topic name"
+                      >
+                        <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                      
+                      {/* Delete button */}
+                      <button
+                        onClick={(event) =>
+                          handleDeleteTopic(event, topic.id, topic.name)
+                        }
+                        className="p-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded hover-scale-sm"
+                        title="Delete topic"
+                        aria-label="Delete topic"
+                      >
+                        <svg className="w-4 h-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <NewTopicModal

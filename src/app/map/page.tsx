@@ -7,6 +7,7 @@ import {
   Edit3, 
   ChevronLeft,
   ChevronRight,
+  Menu,
 } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 
@@ -68,6 +69,8 @@ export default function MapPage() {
   const [forceRegenerateMap, setForceRegenerateMap] = useState(false);
   const lastToastedMapHashRef = useRef<string>('');
   const [autoGenerateMap, setAutoGenerateMap] = useState(true);
+  const [mobileView, setMobileView] = useState<'chat' | 'map'>('chat');
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Usage tracking modals
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -996,6 +999,8 @@ Make sure EVERY concept from the list above is included in the new map.`;
         onSwitchTopic={handleSwitchTopic}
         onDeleteTopic={handleDeleteTopic}
         onRenameTopic={handleRenameTopic}
+        isMobileMenuOpen={isMobileSidebarOpen}
+        onMobileMenuToggle={setIsMobileSidebarOpen}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -1004,26 +1009,56 @@ Make sure EVERY concept from the list above is included in the new map.`;
         {!activeTopicId ? (
           <WelcomeScreen onCreateTopic={handleCreateTopic} />
         ) : (
-          <main className="flex-1 container mx-auto px-4 py-8 overflow-auto">
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+          <main className="flex-1 flex flex-col overflow-hidden">
+            {/* Header - Mobile Optimized */}
+            <div className="px-3 py-4 sm:px-4 md:px-6 lg:px-8 border-b border-slate-200 dark:border-slate-700">
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white truncate">
                 {activeTopic?.name}
               </h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
                 {activeTopic?.messages.length || 0} messages • Updated {activeTopic?.updatedAt ? new Date(activeTopic.updatedAt).toLocaleDateString() : 'recently'}
               </p>
             </div>
+
+            {/* Mobile View Toggle */}
+            <div className="lg:hidden flex border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+              <button
+                onClick={() => setMobileView('chat')}
+                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                  mobileView === 'chat'
+                    ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                    : 'text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                Chat & Notes
+              </button>
+              <button
+                onClick={() => setMobileView('map')}
+                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                  mobileView === 'map'
+                    ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                    : 'text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                Concept Map
+              </button>
+            </div>
             
-            <div className={`grid grid-cols-1 gap-8 h-[calc(100vh-280px)] transition-all duration-300 ${
-              isLeftPanelCollapsed ? 'lg:grid-cols-[60px_1fr]' : 'lg:grid-cols-2'
-            }`}>
-              <div className={`bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 flex flex-col transition-all duration-300 relative h-svh ${
-                isLeftPanelCollapsed ? 'p-2' : 'p-6'
+            {/* Content Area */}
+            <div className="flex-1 overflow-hidden px-3 py-4 sm:px-4 md:px-6 lg:px-8">
+              <div className={`h-full grid grid-cols-1 gap-4 sm:gap-6 lg:gap-8 transition-all duration-300 ${
+                isLeftPanelCollapsed ? 'lg:grid-cols-[60px_1fr]' : 'lg:grid-cols-2'
               }`}>
+                {/* Chat/Notes Panel */}
+                <div className={`bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 flex flex-col transition-all duration-300 relative overflow-hidden ${
+                  isLeftPanelCollapsed ? 'p-2' : 'p-3 sm:p-4 lg:p-6'
+                } ${
+                  mobileView === 'chat' ? 'block' : 'hidden lg:flex'
+                }`}>
                 <button
                   data-tour="collapse-btn"
                   onClick={() => setIsLeftPanelCollapsed(!isLeftPanelCollapsed)}
-                  className="absolute top-4 right-2 z-10 p-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors"
+                  className="hidden lg:block absolute top-4 right-2 z-10 p-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors"
                   aria-label={isLeftPanelCollapsed ? "Expand panel" : "Collapse panel"}
                   title={isLeftPanelCollapsed ? "Expand panel" : "Collapse panel"}
                 >
@@ -1068,29 +1103,32 @@ Make sure EVERY concept from the list above is included in the new map.`;
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full text-slate-400 dark:text-slate-500">
                     <Edit3 className="w-6 h-6 mb-2" />
-                    <span className="text-xs writing-mode-vertical text-center">Your Notes & Chat</span>
+                    <span className="text-xs text-center rotate-180" style={{ writingMode: 'vertical-rl' }}>Your Notes & Chat</span>
                   </div>
                 )}
               </div>
 
-              <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 p-6 flex flex-col">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+              {/* Concept Map Panel */}
+              <div className={`bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 p-3 sm:p-4 lg:p-6 flex flex-col overflow-hidden ${
+                mobileView === 'map' ? 'block' : 'hidden lg:flex'
+              }`}>
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <h2 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-white">
                       Concept Map
                     </h2>
                     {!isChatMode && (
-                      <span className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded">
+                      <span className="hidden sm:inline-block text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded">
                         From Notes
                       </span>
                     )}
                     {isChatMode && (
-                      <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">
+                      <span className="hidden sm:inline-block text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">
                         From AI Chat
                       </span>
                     )}
                   </div>
-                  <div className="text-sm text-slate-600 dark:text-slate-400">
+                  <div className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
                     {isRegeneratingMap ? 'Regenerating...' : loadingState === 'success' ? 'Ready' : loadingState === 'loading' ? 'Generating...' : ''}
                   </div>
                 </div>
@@ -1123,6 +1161,7 @@ Make sure EVERY concept from the list above is included in the new map.`;
                   onRedo={handleRedo}
                 />
               </div>
+            </div>
             </div>
 
             <MapUpdateConfirmationModal

@@ -39,41 +39,41 @@ export const Navbar = () => {
 
   return (
     <nav className="bg-neutral-100 border-b border-slate-200 dark:bg-slate-900 dark:border-slate-700">
-      <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
+      <div className="container mx-auto px-3 sm:px-4">
+        <div className="flex h-14 sm:h-16 items-center justify-between gap-2">
           <Link
             href="/"
-            className="text-2xl font-bold text-blue-600 transition-colors hover:text-blue-700"
+            className="text-xl sm:text-2xl font-bold text-blue-600 transition-colors hover:text-blue-700"
             aria-label="Go to BioBuddy home page"
           >
             BioBuddy
           </Link>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
 
             {pathname !== "/" && pathname !== "/pricing" && (
               <button
                 data-tour="feedback-btn"
                 onClick={() => setIsFeedbackOpen(true)}
-                className="hover-scale-sm flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-green-600 transition-colors hover:bg-slate-100 hover:text-green-600 dark:text-green-300 dark:hover:bg-slate-800 dark:hover:text-green-300"
+                className="hover-scale-sm flex items-center gap-1 sm:gap-2 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-green-600 transition-colors hover:bg-slate-100 hover:text-green-600 dark:text-green-300 dark:hover:bg-slate-800 dark:hover:text-green-300"
                 title="Give Feedback"
                 aria-label="Give Feedback"
                 tabIndex={0}
               >
                 <MessageSquare className="h-4 w-4" />
-                <span className="hidden sm:inline">Give Feedback</span>
+                <span className="hidden md:inline">Give Feedback</span>
               </button>
             )}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {user ? (
-                <div className="flex items-center gap-3 rounded-full bg-blue-50 px-3 py-1.5 text-sm text-blue-700 dark:bg-blue-500/10 dark:text-blue-200">
-                  <span className="hidden lg:inline" aria-live="polite">
+                <div className="flex items-center gap-2 sm:gap-3 rounded-full bg-blue-50 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm text-blue-700 dark:bg-blue-500/10 dark:text-blue-200">
+                  <span className="hidden lg:inline max-w-[120px] xl:max-w-none truncate" aria-live="polite">
                     {user.email}
                   </span>
                   <button
                     type="button"
                     onClick={handleSignOut}
-                    className="rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-full bg-blue-600 px-2 sm:px-3 py-1 text-xs font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
                     disabled={isSigningOut}
                     aria-label="Sign out of BioBuddy"
                   >
@@ -84,7 +84,7 @@ export const Navbar = () => {
                 <button
                   type="button"
                   onClick={handleOpenAuthModal}
-                  className="rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  className="rounded-full bg-blue-600 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                   aria-label="Sign in to BioBuddy"
                   tabIndex={0}
                 >
@@ -94,7 +94,7 @@ export const Navbar = () => {
             {pathname === "/" && (
               <Link
                 href="/pricing"
-                className="hover-scale-sm flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-blue-600 transition-colors hover:bg-slate-100 hover:text-blue-700 dark:text-blue-400 dark:hover:bg-slate-800 dark:hover:text-blue-300"
+                className="hover-scale-sm flex items-center gap-2 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-blue-600 transition-colors hover:bg-slate-100 hover:text-blue-700 dark:text-blue-400 dark:hover:bg-slate-800 dark:hover:text-blue-300"
                 aria-label="View Pricing"
                 tabIndex={0}
               >
@@ -106,20 +106,22 @@ export const Navbar = () => {
               <>
                 <Link
                   href="/map"
-                  className="hover-scale-sm flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-blue-600 transition-colors hover:bg-slate-100 hover:text-blue-700 dark:text-blue-400 dark:hover:bg-slate-800 dark:hover:text-blue-300"
+                  className="hover-scale-sm flex items-center gap-2 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-blue-600 transition-colors hover:bg-slate-100 hover:text-blue-700 dark:text-blue-400 dark:hover:bg-slate-800 dark:hover:text-blue-300"
                   aria-label="Go to Learn"
                   tabIndex={0}
                 >
-                  <span className="hidden sm:inline">Learn</span>
+                  <span className="hidden md:inline">Learn</span>
+                  <span className="md:hidden">📚</span>
                 </Link>
                 <Link
                   data-tour="dashboard-btn"
                   href="/dashboard"
-                  className="hover-scale-sm flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-blue-600 transition-colors hover:bg-slate-100 hover:text-blue-700 dark:text-blue-400 dark:hover:bg-slate-800 dark:hover:text-blue-300"
+                  className="hover-scale-sm flex items-center gap-2 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-blue-600 transition-colors hover:bg-slate-100 hover:text-blue-700 dark:text-blue-400 dark:hover:bg-slate-800 dark:hover:text-blue-300"
                   aria-label="Go to Account"
                   tabIndex={0}
                 >
-                  <span className="hidden sm:inline">Account</span>
+                  <span className="hidden md:inline">Account</span>
+                  <span className="md:hidden">👤</span>
                 </Link>
               </>
             )}
@@ -127,11 +129,11 @@ export const Navbar = () => {
             {pathname === "/map" && (
               <button
                 onClick={startFullTour}
-                className="hover-scale-sm mr-5 rounded-lg p-2 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="hover-scale-sm rounded-lg p-1.5 sm:p-2 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
                 title="Tutorial"
                 aria-label="Help - Tutorial"
               >
-                <HelpCircle className="h-5 w-5 text-blue-600 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300" />
+                <HelpCircle className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300" />
               </button>
             )}
           </div>
